@@ -1,0 +1,249 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String
+  role        String   @default("USER") // SUPER_ADMIN, ADMIN, USER
+  permissions String?  @default("[\"dashboard\",\"prices\",\"stocks\",\"transactions\",\"suppliers\",\"price-check\",\"users\"]")
+  dealerId    String?  // Nullable for SUPER_ADMIN
+  dealer      Dealer?  @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Dealer {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  users        User[]
+  stocks       Stock[]
+  transactions Transaction[]
+  employees    Employee[]
+  productItems ProductItem[]
+  categories   Category[]
+  suppliers    Supplier[]
+  customers    Customer[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// Aktif has fiyatı — singleton upsert (id="singleton"), geçmiş tutulmaz
+model HasPrice {
+  id        String   @id @default("singleton")
+  bid       Float
+  ask       Float
+  source    String   @default("altis") // "altis" | "harem"
+  updatedAt DateTime @updatedAt
+}
+
+// Eski ziynet has milyemleri — kod bazlı upsert (YCEYREK, YYARIM, YTAM)
+model ZiynetPrice {
+  id        String   @id // YCEYREK | YYARIM | YTAM
+  bid       Float
+  ask       Float
+  updatedAt DateTime @updatedAt
+}
+
+// Fiyat ayarları — singleton upsert (id="singleton")
+model PriceSettings {
+  id            String   @id @default("singleton")
+  sourceOrder   String   @default("[\"altis\",\"harem\"]") // JSON dizisi
+  priceOffsets  String   @default("{}") // JSON objesi (hasBid, hasAsk, usdBid, usdAsk, vb.)
+  mil24Ayar     Float    @default(1000)
+  mil22Ayar     Float    @default(916)
+  milAdanaBurma Float    @default(931)
+  milAjda       Float    @default(942)
+  mil14Ayar     Float    @default(583)
+  gremseMil     Float    @default(0) // Gremse milyem cinsinden
+  updatedAt     DateTime @updatedAt
+}
+
+// Stok Durumu Tablosu
+model Stock {
+  id        String   @id @default(cuid())
+  product   String   // Örn: "USD", "ECEYREKTL"
+  label     String   // Ürün Adı (Örn: "Amerikan Doları", "Eski Çeyrek")
+  type      String   // "sarrafiye" | "döviz"
+  amount    Float    @default(0) // Güncel stok seviyesi
+  dealerId  String
+  dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
+
+  @@unique([product, dealerId])
+}
+
+// Alış/Satış İşlemleri Geçmişi
+model Transaction {
+  id           String   @id @default(cuid())
+  dealerId     String
+  dealer       Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  type         String   // "buy" (Alış - biz alıyoruz, stok artar) | "sell" (Satış - biz satıyoruz, stok azalır)
+  productType  String   // "sarrafiye" | "döviz"
+  productCode  String   // Örn: "USD", "ECEYREKTL"
+  quantity     Float    // İşlem miktarı
+  price        Float    // Birim fiyat (TL)
+  total        Float    // Toplam tutar (TL)
+  employeeName String?  // İşlemi gerçekleştiren çalışan adı
+  createdAt    DateTime @default(now())
+}
+
+// Bayi altındaki çalışanlar (Login hesabı değildir)
+model Employee {
+  id        String   @id @default(cuid())
+  name      String
+  dealerId  String
+  dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+// Nihai İşlenmiş Fiyatlar (Fark ve Marjlar Eklenmiş)
+model LivePrice {
+  id        String   @id // Örn: "GAUTRY", "USDTRY", "ECEYREKTL", "mil22Ayar"
+  label     String   // Ürün Adı (Örn: "Has Altın", "22 Ayar Bilezik")
+  bid       Float    // Nihai Alış Fiyatı (TL)
+  ask       Float    // Nihai Satış Fiyatı (TL)
+  updatedAt DateTime @updatedAt
+}
+
+// Tekil Takı Ürünleri (Stokta olan veya satılmış)
+model ProductItem {
+  id           String   @id @default(cuid())
+  barcode      String   @unique // Örn: 14KP00001
+  title        String   @default("") // Ürün Adı (Seçilen kategori ismiyle fallback)
+  description  String?  // Ürün Açıklaması
+  quantity     Int      @default(1) // Adet
+  category     String?  // Kategori Adı (Örn: Küpe)
+  subType      String?  // Alt Tür Adı (Örn: Ajda)
+  subSubType   String?  // Alt Alt Tür Adı (Örn: Oluklu)
+  carat        Int      // Ayar (24, 22, 18, 14, 8 vb.)
+  weight       Float    // Birim Ağırlığı (gr)
+  size         String?  // Beden / Ölçü
+  costMilyem   Float    // Geliş Milyemi (örn: 0.585)
+  laborMilyem  Float    // Giriş İşçiliği (örn: 0.120)
+  sellingMilyem Float?   // Satış Milyemi (örn: 0.931 veya 0.705)
+  profitMargin Float    // Yüzdelik Kar Oranı (örn: 10)
+  costPrice    Float?   // Maliyet Fiyatı (TL)
+  laborType    String   @default("milyem")
+  laborCost    Float    @default(0)
+  status       String   @default("IN_STOCK") // "IN_STOCK" | "SOLD" | "RETURNED"
+  supplierName String?  // Toptancı Adı
+  dealerId     String
+  dealer       Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  code          String        // Kısaltma (örn: KP, BLZ, YZK, KLY)
+  dealerId      String
+  dealer        Dealer        @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  subCategories SubCategory[]
+  createdAt     DateTime      @default(now())
+}
+
+model SubCategory {
+  id             String           @id @default(cuid())
+  name           String
+  categoryId     String
+  category       Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subSubCategories SubSubCategory[]
+  createdAt      DateTime         @default(now())
+}
+
+model SubSubCategory {
+  id            String      @id @default(cuid())
+  name          String
+  subCategoryId String
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+}
+
+model Supplier {
+  id           String                @id @default(cuid())
+  name         String
+  phone        String?
+  address      String?
+  note         String?
+  hasBalance   Float                 @default(0) // Has Altın Bakiyesi (gr Has) - Pozitif: Toptancıya Has borcumuz var
+  tlBalance    Float                 @default(0) // TL Bakiyesi (₺) - Pozitif: Toptancıya TL borcumuz var
+  dealerId     String
+  dealer       Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  transactions SupplierTransaction[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt @default(now())
+}
+
+model SupplierTransaction {
+  id           String   @id @default(cuid())
+  supplierId   String
+  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  dealerId     String
+  type         String   // "PURCHASE" (Mal Alımı) | "HAS_PAYMENT" (Has Ödemesi) | "TL_PAYMENT" (TL Ödemesi) | "SETTLEMENT" (Mutabakat Düzeltmesi)
+  hasAmount    Float    @default(0) // Has Altın Tutarı (gr Has)
+  tlAmount     Float    @default(0) // TL Tutarı (₺)
+  unitPrice    Float?   // İşlem anındaki Has altın fiyatı (TL/gr)
+  documentNo   String?  // Belge / İrsaliye / Fatura No
+  description  String?  // İşlem açıklaması
+  employeeName String?  // İşlemi yapan personel
+  createdAt    DateTime @default(now())
+}
+
+// Sistem & İşlem Logları (Audit Log)
+model AuditLog {
+  id        String   @id @default(cuid())
+  dealerId  String
+  dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  action    String   // Örn: "POS Satış", "Stok Düzeltme", "Müşteri Borç Ekleme"
+  details   String   // Detaylı işlem açıklaması
+  userEmail String?  // İşlemi yapan kullanıcı e-postası
+  userName  String?  // İşlemi yapan kullanıcı adı
+  createdAt DateTime @default(now())
+}
+
+// Müşteri Rehberi
+model Customer {
+  id           String                @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  tcNo         String?
+  address      String?
+  note         String?
+  dealerId     String
+  dealer       Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  transactions CustomerTransaction[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt @default(now())
+}
+
+// Müşteri Borç / Alacak (Veresiye) İşlem Hareketleri
+model CustomerTransaction {
+  id            String   @id @default(cuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  dealerId      String
+  type          String   // "BORC" (Müşteriye Borç Verme - Alacağımız Artar) | "TAHSILAT" (Müşteriden Alacak/Tahsilat Alımı)
+  assetType     String   // "TL" | "USD" | "EUR" | "HAS" | "CEYREK" | "22K" | "14K" vb.
+  amount        Float    // İşlenen öz tutar (örn: 10000 TL, 500 USD, 2 Adet, 25.5 gr)
+  hasEquivalent Float    @default(0) // İşlem anındaki / hesaplanan Has Altın karşılığı (gr Has)
+  unitPrice     Float?   // İşlem anındaki Has altın fiyatı veya döviz kuru
+  description   String?  // İşlem açıklaması / Not
+  employeeName  String?  // İşlemi yapan personel
+  createdAt     DateTime @default(now())
+}
+
+
