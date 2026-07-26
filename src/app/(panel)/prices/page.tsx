@@ -226,14 +226,42 @@ export default function PricesPage() {
       .catch(console.error);
   }, []);
 
-  // ─── Altis WebSocket ──────────────────────────────────────────────────
+  // ─── Altis WebSocket & Sunucu Köprüsü ───────────────────────────────────
 
   useEffect(() => {
-    // HTTPS ortamında ws:// şifresiz soket çağrısı tarayıcı tarafından SecurityError fırlatır.
-    // Bunu yakalayıp sayfayı düşürmesini engelliyoruz.
+    // HTTPS ortamında istemci tarafı ws:// soketi engellendiği için,
+    // sunucu köprüsü /api/prices/altis üzerinden 2.5 saniyede bir Altis canlı verilerini çekiyoruz.
     if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      setAltisStatus('error');
-      return;
+      setAltisStatus('connecting');
+
+      const fetchAltis = async () => {
+        try {
+          const res = await fetch('/api/prices/altis');
+          const json = await res.json();
+          if (json.success && json.data && Object.keys(json.data).length > 0) {
+            setAltisStatus('connected');
+            setAltisData(prev => {
+              const next = { ...prev };
+              Object.entries(json.data as Record<string, { bid: number; ask: number }>).forEach(([code, item]) => {
+                const prevItem = prev[code];
+                let dir: 'up' | 'down' | 'none' = prevItem?.dir ?? 'none';
+                if (prevItem) {
+                  if (item.ask > prevItem.ask) dir = 'up';
+                  else if (item.ask < prevItem.ask) dir = 'down';
+                }
+                next[code] = { code, bid: item.bid, ask: item.ask, dir };
+              });
+              return next;
+            });
+          }
+        } catch (e) {
+          console.error('[Altis Proxy Fetch]', e);
+        }
+      };
+
+      fetchAltis();
+      const interval = setInterval(fetchAltis, 2500);
+      return () => clearInterval(interval);
     }
 
     try {
