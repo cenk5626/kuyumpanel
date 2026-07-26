@@ -1,17 +1,53 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { fetchAltisPricesServer } from '@/lib/altis-server';
 
-// API log başlığı
 const LOG_PREFIX = '[API Prices Live]';
 
 /**
- * GET /api/prices/live — Nihai fiyat listesini döner
+ * GET /api/prices/live — Nihai fiyat listesini döner.
+ * Eğer veritabanında fiyat yoksa, sunucu tarafında Altis WebSocket'e bağlanıp canlı çeker ve kaydeder.
  */
 export async function GET() {
   try {
-    const prices = await prisma.livePrice.findMany({
+    let prices = await prisma.livePrice.findMany({
       orderBy: { id: 'asc' },
     });
+
+    // Veritabanında canlı fiyat yoksa sunucu tarafında Altis WS'den çek
+    if (prices.length === 0) {
+      const altisMap = await fetchAltisPricesServer();
+      const gautry = altisMap['GAUTRY'];
+
+      if (gautry) {
+        const itemsToSave = [
+          { id: 'GAUTRY', label: 'Has Altın', bid: gautry.bid, ask: gautry.ask },
+          { id: 'mil24Ayar', label: '24 Ayar Gram', bid: gautry.bid, ask: gautry.ask },
+          { id: 'mil22Ayar', label: '22 Ayar Gram', bid: gautry.bid * 0.916, ask: gautry.ask * 0.916 },
+          { id: 'milAdanaBurma', label: 'Adana-Burma Bilezik', bid: gautry.bid * 0.931, ask: gautry.ask * 0.931 },
+          { id: 'milAjda', label: 'Ajda Bilezik', bid: gautry.bid * 0.942, ask: gautry.ask * 0.942 },
+          { id: 'mil14Ayar', label: '14 Ayar Gram', bid: gautry.bid * 0.583, ask: gautry.ask * 0.583 },
+        ];
+
+        // ECEYREKTL vb. var ise ekle
+        if (altisMap['ECEYREKTL']) {
+          itemsToSave.push({ id: 'ECEYREKTL', label: 'Çeyrek Altın', bid: altisMap['ECEYREKTL'].bid, ask: altisMap['ECEYREKTL'].ask });
+        }
+
+        await prisma.$transaction(
+          itemsToSave.map(item =>
+            prisma.livePrice.upsert({
+              where: { id: item.id },
+              update: { label: item.label, bid: item.bid, ask: item.ask },
+              create: { id: item.id, label: item.label, bid: item.bid, ask: item.ask },
+            })
+          )
+        );
+
+        prices = await prisma.livePrice.findMany({ orderBy: { id: 'asc' } });
+      }
+    }
+
     return NextResponse.json(prices);
   } catch (error) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
@@ -39,7 +75,6 @@ export async function POST(req: Request) {
 
     const items = body as PriceItem[];
 
-    // SQLite kilitlemesini önlemek için tüm upsert'leri tek transaction altında yapıyoruz
     await prisma.$transaction(
       items.map(item =>
         prisma.livePrice.upsert({
