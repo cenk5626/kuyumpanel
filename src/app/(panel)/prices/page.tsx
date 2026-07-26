@@ -292,9 +292,22 @@ export default function PricesPage() {
             if (dirObj?.satis_dir === 'up') dir = 'up';
             else if (dirObj?.satis_dir === 'down') dir = 'down';
 
-            // ALTIN → GAUTRY eşleştirmesi
+            // ALTIN ve Ziynet kod eşleştirmeleri
             const rawCode = it.code as string;
-            const code = rawCode === HAREM_HAS_CODE ? HAS_CODE : rawCode;
+            const codeMap: Record<string, string> = {
+              ALTIN: HAS_CODE,
+              CEYREK_ESKI: 'ECEYREKTL',
+              CEYREK_YENI: 'ECEYREKTL',
+              YARIM_ESKI: 'EYARIMTL',
+              YARIM_YENI: 'EYARIMTL',
+              TEK_ESKI: 'ETAMTL',
+              TEK_YENI: 'ETAMTL',
+              ATA_ESKI: 'EATATL',
+              ATA_YENI: 'EATATL',
+              GREMSE_ESKI: 'EGREMSETL',
+              GREMSE_YENI: 'EGREMSETL',
+            };
+            const code = codeMap[rawCode] ?? rawCode;
 
             next[code] = {
               code,
@@ -514,7 +527,7 @@ export default function PricesPage() {
   }
 
   const primaryData  = activeSrcKey === 'altis' ? altisData : haremData;
-  const rawActiveHas = primaryData[HAS_CODE];
+  const rawActiveHas = primaryData[HAS_CODE] ?? altisData[HAS_CODE] ?? haremData[HAS_CODE];
 
   const activeHas = rawActiveHas
     ? {
@@ -546,14 +559,14 @@ export default function PricesPage() {
         dir = activeHasPrice.dir;
       }
     } else {
-      // Otomatik mod
-      const rawD = altisData[code];
-      if (rawD && isAltisOnline && rawD.bid > 0 && rawD.ask > 0) {
+      // Otomatik mod: Önce aktif kaynaktaki ham veriyi kontrol et
+      const rawD = (activeSrcKey === 'altis' ? altisData[code] : haremData[code]) ?? haremData[code] ?? altisData[code];
+      if (rawD && rawD.bid > 0 && rawD.ask > 0) {
         bid = getAdjustedPrice(code, rawD.bid, 'bid') ?? 0;
         ask = getAdjustedPrice(code, rawD.ask, 'ask') ?? 0;
         dir = rawD.dir;
       } else {
-        // Altis çevrimdışı ise veya Harem aktifse, DB'deki son ziynet milyemlerini kullanarak aktif Has üzerinden hesapla
+        // DB'deki son ziynet milyemlerini kullanarak aktif Has üzerinden hesapla
         const hasCode = code.replace('TL', '');
         const dbMilyem = dbZiynets[hasCode];
         
