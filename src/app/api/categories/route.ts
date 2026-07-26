@@ -13,6 +13,12 @@ export async function GET() {
 
     const currentUserDealerId = (session.user as any).dealerId || 'merkez';
 
+    await prisma.dealer.upsert({
+      where: { id: currentUserDealerId },
+      create: { id: currentUserDealerId, name: currentUserDealerId === 'merkez' ? 'Merkez Mağaza' : currentUserDealerId },
+      update: {},
+    });
+
     let categories = await prisma.category.findMany({
       where: { dealerId: currentUserDealerId },
       include: {

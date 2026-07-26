@@ -289,12 +289,12 @@ export default function StocksPage() {
         suppliersRes.json(),
         hasRes.json()
       ]);
-      setStocks(stocksData as Stock[]);
-      setTransactions(txData as Transaction[]);
-      setProductItems(productsData as ProductItem[]);
-      setCategories(categoriesData);
-      setSuppliers(suppliersData);
-      setHasPrice(hasData);
+      setStocks(Array.isArray(stocksData) ? (stocksData as Stock[]) : []);
+      setTransactions(Array.isArray(txData) ? (txData as Transaction[]) : []);
+      setProductItems(Array.isArray(productsData) ? (productsData as ProductItem[]) : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
+      setHasPrice(hasData && typeof hasData === 'object' && !('error' in hasData) ? hasData : null);
       
       const liveMap: Record<string, { bid: number; ask: number }> = {};
       if (Array.isArray(liveData)) {
