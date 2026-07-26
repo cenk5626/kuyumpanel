@@ -13,7 +13,7 @@ export const SOURCE_LABELS: Record<string, string> = {
   harem: 'Harem Altın',
 };
 
-export const DEFAULT_SOURCE_ORDER = ['altis', 'harem'] as const;
+export const DEFAULT_SOURCE_ORDER = ['harem', 'altis'] as const;
 
 // Has fiyat kodları
 export const HAS_CODE = 'GAUTRY' as const;

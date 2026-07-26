@@ -52,6 +52,17 @@ type SettingsTab = 'source' | 'milliemes';
 
 // ─── Yardımcı Fonksiyonlar ───────────────────────────────────────────────────
 
+function parsePriceNumber(val: unknown): number {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  const str = String(val).trim();
+  if (str.includes(',')) {
+    const normalized = str.replace(/\./g, '').replace(',', '.');
+    return parseFloat(normalized) || 0;
+  }
+  return parseFloat(str) || 0;
+}
+
 function fmtTL(val: number | undefined): string {
   if (val == null || isNaN(val)) return '—';
   return Math.round(val).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -233,13 +244,17 @@ export default function PricesPage() {
           const next = { ...prev };
           data.forEach(item => {
             if (!item.Code || item.Bid == null || item.Ask == null) return;
+            const bid = parsePriceNumber(item.Bid);
+            const ask = parsePriceNumber(item.Ask);
+            if (bid <= 0 && ask <= 0) return;
+
             const prevItem = prev[item.Code];
             let dir: 'up' | 'down' | 'none' = prevItem?.dir ?? 'none';
             if (prevItem) {
-              if (item.Ask > prevItem.ask) dir = 'up';
-              else if (item.Ask < prevItem.ask) dir = 'down';
+              if (ask > prevItem.ask) dir = 'up';
+              else if (ask < prevItem.ask) dir = 'down';
             }
-            next[item.Code] = { code: item.Code, bid: item.Bid, ask: item.Ask, dir };
+            next[item.Code] = { code: item.Code, bid, ask, dir };
           });
           return next;
         });
@@ -268,6 +283,10 @@ export default function PricesPage() {
           Object.values(payload.data).forEach((item: unknown) => {
             const it = item as Record<string, unknown>;
             if (!it.code || it.alis == null || it.satis == null) return;
+            const bid = parsePriceNumber(it.alis);
+            const ask = parsePriceNumber(it.satis);
+            if (bid <= 0 && ask <= 0) return;
+
             let dir: 'up' | 'down' | 'none' = 'none';
             const dirObj = it.dir as Record<string, string> | undefined;
             if (dirObj?.satis_dir === 'up') dir = 'up';
@@ -279,8 +298,8 @@ export default function PricesPage() {
 
             next[code] = {
               code,
-              bid: parseFloat(it.alis as string),
-              ask: parseFloat(it.satis as string),
+              bid,
+              ask,
               dir,
             };
           });
