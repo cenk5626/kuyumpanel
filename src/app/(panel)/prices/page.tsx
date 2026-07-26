@@ -200,6 +200,7 @@ export default function PricesPage() {
     fetch('/api/prices/settings')
       .then(r => r.json())
       .then((data: AppSettings) => {
+        if (!data || typeof data !== 'object' || !Array.isArray(data.sourceOrder)) return;
         setSettings(data);
         setEditSettings({
           ...data,
