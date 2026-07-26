@@ -231,6 +231,13 @@ export async function GET() {
       }
     }
 
+    // 1.5. Merkez bayi kaydını garanti et
+    try {
+      await prisma.$executeRawUnsafe(
+        `INSERT OR IGNORE INTO "Dealer" ("id", "name", "createdAt", "updatedAt") VALUES ('merkez', 'Merkez Mağaza', datetime('now'), datetime('now'))`
+      );
+    } catch (e) {}
+
     const email = 'admin@kuyumpanel.com';
     const password = 'admin123';
 

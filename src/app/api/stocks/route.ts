@@ -34,6 +34,13 @@ export async function GET() {
 
     const dealerId = (session.user as any).dealerId || 'merkez';
 
+    // Bayinin veritabanında var olduğunu garanti et (Foreign Key kısıtlaması için)
+    await prisma.dealer.upsert({
+      where: { id: dealerId },
+      create: { id: dealerId, name: dealerId === 'merkez' ? 'Merkez Mağaza' : dealerId },
+      update: {},
+    });
+
     // Bayinin mevcut stok kayıtlarını getir
     const existingStocks = await prisma.stock.findMany({
       where: { dealerId },
@@ -101,6 +108,12 @@ export async function PUT(req: Request) {
     }
 
     const dealerId = (session.user as any).dealerId || 'merkez';
+
+    await prisma.dealer.upsert({
+      where: { id: dealerId },
+      create: { id: dealerId, name: dealerId === 'merkez' ? 'Merkez Mağaza' : dealerId },
+      update: {},
+    });
     const { id: product, amount } = await req.json() as { id: string; amount: number };
 
     if (!product || amount == null || isNaN(amount)) {
