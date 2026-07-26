@@ -488,8 +488,10 @@ export default function PricesPage() {
     harem: haremStatus,
   };
 
-  // İkincil kaynak
-  const secondarySrcKey = settings.sourceOrder[1] ?? 'harem';
+  // İkincil ve Birincil kaynak
+  const safeSourceOrder = Array.isArray(settings?.sourceOrder) ? settings.sourceOrder : ['harem', 'altis'];
+  const secondarySrcKey = safeSourceOrder[1] ?? 'altis';
+  let activeSrcKey = safeSourceOrder[0] ?? 'harem';
   const secondaryData   = secondarySrcKey === 'altis' ? altisData : haremData;
 
   // Döviz (önce Harem, yoksa Altis) - Raw ve Fark uygulanmış versiyonlar
@@ -520,7 +522,6 @@ export default function PricesPage() {
   const isAltisOnline = altisStatus === 'connected' && hasAltisValidPrices;
   const isHaremOnline = haremStatus === 'connected' && hasHaremValidPrices;
 
-  let activeSrcKey = settings.sourceOrder[0] ?? 'altis';
   if (activeSrcKey === 'altis' && !isAltisOnline && isHaremOnline) {
     activeSrcKey = 'harem';
   } else if (activeSrcKey === 'harem' && !isHaremOnline && isAltisOnline) {
