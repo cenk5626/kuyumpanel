@@ -229,40 +229,52 @@ export default function PricesPage() {
   // ─── Altis WebSocket ──────────────────────────────────────────────────
 
   useEffect(() => {
-    const ws = new WebSocket(ALTIS_WS_URL);
-    altisWsRef.current = ws;
-    setAltisStatus('connecting');
+    // HTTPS ortamında ws:// şifresiz soket çağrısı tarayıcı tarafından SecurityError fırlatır.
+    // Bunu yakalayıp sayfayı düşürmesini engelliyoruz.
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      setAltisStatus('error');
+      return;
+    }
 
-    ws.onopen = () => setAltisStatus('connected');
-    ws.onerror = () => setAltisStatus('error');
-    ws.onclose = () => setAltisStatus('error');
+    try {
+      const ws = new WebSocket(ALTIS_WS_URL);
+      altisWsRef.current = ws;
+      setAltisStatus('connecting');
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data as string);
-        if (!Array.isArray(data)) return;
-        setAltisData(prev => {
-          const next = { ...prev };
-          data.forEach(item => {
-            if (!item.Code || item.Bid == null || item.Ask == null) return;
-            const bid = parsePriceNumber(item.Bid);
-            const ask = parsePriceNumber(item.Ask);
-            if (bid <= 0 && ask <= 0) return;
+      ws.onopen = () => setAltisStatus('connected');
+      ws.onerror = () => setAltisStatus('error');
+      ws.onclose = () => setAltisStatus('error');
 
-            const prevItem = prev[item.Code];
-            let dir: 'up' | 'down' | 'none' = prevItem?.dir ?? 'none';
-            if (prevItem) {
-              if (ask > prevItem.ask) dir = 'up';
-              else if (ask < prevItem.ask) dir = 'down';
-            }
-            next[item.Code] = { code: item.Code, bid, ask, dir };
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data as string);
+          if (!Array.isArray(data)) return;
+          setAltisData(prev => {
+            const next = { ...prev };
+            data.forEach(item => {
+              if (!item.Code || item.Bid == null || item.Ask == null) return;
+              const bid = parsePriceNumber(item.Bid);
+              const ask = parsePriceNumber(item.Ask);
+              if (bid <= 0 && ask <= 0) return;
+
+              const prevItem = prev[item.Code];
+              let dir: 'up' | 'down' | 'none' = prevItem?.dir ?? 'none';
+              if (prevItem) {
+                if (ask > prevItem.ask) dir = 'up';
+                else if (ask < prevItem.ask) dir = 'down';
+              }
+              next[item.Code] = { code: item.Code, bid, ask, dir };
+            });
+            return next;
           });
-          return next;
-        });
-      } catch (e) { console.error('[Altis]', e); }
-    };
+        } catch (e) { console.error('[Altis]', e); }
+      };
 
-    return () => { ws.onclose = null; ws.close(); };
+      return () => { ws.onclose = null; ws.close(); };
+    } catch (e) {
+      console.warn('[Altis WS HTTPS Skipped]', e);
+      setAltisStatus('error');
+    }
   }, []);
 
   // ─── Harem Altın Socket.io ─────────────────────────────────────────────
