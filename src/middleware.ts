@@ -2,16 +2,25 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ROUTES } from '@/constants/routes';
 
-const PUBLIC_ROUTES: string[] = [ROUTES.LOGIN];
+const PUBLIC_ROUTES: string[] = [
+  ROUTES.LOGIN,
+  '/login',
+  '/showcase',
+  '/price-check',
+  '/manifest.webmanifest',
+  '/manifest.json',
+  '/sw.js',
+];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Static dosyalar, API auth ve Login sayfasına doğrudan izin ver
+  // Static dosyalar, API auth ve Public sayfalara doğrudan izin ver
   if (
     PUBLIC_ROUTES.includes(pathname) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/icons/') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();
@@ -26,7 +35,8 @@ export function middleware(req: NextRequest) {
 
   // Giriş yapılmamışsa login sayfasına yönlendir
   if (!token) {
-    return NextResponse.redirect(new URL(ROUTES.LOGIN, req.url));
+    const loginUrl = new URL(ROUTES.LOGIN, req.nextUrl.origin);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
