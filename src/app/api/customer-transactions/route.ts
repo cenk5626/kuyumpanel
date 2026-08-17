@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { logActivity } from '@/lib/logger';
+import {
+  CUSTOMER_TRANSACTION_TYPES,
+  ASSET_TYPES,
+  calculateHasEquivalent,
+} from '@/constants/cari';
+import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
 
 /**
  * GET /api/customer-transactions?customerId=... — Müşteriye ait veresiye ekstresini döner
@@ -66,64 +72,78 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'İşlem miktarı sıfırdan büyük olmalıdır.' }, { status: 400 });
     }
 
+    const validTypes = Object.values(CUSTOMER_TRANSACTION_TYPES);
+    const normalizedType = type.toUpperCase();
+    if (!validTypes.includes(normalizedType as any)) {
+      return NextResponse.json({ error: `Geçersiz işlem türü: ${type}` }, { status: 400 });
+    }
+
+    const normalizedAsset = assetType.toUpperCase();
+    const numPrice = unitPrice != null && !isNaN(parseFloat(unitPrice)) ? parseFloat(unitPrice) : null;
+
+    const currentUserRole = (session.user as any).role;
     const currentUserDealerId = (session.user as any).dealerId || 'merkez';
     const userEmail = session.user?.email;
     const userName = session.user?.name;
 
     // Müşteriyi kontrol et
-    const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+      include: { transactions: true },
+    });
+
     if (!customer) {
       return NextResponse.json({ error: 'Müşteri bulunamadı.' }, { status: 404 });
     }
 
-    // Has Altın Karşılığının Otomatik Hesaplanması
-    let calculatedHasEq = parseFloat(hasEquivalent) || 0;
-    const numPrice = parseFloat(unitPrice) || 0;
-
-    if (calculatedHasEq <= 0) {
-      if (assetType === 'TL' && numPrice > 0) {
-        // 10.000 TL borç verildiğinde: 10.000 / HasFiyatı = Has Altın Karşılığı
-        calculatedHasEq = numAmount / numPrice;
-      } else if (assetType === 'HAS') {
-        calculatedHasEq = numAmount;
-      } else if (assetType === '22K' || assetType === '22_AYAR') {
-        calculatedHasEq = numAmount * 0.916;
-      } else if (assetType === 'CEYREK') {
-        // Çeyrek Altın ~1.605 gr Has kabul edilir
-        calculatedHasEq = numAmount * 1.605;
-      } else if (assetType === 'YARIM') {
-        calculatedHasEq = numAmount * 3.21;
-      } else if (assetType === 'TAM') {
-        calculatedHasEq = numAmount * 6.42;
-      } else if (assetType === 'ATA') {
-        calculatedHasEq = numAmount * 6.60;
-      } else if (assetType === '14K' || assetType === '14_AYAR') {
-        calculatedHasEq = numAmount * 0.585;
-      }
+    if (currentUserRole !== 'SUPER_ADMIN' && customer.dealerId !== currentUserDealerId) {
+      return NextResponse.json({ error: 'Bu müşteri üzerinde işlem yapma yetkiniz yok.' }, { status: 403 });
     }
 
-    const tx = await prisma.customerTransaction.create({
-      data: {
-        customerId,
-        dealerId: currentUserDealerId,
-        type: type === 'BORC' ? 'BORC' : 'TAHSILAT',
-        assetType: assetType.toUpperCase(),
-        amount: numAmount,
-        hasEquivalent: calculatedHasEq,
-        unitPrice: numPrice || null,
-        description: description?.trim() || null,
-        employeeName: employeeName?.trim() || userName || null,
-      },
-      include: {
-        customer: {
-          select: { name: true },
+    // Has Altın Karşılığının Otomatik Hesaplanması (Sıfır Magic Number)
+    let calculatedHasEq = hasEquivalent != null && !isNaN(parseFloat(hasEquivalent)) && parseFloat(hasEquivalent) > 0
+      ? parseFloat(hasEquivalent)
+      : calculateHasEquivalent(normalizedAsset, numAmount, numPrice);
+
+    // İşlem kaydı ve Müşteri bakiye senkronizasyonunu transaction içinde yap
+    const result = await prisma.$transaction(async (txPrisma) => {
+      const tx = await txPrisma.customerTransaction.create({
+        data: {
+          customerId,
+          dealerId: currentUserDealerId,
+          type: normalizedType,
+          assetType: normalizedAsset,
+          amount: numAmount,
+          hasEquivalent: calculatedHasEq,
+          unitPrice: numPrice,
+          description: description?.trim() || null,
+          employeeName: employeeName?.trim() || userName || null,
         },
-      },
+        include: {
+          customer: {
+            select: { name: true },
+          },
+        },
+      });
+
+      // Güncel bakiyeleri tüm hareketlerden tekrar hesapla ve customer tablosuna yaz
+      const allCustomerTxs = [...customer.transactions, tx];
+      const { tlBalance, hasBalance } = calculateCustomerBalancesFromTransactions(allCustomerTxs);
+
+      await txPrisma.customer.update({
+        where: { id: customerId },
+        data: {
+          tlBalance,
+          hasBalance,
+        },
+      });
+
+      return tx;
     });
 
-    const isDebt = type === 'BORC';
+    const isDebt = normalizedType === CUSTOMER_TRANSACTION_TYPES.BORC || normalizedType === CUSTOMER_TRANSACTION_TYPES.ODEME;
     const actionName = isDebt ? 'Müşteri Borç Verme' : 'Müşteri Tahsilat Alma';
-    const detailsText = `${customer.name} kişisine ${isDebt ? 'borç yazıldı' : 'tahsilat alındı'}: ${numAmount} ${assetType}` + 
+    const detailsText = `${customer.name} kişisine ${isDebt ? 'borç yazıldı' : 'tahsilat alındı'}: ${numAmount} ${normalizedAsset}` +
       (calculatedHasEq > 0 ? ` (${calculatedHasEq.toFixed(3)} gr Has)` : '') +
       (description ? ` - Not: ${description}` : '');
 
@@ -136,7 +156,7 @@ export async function POST(req: NextRequest) {
       userName,
     });
 
-    return NextResponse.json(tx, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error('[API CustomerTransactions] POST Error:', error);
     return NextResponse.json({ error: 'Müşteri işlem kaydı oluşturulamadı.' }, { status: 500 });

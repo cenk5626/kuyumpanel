@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { logActivity } from '@/lib/logger';
+import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
 
 /**
  * GET /api/customers — Bayiye ait müşterileri bakiyeleri ile listeler.
@@ -29,29 +30,9 @@ export async function GET(req: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
-    // Her müşteri için öz bakiye özetlerini hesapla
-    const formatted = customers.map(c => {
-      let tlBalance = 0;
-      let usdBalance = 0;
-      let eurBalance = 0;
-      let totalHasEquivalent = 0;
-
-      c.transactions.forEach(tx => {
-        const isDebt = tx.type === 'BORC'; // Müşteriye borç verildi (Alacağımız var)
-        const sign = isDebt ? 1 : -1;
-
-        // Has karşılığı toplamı (Altın & TL veresiye durumundaki Has karşılığı)
-        totalHasEquivalent += (tx.hasEquivalent || 0) * sign;
-
-        // Varlığına göre öz miktar hesabı
-        if (tx.assetType === 'TL') {
-          tlBalance += tx.amount * sign;
-        } else if (tx.assetType === 'USD') {
-          usdBalance += tx.amount * sign;
-        } else if (tx.assetType === 'EUR') {
-          eurBalance += tx.amount * sign;
-        }
-      });
+    // Her müşteri için öz bakiye özetlerini cari motoruyla hesapla
+    const formatted = customers.map((c) => {
+      const balances = calculateCustomerBalancesFromTransactions(c.transactions);
 
       return {
         id: c.id,
@@ -62,12 +43,13 @@ export async function GET(req: NextRequest) {
         address: c.address,
         note: c.note,
         dealerId: c.dealerId,
-        tlBalance,
-        usdBalance,
-        eurBalance,
-        totalHasEquivalent,
+        tlBalance: balances.tlBalance,
+        usdBalance: balances.usdBalance,
+        eurBalance: balances.eurBalance,
+        hasBalance: balances.hasBalance,
+        totalHasEquivalent: balances.totalHasEquivalent,
         transactionCount: c.transactions.length,
-        createdAt: c.createdAt,
+        createdAt: c.createdAt.toISOString(),
       };
     });
 

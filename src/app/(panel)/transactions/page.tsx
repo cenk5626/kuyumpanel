@@ -21,13 +21,19 @@ import {
   Keyboard,
   ChevronRight,
   Barcode,
-  Camera
+  Camera,
+  MessageSquare,
+  Send
 } from 'lucide-react';
+import Link from 'next/link';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { THEME, ANIM } from '@/constants/theme';
+import { PAYMENT_METHODS } from '@/constants/kasa';
 import HeaderActions from '@/components/HeaderActions';
 import CameraScannerModal from '@/components/CameraScannerModal';
+import { generateWhatsAppReceiptUrl } from '@/lib/whatsapp';
+
 
 // ─── Sabitler ─────────────────────────────────────────────────────────────────
 
@@ -379,6 +385,15 @@ export default function TransactionsPage() {
       return;
     }
     setSubmitting(true);
+    const normalizedPaymentMethod =
+      paymentMethod === 'card'
+        ? PAYMENT_METHODS.CARD
+        : paymentMethod === 'bank'
+        ? PAYMENT_METHODS.BANK
+        : PAYMENT_METHODS.CASH;
+
+    const feePercentNum = paymentMethod === 'card' ? (parseFloat(cardFeePercent) || null) : null;
+
     try {
       const res = await fetch(ROUTES.API_TRANSACTIONS, {
         method: 'POST',
@@ -390,6 +405,9 @@ export default function TransactionsPage() {
           quantity: item.quantity,
           price: item.price,
           total: item.total,
+          paymentMethod: normalizedPaymentMethod,
+          cardFeePercent: feePercentNum,
+          orderNote: orderNote.trim() || null,
           employeeName: activePersonnel || null,
         }))),
       });
@@ -423,6 +441,36 @@ export default function TransactionsPage() {
     if (basket.length === 0) return;
     showToast('Bilgi fişi yazdırılmıştır.', 'success', 2000);
   };
+
+  // WhatsApp Fiş Gönder tetikleyicisi
+  const handleSendWhatsAppReceipt = (phone?: string) => {
+    const validItems = basket.filter(item => item.productCode !== '');
+    if (validItems.length === 0) {
+      showToast('Sepette ürün bulunmuyor!', 'error');
+      return;
+    }
+    const receiptItems = validItems.map(item => {
+      const prodOption = PRODUCT_OPTIONS.find(p => p.code === item.productCode);
+      const title = item.barcodeDetail?.title || prodOption?.label || item.productCode;
+      return {
+        title,
+        carat: item.barcodeDetail?.carat || (item.productCode.includes('22') ? 22 : item.productCode.includes('14') ? 14 : item.productCode.includes('24') ? 24 : undefined),
+        weight: item.barcodeDetail?.weight,
+        priceTL: item.total,
+        quantity: item.quantity,
+      };
+    });
+    const url = generateWhatsAppReceiptUrl({
+      phone: phone || null,
+      customerName: orderNote.trim() || 'Değerli Müşterimiz',
+      items: receiptItems,
+      totalTL: basketTotal,
+      paymentMethod: paymentMethod === 'card' ? 'Kredi Kartı' : paymentMethod === 'bank' ? 'Banka Havalesi' : 'Nakit',
+      employeeName: activePersonnel || loggedInAdminName,
+    });
+    window.open(url, '_blank');
+  };
+
 
   // Has fiyatını al
   const getHasPrice = (type: 'buy' | 'sell') => {
@@ -645,10 +693,13 @@ export default function TransactionsPage() {
           </div>
 
           {/* Kasa Butonu */}
-          <button className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors">
+          <Link
+            href={ROUTES.Z_REPORT}
+            className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+          >
             <Building size={14} />
             Kasa
-          </button>
+          </Link>
 
           {/* Yeni Satır Ekle Butonu */}
           <button
@@ -1020,7 +1071,17 @@ export default function TransactionsPage() {
                   Fiş Yazdır
                 </button>
 
-                {/* 2. Bilgi Fişi (Turquoise) */}
+                {/* 2. WhatsApp Fiş Gönder (Emerald) */}
+                <button
+                  onClick={() => handleSendWhatsAppReceipt()}
+                  disabled={basket.length === 0}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                >
+                  <Send size={16} />
+                  {MESSAGES.WA_SEND_RECEIPT}
+                </button>
+
+                {/* 3. Bilgi Fişi (Turquoise) */}
                 <button
                   onClick={handlePrintInfo}
                   disabled={basket.length === 0}
@@ -1030,6 +1091,7 @@ export default function TransactionsPage() {
                   Bilgi Fişi
                 </button>
               </div>
+
             </div>
           </div>
         </div>

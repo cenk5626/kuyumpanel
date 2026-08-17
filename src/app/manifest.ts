@@ -1,0 +1,41 @@
+import type { MetadataRoute } from 'next';
+import { MESSAGES } from '@/constants/messages';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'KuyumPanel Enterprise',
+    short_name: MESSAGES.APP_NAME,
+    description: MESSAGES.APP_SUBTITLE,
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#030712',
+    theme_color: '#eab308',
+    orientation: 'any',
+    icons: [
+      {
+        src: '/icons/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icons/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icons/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/icons/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+    ],
+  };
+}

@@ -5,6 +5,7 @@ import { USER_ROLES } from '@/constants/roles';
 
 export default async function DashboardPage() {
   const session = await auth();
+  const dealerId = (session?.user as any)?.dealerId || 'merkez';
 
   const [
     totalUsers,
@@ -14,7 +15,8 @@ export default async function DashboardPage() {
     suppliers,
     supplierAgg,
     recentTransactions,
-    hasPrice
+    hasPrice,
+    dealerStocks
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({
@@ -35,13 +37,19 @@ export default async function DashboardPage() {
       _sum: { hasBalance: true, tlBalance: true },
     }),
     prisma.transaction.findMany({
+      where: { dealerId },
       orderBy: { createdAt: 'desc' },
       take: 6,
     }),
     prisma.hasPrice.findUnique({
       where: { id: 'singleton' },
     }),
+    prisma.stock.findMany({
+      where: { dealerId },
+    }),
   ]);
+
+  const criticalStocks = dealerStocks.filter(s => s.amount <= (s.minThreshold || 5));
 
   return (
     <DashboardClient
@@ -70,6 +78,14 @@ export default async function DashboardPage() {
         createdAt: tx.createdAt.toISOString(),
       }))}
       hasPrice={hasPrice ? { bid: hasPrice.bid, ask: hasPrice.ask } : null}
+      criticalStockCount={criticalStocks.length}
+      criticalStockItems={criticalStocks.map(s => ({
+        id: s.id,
+        label: s.label,
+        amount: s.amount,
+        minThreshold: s.minThreshold || 5,
+      }))}
     />
   );
 }
+

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History, Building } from 'lucide-react';
 import { MENU_ITEMS } from '@/constants/menu';
 import { MESSAGES } from '@/constants/messages';
 import { THEME } from '@/constants/theme';
@@ -20,6 +20,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; size?: n
   Truck,
   ScanBarcode,
   UserCheck,
+  Building,
   History,
 };
 
@@ -30,12 +31,12 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
   const role = (session?.user as any)?.role;
   const userPermissionsRaw = (session?.user as any)?.permissions;
 
-  let allowedPermissions: string[] = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'logs', 'price-check', 'users'];
+  let allowedPermissions: string[] = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'z-report', 'logs', 'price-check', 'users'];
   if (role !== 'SUPER_ADMIN' && userPermissionsRaw) {
     try {
       allowedPermissions = typeof userPermissionsRaw === 'string' ? JSON.parse(userPermissionsRaw) : userPermissionsRaw;
     } catch (e) {
-      allowedPermissions = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'logs', 'price-check', 'users'];
+      allowedPermissions = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'z-report', 'logs', 'price-check', 'users'];
     }
   }
 

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
 import CustomersClient from './CustomersClient';
 
 export default async function CustomersPage() {
@@ -26,27 +27,9 @@ export default async function CustomersPage() {
     orderBy: { name: 'asc' },
   });
 
-  // Bakiyeleri hesapla ve serialize et
-  const serializedCustomers = dbCustomers.map(c => {
-    let tlBalance = 0;
-    let usdBalance = 0;
-    let eurBalance = 0;
-    let totalHasEquivalent = 0;
-
-    c.transactions.forEach(tx => {
-      const isDebt = tx.type === 'BORC';
-      const sign = isDebt ? 1 : -1;
-
-      totalHasEquivalent += (tx.hasEquivalent || 0) * sign;
-
-      if (tx.assetType === 'TL') {
-        tlBalance += tx.amount * sign;
-      } else if (tx.assetType === 'USD') {
-        usdBalance += tx.amount * sign;
-      } else if (tx.assetType === 'EUR') {
-        eurBalance += tx.amount * sign;
-      }
-    });
+  // Bakiyeleri cari motoru ile hesapla ve serialize et
+  const serializedCustomers = dbCustomers.map((c) => {
+    const balances = calculateCustomerBalancesFromTransactions(c.transactions);
 
     return {
       id: c.id,
@@ -57,10 +40,11 @@ export default async function CustomersPage() {
       address: c.address,
       note: c.note,
       dealerId: c.dealerId,
-      tlBalance,
-      usdBalance,
-      eurBalance,
-      totalHasEquivalent,
+      tlBalance: balances.tlBalance,
+      usdBalance: balances.usdBalance,
+      eurBalance: balances.eurBalance,
+      hasBalance: balances.hasBalance,
+      totalHasEquivalent: balances.totalHasEquivalent,
       transactionCount: c.transactions.length,
       createdAt: c.createdAt.toISOString(),
     };
@@ -68,9 +52,9 @@ export default async function CustomersPage() {
 
   // Canlı Has ve döviz fiyatlarını al
   const livePrices = await prisma.livePrice.findMany();
-  const liveHasPrice = livePrices.find(p => p.id === 'GAUTRY')?.ask || 3000;
-  const liveUsdPrice = livePrices.find(p => p.id === 'USDTRY')?.ask || 35;
-  const liveEurPrice = livePrices.find(p => p.id === 'EURTRY')?.ask || 38;
+  const liveHasPrice = livePrices.find((p) => p.id === 'GAUTRY')?.ask || 3000;
+  const liveUsdPrice = livePrices.find((p) => p.id === 'USDTRY')?.ask || 35;
+  const liveEurPrice = livePrices.find((p) => p.id === 'EURTRY')?.ask || 38;
 
   return (
     <CustomersClient

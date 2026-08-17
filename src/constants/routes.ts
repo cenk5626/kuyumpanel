@@ -10,9 +10,13 @@ export const ROUTES = {
   PRICE_CHECK: '/price-check',
   CUSTOMERS: '/customers',
   LOGS: '/logs',
+  SHOWCASE: '/showcase',
+  Z_REPORT: '/z-report',
   API_AUTH: '/api/auth',
   API_USERS: '/api/users',
   API_STOCKS: '/api/stocks',
+  API_STOCKS_ANALYTICS: '/api/stocks/analytics',
+  API_STOCKS_REORDER: '/api/stocks/reorder',
   API_TRANSACTIONS: '/api/transactions',
   API_SUPPLIERS: '/api/suppliers',
   API_SUPPLIER_TRANSACTIONS: '/api/supplier-transactions',
@@ -21,4 +25,9 @@ export const ROUTES = {
   API_LOGS: '/api/logs',
   API_PRICES_LIVE: '/api/prices/live',
   API_DEALERS: '/api/dealers',
+  API_Z_REPORT: '/api/z-report',
+  API_Z_REPORT_SESSION: '/api/z-report/session',
+  API_Z_REPORT_SUMMARY: '/api/z-report/summary',
+  API_Z_REPORT_PRINT: '/api/z-report/print',
 } as const;
+

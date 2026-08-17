@@ -4,11 +4,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ScanBarcode, Camera, Sparkles, Shield, Clock,
-  DollarSign, Euro, Gem, Weight, Hash, Tag, CircleDot
+  DollarSign, Euro, Gem, Weight, Hash, Tag, CircleDot,
+  Send, MessageCircle
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { THEME } from '@/constants/theme';
+import { MESSAGES } from '@/constants/messages';
 import CameraScannerModal from '@/components/CameraScannerModal';
+import { generateWhatsAppQuoteUrl } from '@/lib/whatsapp';
+
 
 /* ── Sabitler ── */
 const PRICE_REFRESH_INTERVAL_MS = 10_000;
@@ -378,13 +382,39 @@ export default function PriceCheckClient() {
                     </div>
                   </div>
 
+                  {/* ── WHATSAPP FİYAT TEKLİFİ PAYLAŞ BUTONU ── */}
+                  <div className="mt-5">
+                    <button
+                      onClick={() => {
+                        const sellingPrice = calcSellingPrice(product);
+                        const title = [product.category, product.subType, product.subSubType].filter(Boolean).join(' ') || product.title || 'Altın Takı';
+                        const url = generateWhatsAppQuoteUrl({
+                          productTitle: title,
+                          barcode: product.barcode,
+                          carat: product.carat,
+                          weight: product.weight,
+                          sellingPriceTL: sellingPrice,
+                          hasPrice,
+                          usdEquivalent: usdTry > 0 ? sellingPrice / usdTry : undefined,
+                          eurEquivalent: eurTry > 0 ? sellingPrice / eurTry : undefined,
+                        });
+                        window.open(url, '_blank');
+                      }}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.99]"
+                    >
+                      <Send size={16} />
+                      {MESSAGES.WA_SEND_QUOTE}
+                    </button>
+                  </div>
+
                   {/* Güven Notu */}
-                  <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-gray-600">
+                  <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-gray-600">
                     <Shield size={12} className="text-yellow-600" />
                     <span>Fiyatlar canlı altın piyasası verilerine göre anlık hesaplanmaktadır.</span>
                   </div>
                 </div>
               </div>
+
             </motion.div>
           )}
         </AnimatePresence>

@@ -6,7 +6,9 @@
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npx tsx tests/run-all-tests.ts",
+    "test:e2e": "npx tsx tests/run-all-tests.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

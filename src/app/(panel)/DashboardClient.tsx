@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
@@ -22,12 +23,14 @@ import {
   Scale, 
   CreditCard,
   Layers,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { THEME, ANIM } from '@/constants/theme';
 import HeaderActions from '@/components/HeaderActions';
+import ReorderDraftModal from '@/components/ReorderDraftModal';
 
 interface SupplierItem {
   id: string;
@@ -59,6 +62,8 @@ interface DashboardProps {
   totalSupplierTlBalance: number;
   recentTransactions: RecentTransactionItem[];
   hasPrice: { bid: number; ask: number } | null;
+  criticalStockCount?: number;
+  criticalStockItems?: Array<{ id: string; label: string; amount: number; minThreshold: number }>;
 }
 
 export default function DashboardClient({
@@ -72,7 +77,11 @@ export default function DashboardClient({
   totalSupplierTlBalance,
   recentTransactions,
   hasPrice,
+  criticalStockCount = 0,
+  criticalStockItems = [],
 }: DashboardProps) {
+  const [showReorderModal, setShowReorderModal] = useState(false);
+
   // Hızlı Erişim Butonları
   const quickActions = [
     {
@@ -198,6 +207,47 @@ export default function DashboardClient({
             ))}
           </div>
         </div>
+
+        {/* KRİTİK STOK UYARISI BİLDİRİM BANNERI */}
+        {criticalStockCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-5 rounded-2xl bg-gradient-to-r from-red-950/80 via-red-900/40 to-amber-950/40 border border-red-500/40 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30 shrink-0 animate-pulse">
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-white">{MESSAGES.STOCK_CRITICAL_ALERT}</h3>
+                  <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-bold text-xs rounded-full">
+                    {criticalStockCount} Ürün
+                  </span>
+                </div>
+                <p className="text-xs text-gray-300 mt-0.5">
+                  Minimum emniyet seviyesinin altına düşen sarrafiye veya altın ürünleri için toptancı ikmal siparişi oluşturulmalıdır.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+              <button
+                onClick={() => setShowReorderModal(true)}
+                className="flex-1 sm:flex-none px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-yellow-500/10"
+              >
+                <Truck size={15} /> Sipariş Taslağı Oluştur
+              </button>
+              <Link
+                href={ROUTES.STOCKS}
+                className="flex-1 sm:flex-none px-3.5 py-2.5 bg-gray-900/80 hover:bg-gray-800 text-gray-300 hover:text-white font-bold text-xs rounded-xl border border-gray-700 text-center transition-colors"
+              >
+                Stokları İncele
+              </Link>
+            </div>
+          </motion.div>
+        )}
 
         {/* METRİK VE ÖZET KARTLARI */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -411,6 +461,13 @@ export default function DashboardClient({
           </motion.div>
         </div>
       </div>
+
+      {/* SİPARİŞ TASLAĞI (REORDER DRAFT) MODALI */}
+      <ReorderDraftModal
+        isOpen={showReorderModal}
+        onClose={() => setShowReorderModal(false)}
+        hasGoldPrice={hasPrice?.ask || 3000}
+      />
     </>
   );
 }

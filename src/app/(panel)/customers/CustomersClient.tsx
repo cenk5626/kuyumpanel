@@ -1,14 +1,50 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, UserPlus, Pencil, Trash2, X, Plus, CreditCard, ArrowUpRight, ArrowDownLeft,
-  DollarSign, Euro, Scale, Phone, Mail, FileText, MapPin, Search, Printer, FileSpreadsheet, ShieldAlert
+  Users,
+  UserPlus,
+  Pencil,
+  Trash2,
+  X,
+  Plus,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownLeft,
+  DollarSign,
+  Euro,
+  Scale,
+  Phone,
+  Mail,
+  FileText,
+  MapPin,
+  Search,
+  Printer,
+  Calendar,
+  Sparkles,
+  TrendingUp,
+  Share2,
+  Coins,
 } from 'lucide-react';
-import { THEME, ANIM } from '@/constants/theme';
+import { THEME } from '@/constants/theme';
 import { ROUTES } from '@/constants/routes';
 import HeaderActions from '@/components/HeaderActions';
+import {
+  CUSTOMER_TRANSACTION_TYPES,
+  ASSET_TYPES,
+  type AssetType,
+  GOLD_FINENESS_RATES,
+  ZIYNET_WEIGHTS,
+  calculateHasEquivalent,
+} from '@/constants/cari';
+import {
+  formatCurrency,
+  formatGoldGram,
+  buildWhatsAppStatementUrl,
+  CustomerStatementRow,
+  CustomerBalanceSummary,
+} from '@/lib/cari';
 
 interface Customer {
   id: string;
@@ -22,29 +58,31 @@ interface Customer {
   tlBalance: number;
   usdBalance: number;
   eurBalance: number;
+  hasBalance?: number;
   totalHasEquivalent: number;
   transactionCount: number;
   createdAt: string;
 }
 
-interface CustomerTx {
-  id: string;
-  customerId: string;
-  type: string; // "BORC" | "TAHSILAT"
-  assetType: string; // "TL", "USD", "EUR", "HAS", "22K", "CEYREK", etc.
-  amount: number;
-  hasEquivalent: number;
-  unitPrice: number | null;
-  description: string | null;
-  employeeName: string | null;
-  createdAt: string;
-}
-
-interface LivePrice {
-  id: string;
-  label: string;
-  bid: number;
-  ask: number;
+interface StatementApiResponse {
+  customer: {
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    tcNo: string | null;
+    address: string | null;
+    note: string | null;
+    dealerId: string;
+    createdAt: string;
+  };
+  summary: CustomerBalanceSummary & { usdRate?: number; eurRate?: number };
+  openingBalance: {
+    tl: number;
+    has: number;
+  };
+  rows: CustomerStatementRow[];
+  spotRate: number;
 }
 
 interface CustomersClientProps {
@@ -54,15 +92,37 @@ interface CustomersClientProps {
   liveEurPrice: number;
 }
 
-const ASSET_TYPES = [
-  { id: 'TL', label: 'Türk Lirası (₺)', category: 'TL' },
-  { id: 'USD', label: 'Amerikan Doları ($)', category: 'DOVIZ' },
-  { id: 'EUR', label: 'Euro (€)', category: 'DOVIZ' },
-  { id: 'HAS', label: 'Has Altın (24K / gr)', category: 'ALTIN' },
-  { id: '22K', label: '22 Ayar Gram / Bilezik', category: 'ALTIN' },
-  { id: 'CEYREK', label: 'Çeyrek Altın (Adet)', category: 'ALTIN' },
-  { id: 'YARIM', label: 'Yarım Altın (Adet)', category: 'ALTIN' },
-  { id: 'TAM', label: 'Tam Altın (Adet)', category: 'ALTIN' },
+// Varlık Kategori Tanımlamaları
+const ASSET_CATEGORIES = [
+  { id: 'TL', label: 'Türk Lirası (₺)', icon: '₺' },
+  { id: 'ALTIN_AYAR', label: 'Altın Ayar (Gram)', icon: '⚖️' },
+  { id: 'ZIYNET', label: 'Ziynet Altın (Adet)', icon: '🪙' },
+  { id: 'DOVIZ', label: 'Döviz ($ / €)', icon: '💵' },
+] as const;
+
+// Altın Ayarları
+const GOLD_CARAT_OPTIONS = [
+  { id: ASSET_TYPES.HAS, label: 'Has Altın (24K / 0.995+)', milyem: 1.000, suffix: 'gr' },
+  { id: ASSET_TYPES.K24, label: '24 Ayar Altın (0.995)', milyem: 0.995, suffix: 'gr' },
+  { id: ASSET_TYPES.K22, label: '22 Ayar Bilezik/Gram (0.916)', milyem: 0.916, suffix: 'gr' },
+  { id: ASSET_TYPES.K18, label: '18 Ayar Altın (0.750)', milyem: 0.750, suffix: 'gr' },
+  { id: ASSET_TYPES.K14, label: '14 Ayar Altın (0.585)', milyem: 0.585, suffix: 'gr' },
+  { id: ASSET_TYPES.K8, label: '8 Ayar Altın (0.333)', milyem: 0.333, suffix: 'gr' },
+];
+
+// Ziynet Altın Çeşitleri
+const ZIYNET_OPTIONS = [
+  { id: ASSET_TYPES.CEYREK, label: 'Çeyrek Altın', hasWeight: ZIYNET_WEIGHTS.CEYREK, suffix: 'Adet' },
+  { id: ASSET_TYPES.YARIM, label: 'Yarım Altın', hasWeight: ZIYNET_WEIGHTS.YARIM, suffix: 'Adet' },
+  { id: ASSET_TYPES.TAM, label: 'Tam (Ziynet) Altın', hasWeight: ZIYNET_WEIGHTS.TAM, suffix: 'Adet' },
+  { id: ASSET_TYPES.ATA, label: 'Ata Lira (Cumhuriyet)', hasWeight: ZIYNET_WEIGHTS.ATA, suffix: 'Adet' },
+  { id: ASSET_TYPES.GREMSE, label: 'Gremse (2.5\'luk)', hasWeight: ZIYNET_WEIGHTS.GREMSE, suffix: 'Adet' },
+];
+
+// Döviz Çeşitleri
+const FX_OPTIONS = [
+  { id: ASSET_TYPES.USD, label: 'Amerikan Doları ($)', symbol: '$' },
+  { id: ASSET_TYPES.EUR, label: 'Euro (€)', symbol: '€' },
 ];
 
 export default function CustomersClient({
@@ -96,9 +156,10 @@ export default function CustomersClient({
   // Borç / Tahsilat İşlem Modalı State
   const [showTxModal, setShowTxModal] = useState(false);
   const [selectedCustomerForTx, setSelectedCustomerForTx] = useState<Customer | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'TL' | 'ALTIN_AYAR' | 'ZIYNET' | 'DOVIZ'>('TL');
   const [txFormData, setTxFormData] = useState({
-    type: 'BORC' as 'BORC' | 'TAHSILAT',
-    assetType: 'TL',
+    type: CUSTOMER_TRANSACTION_TYPES.BORC as 'BORC' | 'TAHSILAT',
+    assetType: ASSET_TYPES.TL as string,
     amount: '',
     unitPrice: '',
     description: '',
@@ -107,23 +168,28 @@ export default function CustomersClient({
   // Ekstre (Detay) Modalı State
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [statementCustomer, setStatementCustomer] = useState<Customer | null>(null);
-  const [statementTxs, setStatementTxs] = useState<CustomerTx[]>([]);
+  const [statementData, setStatementData] = useState<StatementApiResponse | null>(null);
   const [loadingStatement, setLoadingStatement] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [quickDateFilter, setQuickDateFilter] = useState<'ALL' | 'TODAY' | 'WEEK' | 'MONTH'>('ALL');
 
   // Canlı fiyatları periyodik yenile
   const fetchLivePrices = useCallback(async () => {
     try {
       const res = await fetch(ROUTES.API_PRICES_LIVE);
       if (res.ok) {
-        const prices: LivePrice[] = await res.json();
-        const has = prices.find(p => p.id === 'GAUTRY')?.ask || 0;
-        const usd = prices.find(p => p.id === 'USDTRY')?.ask || 0;
-        const eur = prices.find(p => p.id === 'EURTRY')?.ask || 0;
+        const prices = await res.json();
+        const has = prices.find((p: any) => p.id === 'GAUTRY')?.ask || 0;
+        const usd = prices.find((p: any) => p.id === 'USDTRY')?.ask || 0;
+        const eur = prices.find((p: any) => p.id === 'EURTRY')?.ask || 0;
         if (has > 0) setHasPrice(has);
         if (usd > 0) setUsdPrice(usd);
         if (eur > 0) setEurPrice(eur);
       }
-    } catch { /* quiet */ }
+    } catch {
+      /* quiet */
+    }
   }, []);
 
   useEffect(() => {
@@ -139,7 +205,9 @@ export default function CustomersClient({
         const data = await res.json();
         setCustomers(data);
       }
-    } catch { /* quiet */ }
+    } catch {
+      /* quiet */
+    }
   };
 
   // Müşteri Formu Sıfırla
@@ -216,11 +284,12 @@ export default function CustomersClient({
   };
 
   // Borç / Tahsilat İşlem Modalı Aç
-  const openTxModal = (c: Customer, defaultType: 'BORC' | 'TAHSILAT' = 'BORC') => {
+  const openTxModal = (c: Customer, defaultType: 'BORC' | 'TAHSILAT' = CUSTOMER_TRANSACTION_TYPES.BORC) => {
     setSelectedCustomerForTx(c);
+    setSelectedCategory('TL');
     setTxFormData({
       type: defaultType,
-      assetType: 'TL',
+      assetType: ASSET_TYPES.TL,
       amount: '',
       unitPrice: hasPrice ? hasPrice.toFixed(2) : '',
       description: '',
@@ -228,6 +297,28 @@ export default function CustomersClient({
     setError(null);
     setShowTxModal(true);
   };
+
+  // Kategori değiştiğinde varsayılan assetType ayarla
+  const handleCategoryChange = (cat: 'TL' | 'ALTIN_AYAR' | 'ZIYNET' | 'DOVIZ') => {
+    setSelectedCategory(cat);
+    let defaultAsset: AssetType = ASSET_TYPES.TL;
+    if (cat === 'ALTIN_AYAR') defaultAsset = ASSET_TYPES.K22;
+    else if (cat === 'ZIYNET') defaultAsset = ASSET_TYPES.CEYREK;
+    else if (cat === 'DOVIZ') defaultAsset = ASSET_TYPES.USD;
+
+    setTxFormData((prev) => ({
+      ...prev,
+      assetType: defaultAsset,
+      unitPrice: cat === 'TL' ? (hasPrice ? hasPrice.toFixed(2) : '') : prev.unitPrice,
+    }));
+  };
+
+  // Has Karşılığı Otomatik Hesaplama (Önizleme)
+  const computedHasEquivalent = useMemo(() => {
+    const amt = parseFloat(txFormData.amount) || 0;
+    const pr = parseFloat(txFormData.unitPrice) || hasPrice;
+    return calculateHasEquivalent(txFormData.assetType, amt, pr);
+  }, [txFormData.assetType, txFormData.amount, txFormData.unitPrice, hasPrice]);
 
   // Borç / Tahsilat İşlemi Kaydet
   const handleTxSubmit = async (e: React.FormEvent) => {
@@ -246,6 +337,7 @@ export default function CustomersClient({
           type: txFormData.type,
           assetType: txFormData.assetType,
           amount: parseFloat(txFormData.amount),
+          hasEquivalent: computedHasEquivalent,
           unitPrice: parseFloat(txFormData.unitPrice) || hasPrice,
           description: txFormData.description,
         }),
@@ -262,7 +354,7 @@ export default function CustomersClient({
 
       // Eğer ekstre modalı açıksa ekstreyi de yenile
       if (statementCustomer?.id === selectedCustomerForTx.id) {
-        openStatementModal(selectedCustomerForTx);
+        fetchStatement(selectedCustomerForTx.id, startDate, endDate);
       }
     } catch {
       setError('Bağlantı hatası oluştu.');
@@ -271,23 +363,63 @@ export default function CustomersClient({
     }
   };
 
-  // Müşteri Ekstresi (Detay) Aç
-  const openStatementModal = async (c: Customer) => {
-    setStatementCustomer(c);
-    setShowStatementModal(true);
+  // Müşteri Ekstresi Getir
+  const fetchStatement = async (customerId: string, start?: string, end?: string) => {
     setLoadingStatement(true);
-
     try {
-      const res = await fetch(`${ROUTES.API_CUSTOMER_TRANSACTIONS}?customerId=${c.id}`);
+      let url = `/api/customers/${customerId}/statement?spotRate=${hasPrice}`;
+      if (start) url += `&startDate=${start}`;
+      if (end) url += `&endDate=${end}`;
+
+      const res = await fetch(url);
       if (res.ok) {
-        const txs: CustomerTx[] = await res.json();
-        setStatementTxs(txs);
+        const data: StatementApiResponse = await res.json();
+        setStatementData(data);
       }
-    } catch {
-      setStatementTxs([]);
+    } catch (err) {
+      console.error('Ekstre fetch hatası:', err);
     } finally {
       setLoadingStatement(false);
     }
+  };
+
+  // Müşteri Ekstresi (Detay) Aç
+  const openStatementModal = async (c: Customer) => {
+    setStatementCustomer(c);
+    setStartDate('');
+    setEndDate('');
+    setQuickDateFilter('ALL');
+    setShowStatementModal(true);
+    await fetchStatement(c.id);
+  };
+
+  // Hızlı Tarih Filtresi Seçimi
+  const handleQuickFilter = (type: 'ALL' | 'TODAY' | 'WEEK' | 'MONTH') => {
+    setQuickDateFilter(type);
+    if (!statementCustomer) return;
+
+    const now = new Date();
+    let start = '';
+    let end = now.toISOString().split('T')[0];
+
+    if (type === 'TODAY') {
+      start = end;
+    } else if (type === 'WEEK') {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      start = d.toISOString().split('T')[0];
+    } else if (type === 'MONTH') {
+      const d = new Date();
+      d.setDate(d.getDate() - 30);
+      start = d.toISOString().split('T')[0];
+    } else {
+      start = '';
+      end = '';
+    }
+
+    setStartDate(start);
+    setEndDate(end);
+    fetchStatement(statementCustomer.id, start, end);
   };
 
   // Ekstre Yazdır
@@ -295,39 +427,54 @@ export default function CustomersClient({
     window.print();
   };
 
+  // WhatsApp Paylaşım URL'i
+  const whatsappUrl = useMemo(() => {
+    if (!statementCustomer || !statementData) return '#';
+    const phone = statementCustomer.phone || '';
+    return buildWhatsAppStatementUrl(
+      phone,
+      statementCustomer.name,
+      statementData.summary,
+      statementData.rows
+    );
+  }, [statementCustomer, statementData]);
+
   // Filtrelenmiş Müşteriler
-  const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (c.phone && c.phone.includes(searchQuery)) ||
-    (c.tcNo && c.tcNo.includes(searchQuery))
+  const filteredCustomers = customers.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.phone && c.phone.includes(searchQuery)) ||
+      (c.tcNo && c.tcNo.includes(searchQuery))
   );
 
   // Toplam Alacak Özetleri (Tüm bayideki alacaklarımız)
   const totalTlDebt = customers.reduce((acc, c) => acc + c.tlBalance, 0);
   const totalUsdDebt = customers.reduce((acc, c) => acc + c.usdBalance, 0);
   const totalEurDebt = customers.reduce((acc, c) => acc + c.eurBalance, 0);
-  const totalHasDebt = customers.reduce((acc, c) => acc + c.totalHasEquivalent, 0);
-
-  const formatTL = (val: number) => val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const formatHas = (val: number) => val.toLocaleString('tr-TR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  const totalHasDebt = customers.reduce(
+    (acc, c) => acc + (c.hasBalance !== undefined ? c.hasBalance : c.totalHasEquivalent),
+    0
+  );
 
   return (
     <div className="space-y-6">
-
       {/* ── HEADER & TOPLAM ALACAK ÖZET KARTLARI ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <Users className="text-yellow-400" size={28} />
-            Müşteriler & Borç / Alacak (Veresiye) Takibi
+            Müşteriler & Has / Altın Cari & Veresiye Takibi
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            Müşteri rehberi, veresiye borçlandırma, TL/Döviz borçları ve Has Altın karşılıklı cari ekstreler.
+            Fiziki Gram Has Altın, Ziynet ve TL bazında çift bakiye, anlık altın değerlemesi ve detaylı yürüyen ekstreler.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { resetCustomerForm(); setShowCustomerModal(true); }}
+            onClick={() => {
+              resetCustomerForm();
+              setShowCustomerModal(true);
+            }}
             className={`${THEME.BTN_PRIMARY} gap-2 text-sm px-5 py-2.5`}
           >
             <UserPlus size={18} />
@@ -337,84 +484,117 @@ export default function CustomersClient({
         </div>
       </div>
 
-      {/* ÖZET KARTLARI */}
+      {/* ÖZET KARTLARI (Çift Bakiye & Portföy Değerlemesi) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Toplam Has Alacak */}
+        {/* Toplam Has Altın Alacak */}
         <div className={THEME.STAT_CARD}>
           <div className="flex justify-between items-start mb-2">
-            <span className={THEME.STAT_LABEL}>Toplam Has Alacak</span>
+            <div>
+              <span className={THEME.STAT_LABEL}>Toplam Has Altın Alacak</span>
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 mt-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-medium">
+                <Sparkles size={10} /> Canlı Spot: ₺{hasPrice.toLocaleString('tr-TR')}/gr
+              </span>
+            </div>
             <div className={THEME.STAT_ICON_WRAPPER}>
               <Scale size={20} />
             </div>
           </div>
           <div className="text-2xl font-bold text-yellow-400 font-mono">
-            {formatHas(totalHasDebt)} gr Has
+            {formatGoldGram(totalHasDebt)}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Canlı Değeri: ₺{formatTL(totalHasDebt * hasPrice)}
-          </p>
+          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
+            <span>Canlı TL Karşılığı:</span>
+            <span className="font-bold text-yellow-300 font-mono">
+              {formatCurrency(totalHasDebt * hasPrice, 'TL')}
+            </span>
+          </div>
         </div>
 
-        {/* Toplam TL Alacak */}
+        {/* Net TL Borç Bakiyesi */}
         <div className={THEME.STAT_CARD}>
           <div className="flex justify-between items-start mb-2">
-            <span className={THEME.STAT_LABEL}>Net TL Borç Bakiyesi</span>
-            <div className="p-3 bg-black/50 rounded-xl border border-emerald-900/30 text-emerald-400">
+            <div>
+              <span className={THEME.STAT_LABEL}>Net TL Borç Bakiyesi</span>
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 mt-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                <TrendingUp size={10} /> Müşteri Veresiyesi
+              </span>
+            </div>
+            <div className="p-3 bg-black/50 rounded-xl border border-emerald-900/30 text-emerald-400 font-bold">
               ₺
             </div>
           </div>
           <div className="text-2xl font-bold text-emerald-400 font-mono">
-            ₺{formatTL(totalTlDebt)}
+            {formatCurrency(totalTlDebt, 'TL')}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Has Karşılığı: ~{hasPrice > 0 ? formatHas(totalTlDebt / hasPrice) : '0.000'} gr
-          </p>
+          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
+            <span>Has Eşdeğeri:</span>
+            <span className="font-bold text-emerald-300 font-mono">
+              ~{hasPrice > 0 ? formatGoldGram(totalTlDebt / hasPrice) : '0,000 gr'}
+            </span>
+          </div>
         </div>
 
-        {/* Toplam Dolar Alacak */}
+        {/* Toplam Dolar Bakiyesi */}
         <div className={THEME.STAT_CARD}>
           <div className="flex justify-between items-start mb-2">
-            <span className={THEME.STAT_LABEL}>Net Dolar Bakiyesi</span>
+            <div>
+              <span className={THEME.STAT_LABEL}>Net Dolar Bakiyesi</span>
+              <span className="text-[11px] text-gray-500 block mt-0.5">USD/TRY: ₺{usdPrice.toFixed(2)}</span>
+            </div>
             <div className="p-3 bg-black/50 rounded-xl border border-green-900/30 text-green-400">
               <DollarSign size={20} />
             </div>
           </div>
           <div className="text-2xl font-bold text-green-400 font-mono">
-            ${formatTL(totalUsdDebt)}
+            {formatCurrency(totalUsdDebt, 'USD')}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            TL Karşılığı: ₺{formatTL(totalUsdDebt * usdPrice)}
-          </p>
+          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
+            <span>TL Karşılığı:</span>
+            <span className="font-bold text-green-300 font-mono">
+              {formatCurrency(totalUsdDebt * usdPrice, 'TL')}
+            </span>
+          </div>
         </div>
 
-        {/* Toplam Euro Alacak */}
+        {/* Toplam Euro Bakiyesi */}
         <div className={THEME.STAT_CARD}>
           <div className="flex justify-between items-start mb-2">
-            <span className={THEME.STAT_LABEL}>Net Euro Bakiyesi</span>
+            <div>
+              <span className={THEME.STAT_LABEL}>Net Euro Bakiyesi</span>
+              <span className="text-[11px] text-gray-500 block mt-0.5">EUR/TRY: ₺{eurPrice.toFixed(2)}</span>
+            </div>
             <div className="p-3 bg-black/50 rounded-xl border border-blue-900/30 text-blue-400">
               <Euro size={20} />
             </div>
           </div>
           <div className="text-2xl font-bold text-blue-400 font-mono">
-            €{formatTL(totalEurDebt)}
+            {formatCurrency(totalEurDebt, 'EUR')}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            TL Karşılığı: ₺{formatTL(totalEurDebt * eurPrice)}
-          </p>
+          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
+            <span>TL Karşılığı:</span>
+            <span className="font-bold text-blue-300 font-mono">
+              {formatCurrency(totalEurDebt * eurPrice, 'TL')}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* ── ARAMA VE MÜŞTERİ LİSTESİ ── */}
       <div className={`${THEME.GLASS_CARD} p-4`}>
-        <div className="relative max-w-md w-full mb-4">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Müşteri adı, telefon veya TC No ara..."
-            className={`${THEME.INPUT} pl-10 text-sm py-2`}
-          />
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-4">
+          <div className="relative max-w-md w-full">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Müşteri adı, telefon veya TC No ara..."
+              className={`${THEME.INPUT} pl-10 text-sm py-2`}
+            />
+          </div>
+          <span className="text-xs text-gray-400 font-mono self-end sm:self-center">
+            Toplam {filteredCustomers.length} müşteri listeleniyor
+          </span>
         </div>
 
         <div className={THEME.TABLE.WRAPPER}>
@@ -431,117 +611,148 @@ export default function CustomersClient({
             </thead>
             <tbody className={THEME.TABLE.TBODY}>
               {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((c, i) => (
-                  <motion.tr
-                    key={c.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    className={THEME.TABLE.TR}
-                  >
-                    {/* İsim & Not */}
-                    <td className={THEME.TABLE.TD}>
-                      <div>
+                filteredCustomers.map((c, i) => {
+                  const effectiveHas = c.hasBalance !== undefined ? c.hasBalance : c.totalHasEquivalent;
+                  return (
+                    <motion.tr
+                      key={c.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.02 }}
+                      className={THEME.TABLE.TR}
+                    >
+                      {/* İsim & Not */}
+                      <td className={THEME.TABLE.TD}>
+                        <div>
+                          <span
+                            onClick={() => openStatementModal(c)}
+                            className="font-bold text-white hover:text-yellow-400 cursor-pointer block text-sm"
+                          >
+                            {c.name}
+                          </span>
+                          {c.note && (
+                            <span className="text-[11px] text-gray-500 block truncate max-w-xs">{c.note}</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* İletişim */}
+                      <td className={THEME.TABLE.TD}>
+                        <div className="space-y-0.5 text-xs text-gray-400">
+                          {c.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone size={12} className="text-gray-500" /> {c.phone}
+                            </div>
+                          )}
+                          {c.tcNo && <div className="text-[10px] text-gray-500 font-mono">TC: {c.tcNo}</div>}
+                        </div>
+                      </td>
+
+                      {/* Has Altın Bakiyesi + Değerleme Rozeti */}
+                      <td className={THEME.TABLE.TD}>
+                        <div>
+                          <span
+                            className={`text-sm font-mono font-bold ${
+                              effectiveHas > 0
+                                ? 'text-yellow-400'
+                                : effectiveHas < 0
+                                ? 'text-emerald-400'
+                                : 'text-gray-400'
+                            }`}
+                          >
+                            {formatGoldGram(effectiveHas)}
+                          </span>
+                          {effectiveHas !== 0 && (
+                            <span className="text-[10px] text-yellow-300/70 block font-mono">
+                              ~{formatCurrency(effectiveHas * hasPrice, 'TL')}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* TL Bakiyesi */}
+                      <td className={THEME.TABLE.TD}>
                         <span
-                          onClick={() => openStatementModal(c)}
-                          className="font-bold text-white hover:text-yellow-400 cursor-pointer block text-sm"
+                          className={`text-sm font-mono font-bold ${
+                            c.tlBalance > 0
+                              ? 'text-red-400'
+                              : c.tlBalance < 0
+                              ? 'text-emerald-400'
+                              : 'text-gray-400'
+                          }`}
                         >
-                          {c.name}
+                          {formatCurrency(c.tlBalance, 'TL')}
                         </span>
-                        {c.note && <span className="text-[11px] text-gray-500 block truncate max-w-xs">{c.note}</span>}
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* İletişim */}
-                    <td className={THEME.TABLE.TD}>
-                      <div className="space-y-0.5 text-xs text-gray-400">
-                        {c.phone && <div className="flex items-center gap-1"><Phone size={12} className="text-gray-500" /> {c.phone}</div>}
-                        {c.tcNo && <div className="text-[10px] text-gray-500 font-mono">TC: {c.tcNo}</div>}
-                      </div>
-                    </td>
+                      {/* Döviz Bakiyeleri */}
+                      <td className={THEME.TABLE.TD}>
+                        <div className="flex flex-col text-xs font-mono gap-0.5">
+                          {c.usdBalance !== 0 && (
+                            <span className="text-green-400 font-bold">
+                              {formatCurrency(c.usdBalance, 'USD')}{' '}
+                              <span className="text-[10px] text-gray-500 font-normal">
+                                ({formatCurrency(c.usdBalance * usdPrice, 'TL')})
+                              </span>
+                            </span>
+                          )}
+                          {c.eurBalance !== 0 && (
+                            <span className="text-blue-400 font-bold">
+                              {formatCurrency(c.eurBalance, 'EUR')}{' '}
+                              <span className="text-[10px] text-gray-500 font-normal">
+                                ({formatCurrency(c.eurBalance * eurPrice, 'TL')})
+                              </span>
+                            </span>
+                          )}
+                          {c.usdBalance === 0 && c.eurBalance === 0 && <span className="text-gray-500">—</span>}
+                        </div>
+                      </td>
 
-                    {/* Has Altın Bakiyesi */}
-                    <td className={THEME.TABLE.TD}>
-                      <div>
-                        <span className={`text-sm font-mono font-bold ${c.totalHasEquivalent > 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
-                          {formatHas(c.totalHasEquivalent)} gr Has
-                        </span>
-                        {c.totalHasEquivalent > 0 && (
-                          <span className="text-[10px] text-gray-500 block">
-                            ~₺{formatTL(c.totalHasEquivalent * hasPrice)}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* TL Bakiyesi */}
-                    <td className={THEME.TABLE.TD}>
-                      <span className={`text-sm font-mono font-bold ${c.tlBalance > 0 ? 'text-red-400' : c.tlBalance < 0 ? 'text-emerald-400' : 'text-gray-400'}`}>
-                        {c.tlBalance !== 0 ? `₺${formatTL(c.tlBalance)}` : '₺0,00'}
-                      </span>
-                    </td>
-
-                    {/* Döviz Bakiyeleri */}
-                    <td className={THEME.TABLE.TD}>
-                      <div className="flex flex-col text-xs font-mono gap-0.5">
-                        {c.usdBalance !== 0 && (
-                          <span className="text-green-400 font-bold">
-                            ${formatTL(c.usdBalance)} <span className="text-[10px] text-gray-500 font-normal">(₺{formatTL(c.usdBalance * usdPrice)})</span>
-                          </span>
-                        )}
-                        {c.eurBalance !== 0 && (
-                          <span className="text-blue-400 font-bold">
-                            €{formatTL(c.eurBalance)} <span className="text-[10px] text-gray-500 font-normal">(₺{formatTL(c.eurBalance * eurPrice)})</span>
-                          </span>
-                        )}
-                        {c.usdBalance === 0 && c.eurBalance === 0 && <span className="text-gray-500">—</span>}
-                      </div>
-                    </td>
-
-                    {/* İşlem Düğmeleri */}
-                    <td className={THEME.TABLE.TD}>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => openTxModal(c, 'BORC')}
-                          className="px-2.5 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 rounded-lg text-xs font-semibold flex items-center gap-1"
-                          title="Borç Yaz"
-                        >
-                          <ArrowUpRight size={14} />
-                          Borç Yaz
-                        </button>
-                        <button
-                          onClick={() => openTxModal(c, 'TAHSILAT')}
-                          className="px-2.5 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 rounded-lg text-xs font-semibold flex items-center gap-1"
-                          title="Tahsilat Al"
-                        >
-                          <ArrowDownLeft size={14} />
-                          Tahsilat
-                        </button>
-                        <button
-                          onClick={() => openStatementModal(c)}
-                          className={THEME.BTN_ICON}
-                          title="Hesap Ekstresi"
-                        >
-                          <FileText size={16} />
-                        </button>
-                        <button
-                          onClick={() => openEditCustomer(c)}
-                          className={THEME.BTN_ICON}
-                          title="Düzenle"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleCustomerDelete(c)}
-                          className={THEME.BTN_DANGER}
-                          title="Sil"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
+                      {/* İşlem Düğmeleri */}
+                      <td className={THEME.TABLE.TD}>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => openTxModal(c, CUSTOMER_TRANSACTION_TYPES.BORC)}
+                            className="px-2.5 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+                            title="Borç Yaz (Veresiye)"
+                          >
+                            <ArrowUpRight size={14} />
+                            Borç Yaz
+                          </button>
+                          <button
+                            onClick={() => openTxModal(c, CUSTOMER_TRANSACTION_TYPES.TAHSILAT)}
+                            className="px-2.5 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+                            title="Tahsilat Al"
+                          >
+                            <ArrowDownLeft size={14} />
+                            Tahsilat
+                          </button>
+                          <button
+                            onClick={() => openStatementModal(c)}
+                            className={THEME.BTN_ICON}
+                            title="Hesap Ekstresi & Yürüyen Bakiye"
+                          >
+                            <FileText size={16} />
+                          </button>
+                          <button
+                            onClick={() => openEditCustomer(c)}
+                            className={THEME.BTN_ICON}
+                            title="Düzenle"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleCustomerDelete(c)}
+                            className={THEME.BTN_DANGER}
+                            title="Sil"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center text-gray-500">
@@ -667,7 +878,7 @@ export default function CustomersClient({
         )}
       </AnimatePresence>
 
-      {/* ─── BORÇ VERME / TAHSİLAT ALMA MODALI ─── */}
+      {/* ─── BORÇ VERME / TAHSİLAT ALMA MODALI (GELİŞMİŞ HAS & ZİYNET DÖNÜŞÜMÜ) ─── */}
       <AnimatePresence>
         {showTxModal && selectedCustomerForTx && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
@@ -675,7 +886,7 @@ export default function CustomersClient({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`${THEME.GLASS_CARD} w-full max-w-lg p-6`}
+              className={`${THEME.GLASS_CARD} w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto`}
             >
               <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
                 <div>
@@ -693,15 +904,15 @@ export default function CustomersClient({
               </div>
 
               <form onSubmit={handleTxSubmit} className="space-y-4">
-                {/* İşlem Türü Seçimi */}
+                {/* İşlem Türü Seçimi (Borçlandırma vs Tahsilat) */}
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setTxFormData({ ...txFormData, type: 'BORC' })}
+                    onClick={() => setTxFormData({ ...txFormData, type: CUSTOMER_TRANSACTION_TYPES.BORC })}
                     className={`py-3 rounded-xl font-bold text-sm border flex items-center justify-center gap-2 transition-all ${
-                      txFormData.type === 'BORC'
+                      txFormData.type === CUSTOMER_TRANSACTION_TYPES.BORC
                         ? 'bg-red-500/20 text-red-400 border-red-500/50 shadow-lg shadow-red-500/10'
-                        : 'bg-gray-900 border-gray-800 text-gray-400'
+                        : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
                     }`}
                   >
                     <ArrowUpRight size={18} />
@@ -710,11 +921,11 @@ export default function CustomersClient({
 
                   <button
                     type="button"
-                    onClick={() => setTxFormData({ ...txFormData, type: 'TAHSILAT' })}
+                    onClick={() => setTxFormData({ ...txFormData, type: CUSTOMER_TRANSACTION_TYPES.TAHSILAT })}
                     className={`py-3 rounded-xl font-bold text-sm border flex items-center justify-center gap-2 transition-all ${
-                      txFormData.type === 'TAHSILAT'
+                      txFormData.type === CUSTOMER_TRANSACTION_TYPES.TAHSILAT
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-lg shadow-emerald-500/10'
-                        : 'bg-gray-900 border-gray-800 text-gray-400'
+                        : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
                     }`}
                   >
                     <ArrowDownLeft size={18} />
@@ -722,31 +933,109 @@ export default function CustomersClient({
                   </button>
                 </div>
 
-                {/* Varlık Cinsi */}
+                {/* Varlık Kategori Sekmeleri */}
                 <div>
-                  <label className={THEME.LABEL}>Varlık / Para Cinsi *</label>
-                  <select
-                    value={txFormData.assetType}
-                    onChange={(e) => setTxFormData({ ...txFormData, assetType: e.target.value })}
-                    className={THEME.SELECT}
-                  >
-                    {ASSET_TYPES.map(a => (
-                      <option key={a.id} value={a.id}>{a.label}</option>
+                  <label className={THEME.LABEL}>Varlık Kategorisi</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {ASSET_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => handleCategoryChange(cat.id as any)}
+                        className={`p-2 rounded-xl text-xs font-semibold border text-center transition-all ${
+                          selectedCategory === cat.id
+                            ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50 shadow-sm'
+                            : 'bg-gray-950 border-gray-800 text-gray-400 hover:bg-gray-900'
+                        }`}
+                      >
+                        <div className="text-base mb-0.5">{cat.icon}</div>
+                        {cat.label}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
-                {/* Miktar & İşlem Anındaki Kur/Fiyat */}
+                {/* Seçilen Kategoriye Göre Varlık Türü */}
+                {selectedCategory === 'TL' && (
+                  <div>
+                    <label className={THEME.LABEL}>Varlık Türü</label>
+                    <div className="p-3 bg-gray-950 border border-gray-800 rounded-xl text-sm font-bold text-emerald-400 flex items-center justify-between">
+                      <span>Türk Lirası (₺)</span>
+                      <span className="text-xs text-gray-500">Nakit / Havale / Kasa</span>
+                    </div>
+                  </div>
+                )}
+
+                {selectedCategory === 'ALTIN_AYAR' && (
+                  <div>
+                    <label className={THEME.LABEL}>Altın Ayar Seçimi *</label>
+                    <select
+                      value={txFormData.assetType}
+                      onChange={(e) => setTxFormData({ ...txFormData, assetType: e.target.value })}
+                      className={THEME.SELECT}
+                    >
+                      {GOLD_CARAT_OPTIONS.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.label} (Milyem: {g.milyem})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedCategory === 'ZIYNET' && (
+                  <div>
+                    <label className={THEME.LABEL}>Ziynet Altın Seçimi *</label>
+                    <select
+                      value={txFormData.assetType}
+                      onChange={(e) => setTxFormData({ ...txFormData, assetType: e.target.value })}
+                      className={THEME.SELECT}
+                    >
+                      {ZIYNET_OPTIONS.map((z) => (
+                        <option key={z.id} value={z.id}>
+                          {z.label} (Has: ~{z.hasWeight} gr/adet)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedCategory === 'DOVIZ' && (
+                  <div>
+                    <label className={THEME.LABEL}>Döviz Para Birimi *</label>
+                    <select
+                      value={txFormData.assetType}
+                      onChange={(e) => setTxFormData({ ...txFormData, assetType: e.target.value })}
+                      className={THEME.SELECT}
+                    >
+                      {FX_OPTIONS.map((f) => (
+                        <option key={f.id} value={f.id}>
+                          {f.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Miktar & Birim Fiyat (Has Fiyatı) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className={THEME.LABEL}>Miktar *</label>
+                    <label className={THEME.LABEL}>
+                      {selectedCategory === 'ZIYNET'
+                        ? 'Adet *'
+                        : selectedCategory === 'ALTIN_AYAR'
+                        ? 'Gramaj (gr) *'
+                        : selectedCategory === 'DOVIZ'
+                        ? 'Tutar ($/€) *'
+                        : 'TL Tutar (₺) *'}
+                    </label>
                     <input
                       type="number"
                       step="any"
                       required
                       value={txFormData.amount}
                       onChange={(e) => setTxFormData({ ...txFormData, amount: e.target.value })}
-                      placeholder={txFormData.assetType === 'CEYREK' ? 'Örn: 2 Adet' : 'Örn: 10000'}
+                      placeholder={selectedCategory === 'ZIYNET' ? 'Örn: 2 Adet' : 'Örn: 10000'}
                       className={THEME.INPUT}
                     />
                   </div>
@@ -758,50 +1047,54 @@ export default function CustomersClient({
                       step="any"
                       value={txFormData.unitPrice}
                       onChange={(e) => setTxFormData({ ...txFormData, unitPrice: e.target.value })}
-                      placeholder="₺/gr"
+                      placeholder={`₺${hasPrice.toFixed(0)}/gr`}
                       className={THEME.INPUT}
                     />
                   </div>
                 </div>
 
-                {/* Has Çevrim Bilgi Kutusu */}
+                {/* Has Çevrim ve Canlı Değerleme Bilgi Kutusu */}
                 {txFormData.amount && parseFloat(txFormData.amount) > 0 && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl text-xs space-y-1">
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 p-3.5 rounded-xl text-xs space-y-1.5">
                     <div className="text-yellow-400 font-bold flex items-center justify-between">
-                      <span>Otomatik Has Karşılığı:</span>
-                      <span className="font-mono text-sm">
-                        {(() => {
-                          const amt = parseFloat(txFormData.amount) || 0;
-                          const pr = parseFloat(txFormData.unitPrice) || hasPrice;
-                          let eq = 0;
-                          if (txFormData.assetType === 'TL' && pr > 0) eq = amt / pr;
-                          else if (txFormData.assetType === 'HAS') eq = amt;
-                          else if (txFormData.assetType === '22K') eq = amt * 0.916;
-                          else if (txFormData.assetType === 'CEYREK') eq = amt * 1.605;
-                          else if (txFormData.assetType === 'YARIM') eq = amt * 3.21;
-                          else if (txFormData.assetType === 'TAM') eq = amt * 6.42;
-                          return `${eq.toFixed(3)} gr Has`;
-                        })()}
+                      <span className="flex items-center gap-1.5">
+                        <Coins size={14} />
+                        Hesaplanan Has Altın Karşılığı:
+                      </span>
+                      <span className="font-mono text-sm font-bold text-yellow-300">
+                        {formatGoldGram(computedHasEquivalent)}
                       </span>
                     </div>
-                    <p className="text-gray-400 text-[11px]">
-                      {txFormData.assetType === 'TL'
-                        ? `${txFormData.amount} TL borç verildi. Fiyat ₺${txFormData.unitPrice || hasPrice}/gr üzerinden Has karşılığına çevrildi.`
-                        : txFormData.assetType.includes('USD') || txFormData.assetType.includes('EUR')
-                        ? 'Döviz borcu kendi biriminde tutulacaktır.'
-                        : 'Altın borcu Has Altın gram karşılığına çevrildi.'}
+
+                    <div className="flex items-center justify-between text-gray-300 pt-1 border-t border-yellow-500/20">
+                      <span>Tahmini Canlı TL Değeri:</span>
+                      <span className="font-mono font-semibold text-white">
+                        {selectedCategory === 'TL'
+                          ? formatCurrency(parseFloat(txFormData.amount) || 0, 'TL')
+                          : formatCurrency(computedHasEquivalent * (parseFloat(txFormData.unitPrice) || hasPrice), 'TL')}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-400 text-[11px] mt-1">
+                      {selectedCategory === 'TL'
+                        ? `${txFormData.amount} TL işlem, ₺${txFormData.unitPrice || hasPrice}/gr kuruyla Has karşılığına bağlandı.`
+                        : selectedCategory === 'ZIYNET'
+                        ? `${txFormData.amount} adet ${txFormData.assetType} için standart gramaj üzerinden Has karşılığı hesaplandı.`
+                        : selectedCategory === 'ALTIN_AYAR'
+                        ? `${txFormData.amount} gr ${txFormData.assetType} ayar milyemi üzerinden saf Has Altın'a dönüştürüldü.`
+                        : 'Döviz işlemi cariye kaydedilecektir.'}
                     </p>
                   </div>
                 )}
 
                 {/* Açıklama / Not */}
                 <div>
-                  <label className={THEME.LABEL}>İşlem Açıklaması / Not</label>
+                  <label className={THEME.LABEL}>İşlem Açıklaması / Belge No</label>
                   <input
                     type="text"
                     value={txFormData.description}
                     onChange={(e) => setTxFormData({ ...txFormData, description: e.target.value })}
-                    placeholder="Örn: 2 adet çeyrek veresiye verildi"
+                    placeholder="Örn: Düğün için 2 adet çeyrek altın veresiye verildi"
                     className={THEME.INPUT}
                   />
                 </div>
@@ -826,27 +1119,48 @@ export default function CustomersClient({
         )}
       </AnimatePresence>
 
-      {/* ─── HESAP EKSTRESİ MODALI ─── */}
+      {/* ─── GELİŞMİŞ HESAP EKSTRESİ & YÜRÜYEN BAKİYE (RUNNING BALANCE) MODALI ─── */}
       <AnimatePresence>
         {showStatementModal && statementCustomer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto print:p-0 print:bg-white print:static">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className={`${THEME.GLASS_CARD} w-full max-w-3xl p-6 my-8`}
+              className={`${THEME.GLASS_CARD} w-full max-w-4xl p-6 my-8 print:border-none print:shadow-none print:bg-white print:text-black print:my-0`}
             >
               {/* Ekstre Üst Başlık */}
-              <div className="flex justify-between items-start mb-6 border-b border-gray-800 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-5 border-b border-gray-800 print:border-black pb-4">
                 <div>
-                  <span className="text-xs text-yellow-400 font-bold uppercase tracking-wider block">Müşteri Cari Hesap Ekstresi</span>
-                  <h2 className="text-2xl font-bold text-white mt-1">{statementCustomer.name}</h2>
-                  <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-yellow-400 print:text-black font-bold uppercase tracking-wider">
+                      Müşteri Cari Hesap Ekstresi
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 bg-yellow-500/10 text-yellow-400 print:hidden rounded-full font-mono font-semibold">
+                      Spot Has: ₺{hasPrice.toLocaleString('tr-TR')}/gr
+                    </span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white print:text-black mt-1">
+                    {statementCustomer.name}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400 print:text-gray-700 mt-1">
                     {statementCustomer.phone && <span>Tel: {statementCustomer.phone}</span>}
                     {statementCustomer.tcNo && <span>TC: {statementCustomer.tcNo}</span>}
+                    {statementCustomer.address && <span>Adres: {statementCustomer.address}</span>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* Yazdır, WhatsApp ve Kapat Düğmeleri */}
+                <div className="flex items-center gap-2 print:hidden">
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-900/20 transition-all"
+                  >
+                    <Share2 size={14} />
+                    WhatsApp Ekstre
+                  </a>
                   <button
                     onClick={handlePrintStatement}
                     className={`${THEME.BTN_SECONDARY} gap-1.5 text-xs py-2`}
@@ -859,77 +1173,185 @@ export default function CustomersClient({
                 </div>
               </div>
 
-              {/* Bakiye Özet Kartları */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                <div className="bg-gray-950 p-3 rounded-xl border border-gray-800">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold block">Net Has Alacak</span>
-                  <span className="text-sm font-bold text-yellow-400 font-mono block mt-0.5">
-                    {formatHas(statementCustomer.totalHasEquivalent)} gr
-                  </span>
-                  <span className="text-[10px] text-gray-600">~₺{formatTL(statementCustomer.totalHasEquivalent * hasPrice)}</span>
+              {/* Tarih Filtreleme Çubuğu (Print esnasında gizlenir) */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-5 p-3 bg-gray-950/80 rounded-xl border border-gray-800 print:hidden">
+                <div className="flex items-center gap-1.5">
+                  <Calendar size={16} className="text-yellow-400" />
+                  <span className="text-xs font-semibold text-gray-300">Tarih Aralığı:</span>
+                  <div className="flex gap-1 ml-2">
+                    {(['ALL', 'TODAY', 'WEEK', 'MONTH'] as const).map((filterKey) => {
+                      const labels = {
+                        ALL: 'Tümü',
+                        TODAY: 'Bugün',
+                        WEEK: 'Son 7 Gün',
+                        MONTH: 'Son 30 Gün',
+                      };
+                      return (
+                        <button
+                          key={filterKey}
+                          onClick={() => handleQuickFilter(filterKey)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                            quickDateFilter === filterKey
+                              ? 'bg-yellow-500 text-black font-bold'
+                              : 'bg-gray-900 text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          {labels[filterKey]}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="bg-gray-950 p-3 rounded-xl border border-gray-800">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold block">Net TL Bakiyesi</span>
-                  <span className="text-sm font-bold text-emerald-400 font-mono block mt-0.5">
-                    ₺{formatTL(statementCustomer.tlBalance)}
-                  </span>
-                </div>
-
-                <div className="bg-gray-950 p-3 rounded-xl border border-gray-800">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold block">Dolar Bakiyesi</span>
-                  <span className="text-sm font-bold text-green-400 font-mono block mt-0.5">
-                    ${formatTL(statementCustomer.usdBalance)}
-                  </span>
-                </div>
-
-                <div className="bg-gray-950 p-3 rounded-xl border border-gray-800">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold block">Euro Bakiyesi</span>
-                  <span className="text-sm font-bold text-blue-400 font-mono block mt-0.5">
-                    €{formatTL(statementCustomer.eurBalance)}
-                  </span>
+                <div className="flex items-center gap-2 text-xs">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setQuickDateFilter('ALL');
+                      fetchStatement(statementCustomer.id, e.target.value, endDate);
+                    }}
+                    className={`${THEME.INPUT} py-1 text-xs`}
+                  />
+                  <span className="text-gray-500">-</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setQuickDateFilter('ALL');
+                      fetchStatement(statementCustomer.id, startDate, e.target.value);
+                    }}
+                    className={`${THEME.INPUT} py-1 text-xs`}
+                  />
                 </div>
               </div>
 
-              {/* İşlem Hareketleri Tablosu */}
-              <div className="overflow-x-auto max-h-80 overflow-y-auto rounded-xl border border-gray-800 mb-4">
+              {/* Bakiye Özet Kartları */}
+              {statementData && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                  <div className="bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-gray-800 print:border-gray-300">
+                    <span className="text-[10px] text-gray-500 uppercase font-bold block">
+                      Net Has Altın Borcu
+                    </span>
+                    <span className="text-sm font-bold text-yellow-400 print:text-black font-mono block mt-0.5">
+                      {formatGoldGram(statementData.summary.hasBalance)}
+                    </span>
+                    <span className="text-[10px] text-yellow-300/70 print:text-gray-600 block">
+                      ~{formatCurrency(statementData.summary.hasBalance * statementData.spotRate, 'TL')}
+                    </span>
+                  </div>
+
+                  <div className="bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-gray-800 print:border-gray-300">
+                    <span className="text-[10px] text-gray-500 uppercase font-bold block">
+                      Net TL Borç Bakiyesi
+                    </span>
+                    <span className="text-sm font-bold text-emerald-400 print:text-black font-mono block mt-0.5">
+                      {formatCurrency(statementData.summary.tlBalance, 'TL')}
+                    </span>
+                    <span className="text-[10px] text-gray-500 block">Nakit Açık Hesap</span>
+                  </div>
+
+                  <div className="bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-gray-800 print:border-gray-300">
+                    <span className="text-[10px] text-gray-500 uppercase font-bold block">
+                      Döviz Bakiyeleri
+                    </span>
+                    <span className="text-xs font-bold text-green-400 print:text-black font-mono block mt-0.5">
+                      {statementData.summary.usdBalance !== 0
+                        ? formatCurrency(statementData.summary.usdBalance, 'USD')
+                        : '—'}
+                    </span>
+                    <span className="text-xs font-bold text-blue-400 print:text-black font-mono block">
+                      {statementData.summary.eurBalance !== 0
+                        ? formatCurrency(statementData.summary.eurBalance, 'EUR')
+                        : '—'}
+                    </span>
+                  </div>
+
+                  <div className="bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-yellow-500/30 print:border-gray-300">
+                    <span className="text-[10px] text-yellow-400 print:text-black uppercase font-bold block">
+                      Toplam Portföy Değeri
+                    </span>
+                    <span className="text-base font-bold text-yellow-300 print:text-black font-mono block mt-0.5">
+                      {formatCurrency(statementData.summary.estimatedTotalTL, 'TL')}
+                    </span>
+                    <span className="text-[10px] text-gray-400 block">Has + TL + Döviz</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Açılış Devir Bilgisi (Eğer filtre uygulandıysa) */}
+              {statementData && (statementData.openingBalance.tl !== 0 || statementData.openingBalance.has !== 0) && (
+                <div className="p-2.5 mb-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300 flex justify-between items-center">
+                  <span>Dönem Başı Açılış Bakiyesi:</span>
+                  <span className="font-mono font-bold">
+                    TL: {formatCurrency(statementData.openingBalance.tl, 'TL')} | Has: {formatGoldGram(statementData.openingBalance.has)}
+                  </span>
+                </div>
+              )}
+
+              {/* İşlem Hareketleri ve Yürüyen Bakiye Tablosu */}
+              <div className="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-gray-800 print:border-gray-300 mb-4">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-gray-900 text-gray-400 font-semibold sticky top-0">
+                  <thead className="bg-gray-900 print:bg-gray-200 text-gray-400 print:text-black font-semibold sticky top-0">
                     <tr>
                       <th className="p-3">Tarih</th>
-                      <th className="p-3">İşlem Türü</th>
-                      <th className="p-3">Varlık Cinsi</th>
-                      <th className="p-3">İşlem Miktarı</th>
+                      <th className="p-3">Tür</th>
+                      <th className="p-3">Varlık</th>
+                      <th className="p-3">Miktar</th>
                       <th className="p-3">Has Karşılığı</th>
+                      <th className="p-3 bg-yellow-500/10 print:bg-transparent font-bold text-yellow-400 print:text-black">
+                        Yürüyen Has (gr)
+                      </th>
+                      <th className="p-3 bg-emerald-500/10 print:bg-transparent font-bold text-emerald-400 print:text-black">
+                        Yürüyen TL (₺)
+                      </th>
                       <th className="p-3">Açıklama</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800 text-gray-300">
+                  <tbody className="divide-y divide-gray-800 print:divide-gray-300 text-gray-300 print:text-black">
                     {loadingStatement ? (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-gray-500">Ekstre yükleniyor...</td>
+                        <td colSpan={8} className="p-8 text-center text-gray-500">
+                          Ekstre ve yürüyen bakiyeler hesaplanıyor...
+                        </td>
                       </tr>
-                    ) : statementTxs.length > 0 ? (
-                      statementTxs.map(tx => {
-                        const isDebt = tx.type === 'BORC';
+                    ) : statementData && statementData.rows.length > 0 ? (
+                      statementData.rows.map((tx) => {
+                        const isDebt =
+                          tx.type === CUSTOMER_TRANSACTION_TYPES.BORC ||
+                          tx.type === CUSTOMER_TRANSACTION_TYPES.ODEME;
                         return (
-                          <tr key={tx.id} className="hover:bg-gray-900/50">
-                            <td className="p-3 font-mono text-gray-400">
-                              {new Date(tx.createdAt).toLocaleDateString('tr-TR')}
+                          <tr key={tx.id || Math.random().toString()} className="hover:bg-gray-900/50">
+                            <td className="p-3 font-mono text-gray-400 print:text-gray-700">
+                              {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('tr-TR') : '—'}
                             </td>
                             <td className="p-3 font-bold">
-                              <span className={`px-2 py-0.5 rounded text-[11px] ${isDebt ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
-                                {isDebt ? 'BORÇ YAZILDI' : 'TAHSİLAT ALINDI'}
+                              <span
+                                className={`px-2 py-0.5 rounded text-[11px] ${
+                                  isDebt
+                                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                }`}
+                              >
+                                {isDebt ? 'BORÇ' : 'TAHSİLAT'}
                               </span>
                             </td>
-                            <td className="p-3 font-bold text-white">{tx.assetType}</td>
+                            <td className="p-3 font-bold text-white print:text-black">{tx.assetType}</td>
                             <td className="p-3 font-mono font-bold">
                               {tx.amount} {tx.assetType}
                             </td>
-                            <td className="p-3 font-mono text-yellow-400 font-bold">
-                              {tx.hasEquivalent > 0 ? `${formatHas(tx.hasEquivalent)} gr` : '—'}
+                            <td className="p-3 font-mono text-yellow-400 print:text-black font-semibold">
+                              {tx.hasEquivalent > 0 ? formatGoldGram(tx.hasEquivalent) : '—'}
                             </td>
-                            <td className="p-3 text-gray-400 max-w-xs truncate">
+                            <td className="p-3 font-mono font-bold text-yellow-300 print:text-black bg-yellow-500/5 print:bg-transparent">
+                              {formatGoldGram(tx.runningBalanceHas)}
+                            </td>
+                            <td className="p-3 font-mono font-bold text-emerald-400 print:text-black bg-emerald-500/5 print:bg-transparent">
+                              {formatCurrency(tx.runningBalanceTL, 'TL')}
+                            </td>
+                            <td className="p-3 text-gray-400 print:text-gray-700 max-w-xs truncate">
                               {tx.description || '—'}
                             </td>
                           </tr>
@@ -937,14 +1359,20 @@ export default function CustomersClient({
                       })
                     ) : (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-gray-500">Henüz işlem hareketi yok.</td>
+                        <td colSpan={8} className="p-8 text-center text-gray-500">
+                          Seçilen tarih aralığında işlem hareketi bulunamadı.
+                        </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
 
-              <div className="flex justify-end pt-2">
+              {/* Ekstre Alt Bilgi & Kapat */}
+              <div className="flex justify-between items-center pt-2 print:hidden">
+                <span className="text-xs text-gray-500">
+                  Ekstre Çıktısı: {new Date().toLocaleString('tr-TR')}
+                </span>
                 <button onClick={() => setShowStatementModal(false)} className={THEME.BTN_SECONDARY}>
                   Kapat
                 </button>

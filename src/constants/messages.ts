@@ -62,6 +62,7 @@ export const MESSAGES = {
   MENU_TRANSACTIONS: 'Alış / Satış',
   MENU_SUPPLIERS: 'Toptancı & Mutabakat',
   MENU_CUSTOMERS: 'Müşteriler & Borç Takip',
+  MENU_Z_REPORT: 'Kasa & Z-Raporu',
   MENU_LOGS: 'İşlem Logları',
   MENU_PRICE_CHECK: 'Fiyat Gör Kiosk',
   MENU_LOGOUT: 'Çıkış Yap',
@@ -114,5 +115,55 @@ export const MESSAGES = {
   TX_COMPLETE: 'İşlemi Tamamla',
   TX_HISTORY: 'Son İşlemler',
   TX_EMPTY: 'Henüz işlem yok.',
+
+  // Kasa & Z-Raporu
+  Z_REPORT_TITLE: 'Kasa Kapatma & Z-Raporu',
+  Z_REPORT_OPEN_SESSION: 'Kasa Oturumu Aç',
+  Z_REPORT_CLOSE_SESSION: 'Günü Kapat & Z-Raporu Al',
+  Z_REPORT_PHYSICAL_COUNT: 'Fiili Kasa Sayımı',
+  Z_REPORT_SYSTEM_TOTAL: 'Sistem Hesaplanan',
+  Z_REPORT_DIFFERENCE: 'Kasa Farkı',
+  Z_REPORT_BALANCED: 'Kasa Mutabık (Farksız)',
+  Z_REPORT_DEFICIT: 'Kasa Açığı',
+  Z_REPORT_SURPLUS: 'Kasa Fazlası',
+  Z_REPORT_PRINT: 'Z-Raporu Yazdır',
+
+  // TV Vitrin / Showcase
+  SHOWCASE_TITLE: 'TV Vitrin Ekranı',
+  SHOWCASE_LIVE_MARKET: 'Canlı Piyasa',
+  SHOWCASE_FULLSCREEN: 'Tam Ekran',
+  SHOWCASE_EXIT_FULLSCREEN: 'Tam Ekrandan Çık',
+  SHOWCASE_STORE_DEFAULT_NAME: 'KuyumPanel Mücevherat & Sarrafiye',
+  SHOWCASE_CONNECTING: 'Piyasa Bağlanıyor...',
+  SHOWCASE_OFFLINE: 'Çevrimdışı (Son Veri)',
+  SHOWCASE_LAST_UPDATE: 'Son Güncelleme',
+  SHOWCASE_ANNOUNCEMENT_HEADER: 'DUYURULAR & KAMPANYALAR',
+  SHOWCASE_HAS_GOLD: 'Has Altın (24 Ayar)',
+  SHOWCASE_DOVIZ_RATES: 'Döviz Kurları',
+  SHOWCASE_ZIYNET_RATES: 'Sarrafiye & Ziynet Altın',
+  SHOWCASE_BILEZIK_RATES: 'Bilezik & İşlenmiş Altın',
+
+
+  // Etiket Baskı
+  LABEL_PRINT_TITLE: 'Kuyumcu Barkod & Etiket Baskı',
+  LABEL_PRINT_BUTTON: 'Etiket Yazdır',
+  LABEL_PREVIEW: 'Etiket Önizleme',
+  LABEL_BATCH_PRINT: 'Toplu Etiket Yazdır',
+
+  // WhatsApp Paylaşım
+  WA_SEND_RECEIPT: 'WhatsApp Fiş Gönder',
+  WA_SEND_STATEMENT: 'WhatsApp Ekstre Gönder',
+  WA_SEND_ORDER: 'WhatsApp Sipariş İlet',
+  WA_SEND_QUOTE: 'WhatsApp Fiyat Teklifi',
+
+  // Stok Devir & Kritik Stok
+  TURNOVER_TITLE: 'Stok Devir & Sirkülasyon Analizi',
+  TURNOVER_VELOCITY: 'Günlük Satış Hızı',
+  TURNOVER_DAYS_LEFT: 'Tahmini Tükenme',
+  REORDER_TITLE: 'Tedarik & Sipariş Taslağı',
+  REORDER_SUGGESTED: 'Önerilen Sipariş',
+  REORDER_TOTAL_ESTIMATE: 'Tahmini Has Maliyeti',
+  STOCK_CRITICAL_ALERT: 'Kritik Stok Uyarısı',
 } as const;
+
 

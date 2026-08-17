@@ -39,6 +39,12 @@ export const MENU_ITEMS = [
     icon: 'UserCheck',
   },
   {
+    id: 'z-report',
+    label: MESSAGES.MENU_Z_REPORT,
+    href: ROUTES.Z_REPORT,
+    icon: 'Building',
+  },
+  {
     id: 'logs',
     label: MESSAGES.MENU_LOGS,
     href: ROUTES.LOGS,

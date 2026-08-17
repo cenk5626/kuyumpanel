@@ -15,15 +15,36 @@ import {
   Tag, 
   Printer, 
   Trash2, 
-  Plus,
-  Search,
-  Pencil,
-  Sliders
+  Plus, 
+  Search, 
+  Pencil, 
+  Sliders, 
+  CheckSquare, 
+  Square,
+  Truck,
+  Camera,
+  AlertTriangle,
+  Flame,
+  Activity,
+  Hourglass,
+  Filter
 } from 'lucide-react';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { THEME, ANIM } from '@/constants/theme';
+import {
+  DEFAULT_MIN_STOCK_THRESHOLD,
+  TURNOVER_CATEGORIES,
+  STOCK_ALERT_LEVELS,
+  type TurnoverCategory,
+} from '@/constants/stocks';
 import HeaderActions from '@/components/HeaderActions';
+import KelebekLabelModal from '@/components/KelebekLabelModal';
+import BatchLabelPrintModal from '@/components/BatchLabelPrintModal';
+import CriticalStockBadge, { TurnoverBadge } from '@/components/CriticalStockBadge';
+import ReorderDraftModal from '@/components/ReorderDraftModal';
+import CameraScannerModal from '@/components/CameraScannerModal';
+import type { StockTurnoverItem, TurnoverAnalyticsSummary } from '@/lib/stocks/analytics';
 
 // ─── Tipler ───────────────────────────────────────────────────────────────────
 
@@ -32,8 +53,10 @@ interface Stock {
   label: string;
   type: string; // "sarrafiye" | "döviz"
   amount: number;
+  minThreshold?: number;
   updatedAt: string;
 }
+
 
 interface Transaction {
   id: string;
@@ -120,14 +143,16 @@ function StatCard({ title, value, icon: Icon, color }: {
   );
 }
 
-function StockRow({ stock, onEdit, livePrice }: {
+function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
   stock: Stock;
   onEdit: (stock: Stock) => void;
   livePrice?: { bid: number; ask: number };
+  turnoverItem?: StockTurnoverItem;
 }) {
   const unit = UNIT_MAP[stock.id] ?? 'Adet';
   const totalValueBid = livePrice ? stock.amount * livePrice.bid : null;
-  const isLow = stock.amount <= 0;
+  const minThreshold = stock.minThreshold ?? DEFAULT_MIN_STOCK_THRESHOLD;
+  const isLow = stock.amount <= minThreshold;
 
   return (
     <motion.div
@@ -144,15 +169,28 @@ function StockRow({ stock, onEdit, livePrice }: {
           }`}>
             {TYPE_LABELS[stock.type] ?? stock.type}
           </span>
-          {isLow && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
-              Stok Yok
-            </span>
+          <CriticalStockBadge
+            amount={stock.amount}
+            minThreshold={minThreshold}
+            size="sm"
+          />
+          {turnoverItem && (
+            <TurnoverBadge
+              category={turnoverItem.category}
+              dailyVelocity={turnoverItem.dailyVelocity}
+              size="sm"
+            />
           )}
         </div>
-        <p className="text-gray-500 text-[10px] font-mono mt-1">
-          Güncelleme: {new Date(stock.updatedAt).toLocaleString('tr-TR')}
-        </p>
+        <div className="flex items-center gap-3 text-[10px] text-gray-500 font-mono mt-1 flex-wrap">
+          <span>Güncelleme: {new Date(stock.updatedAt).toLocaleString('tr-TR')}</span>
+          {turnoverItem && turnoverItem.daysToStockout !== Infinity && (
+            <span>• Tahmini Tükenme: {turnoverItem.daysToStockout > 0 ? `${turnoverItem.daysToStockout} gün` : 'Tükendi'}</span>
+          )}
+          {turnoverItem && turnoverItem.salesQuantity > 0 && (
+            <span>• 30 Günlük Satış: {turnoverItem.salesQuantity} {unit}</span>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-6 flex-shrink-0">
@@ -195,12 +233,21 @@ export default function StocksPage() {
   const [livePrices, setLivePrices] = useState<Record<string, { bid: number; ask: number }>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<typeof FILTER_ALL | typeof FILTER_SARRAFIYE | typeof FILTER_DOVIZ>(FILTER_ALL);
+  const [levelFilter, setLevelFilter] = useState<'all' | 'critical' | 'stagnant'>('all');
+  const [analyticsSummary, setAnalyticsSummary] = useState<TurnoverAnalyticsSummary | null>(null);
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
 
   // Barcode product items states
   const [productItems, setProductItems] = useState<ProductItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProductModal, setShowProductModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // Kelebek Label Printing & Multi-Select States
+  const [labelModalProduct, setLabelModalProduct] = useState<ProductItem | null>(null);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [showBatchPrintModal, setShowBatchPrintModal] = useState<boolean>(false);
   
   // Dynamic category tree, suppliers, and live prices
   const [categories, setCategories] = useState<any[]>([]);
@@ -271,23 +318,25 @@ export default function StocksPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [stocksRes, txRes, liveRes, productsRes, categoriesRes, suppliersRes, hasRes] = await Promise.all([
+      const [stocksRes, txRes, liveRes, productsRes, categoriesRes, suppliersRes, hasRes, analyticsRes] = await Promise.all([
         fetch(ROUTES.API_STOCKS),
         fetch(ROUTES.API_TRANSACTIONS),
         fetch(ROUTES.API_PRICES_LIVE),
         fetch('/api/products'),
         fetch('/api/categories'),
         fetch('/api/suppliers'),
-        fetch('/api/prices/has')
+        fetch('/api/prices/has'),
+        fetch(ROUTES.API_STOCKS_ANALYTICS)
       ]);
-      const [stocksData, txData, liveData, productsData, categoriesData, suppliersData, hasData] = await Promise.all([
+      const [stocksData, txData, liveData, productsData, categoriesData, suppliersData, hasData, analyticsData] = await Promise.all([
         stocksRes.json(),
         txRes.json(),
         liveRes.json(),
         productsRes.json(),
         categoriesRes.json(),
         suppliersRes.json(),
-        hasRes.json()
+        hasRes.json(),
+        analyticsRes.json()
       ]);
       setStocks(Array.isArray(stocksData) ? (stocksData as Stock[]) : []);
       setTransactions(Array.isArray(txData) ? (txData as Transaction[]) : []);
@@ -295,6 +344,7 @@ export default function StocksPage() {
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
       setHasPrice(hasData && typeof hasData === 'object' && !('error' in hasData) ? hasData : null);
+      setAnalyticsSummary(analyticsData && typeof analyticsData === 'object' && !('error' in analyticsData) ? analyticsData : null);
       
       const liveMap: Record<string, { bid: number; ask: number }> = {};
       if (Array.isArray(liveData)) {
@@ -313,6 +363,7 @@ export default function StocksPage() {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
 
   // Helper actions for dynamic CRUD management
   const handleAddCategory = async () => {
@@ -627,118 +678,21 @@ export default function StocksPage() {
   };
 
   const handlePrintLabel = (item: ProductItem) => {
-    const printWindow = window.open('', '_blank', 'width=500,height=300');
-    if (!printWindow) return;
+    setLabelModalProduct(item);
+  };
 
-    const formattedLabor = item.laborType === 'fixed' 
-      ? `₺${item.laborCost}/gr` 
-      : item.laborType === 'percentage' 
-      ? `%${item.laborCost}` 
-      : `+${item.laborCost} milyem`;
+  const handleToggleSelectProduct = (id: string) => {
+    setSelectedProductIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${item.barcode} - Etiket Yazdır</title>
-          <style>
-            @page {
-              size: 50mm 12mm;
-              margin: 0;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              font-family: 'Courier New', monospace;
-              background-color: white;
-              color: black;
-              -webkit-print-color-adjust: exact;
-            }
-            .label {
-              width: 50mm;
-              height: 12mm;
-              display: flex;
-              box-sizing: border-box;
-              padding: 1mm 2mm;
-              overflow: hidden;
-            }
-            .left {
-              width: 32mm;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              padding-right: 1mm;
-            }
-            .right {
-              width: 18mm;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              border-left: 0.5px dashed #000;
-              padding-left: 1mm;
-            }
-            .title {
-              font-size: 7px;
-              font-weight: bold;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-            .details {
-              font-size: 6px;
-              display: flex;
-              justify-content: space-between;
-              font-weight: bold;
-            }
-            .barcode-svg {
-              width: 100%;
-              height: 16px;
-            }
-            .barcode-text {
-              font-size: 6px;
-              margin-top: 1px;
-              font-weight: bold;
-            }
-          </style>
-          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-        </head>
-        <body>
-          <div class="label">
-            <div class="left">
-              <div class="title">${item.title}</div>
-              <div class="details">
-                <span>${item.carat} Ayar</span>
-                <span>${item.weight.toFixed(2)} gr</span>
-              </div>
-              <div class="details">
-                <span>İşçilik:</span>
-                <span>${formattedLabor}</span>
-              </div>
-            </div>
-            <div class="right">
-              <svg id="barcode" class="barcode-svg"></svg>
-              <div class="barcode-text">${item.barcode}</div>
-            </div>
-          </div>
-          <script>
-            window.onload = function() {
-              JsBarcode("#barcode", "${item.barcode}", {
-                format: "CODE128",
-                displayValue: false,
-                margin: 0,
-                height: 30,
-                width: 1.5
-              });
-              setTimeout(function() {
-                window.print();
-                window.close();
-              }, 400);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+  const handleSelectAllProducts = () => {
+    if (selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(filteredProducts.map(p => p.id));
+    }
   };
 
   // Helper select handlers
@@ -788,7 +742,18 @@ export default function StocksPage() {
   const sellingPriceEstimate = (hasPrice?.ask || 0) * sellingHasMultiplier;
 
   // Standard filter logic
-  const filteredStocks = filter === FILTER_ALL ? stocks : stocks.filter(s => s.type === filter);
+  const filteredStocks = stocks.filter(s => {
+    if (filter !== FILTER_ALL && s.type !== filter) return false;
+    if (levelFilter === 'critical') {
+      const minThreshold = s.minThreshold ?? DEFAULT_MIN_STOCK_THRESHOLD;
+      return s.amount <= minThreshold;
+    }
+    if (levelFilter === 'stagnant') {
+      const turnoverItem = analyticsSummary?.items.find(i => i.product === s.id);
+      return turnoverItem?.category === TURNOVER_CATEGORIES.HAREKETSIZ;
+    }
+    return true;
+  });
   const sarrafiyeCount = stocks.filter(s => s.type === FILTER_SARRAFIYE).reduce((acc, s) => acc + (s.amount > 0 ? 1 : 0), 0);
   const dovizCount = stocks.filter(s => s.type === FILTER_DOVIZ && s.amount > 0).length;
 
@@ -812,6 +777,30 @@ export default function StocksPage() {
           </motion.div>
           
           <div className="flex items-center gap-2">
+            {/* Sipariş Taslağı Aksiyon Butonu */}
+            <button
+              onClick={() => setShowReorderModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-extrabold rounded-xl text-sm flex items-center transition-all shadow-lg shadow-amber-500/10"
+            >
+              <Truck size={15} className="mr-1.5 text-black" />
+              Sipariş Taslağı
+              {analyticsSummary && analyticsSummary.totalCriticalCount > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 bg-red-600 text-white text-[10px] font-mono font-black rounded-full">
+                  {analyticsSummary.totalCriticalCount}
+                </span>
+              )}
+            </button>
+
+            {/* Kamera İle Barkod Tara */}
+            <button
+              onClick={() => setShowCameraScanner(true)}
+              className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white rounded-xl text-sm font-bold flex items-center gap-1.5 transition-colors border border-gray-700/60"
+              title="Kamera Barkod Okut"
+            >
+              <Camera size={15} />
+              Kamera
+            </button>
+
             {activeView === 'barcode' && (
               <button
                 onClick={() => setShowProductModal(true)}
@@ -873,20 +862,69 @@ export default function StocksPage() {
             </div>
 
             {/* Filtre Sekmeleri */}
-            <div className="flex items-center gap-2">
-              {([FILTER_ALL, FILTER_SARRAFIYE, FILTER_DOVIZ] as const).map(tab => (
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              {/* Tür Filtreleri */}
+              <div className="flex items-center gap-2">
+                {([FILTER_ALL, FILTER_SARRAFIYE, FILTER_DOVIZ] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setFilter(tab)}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      filter === tab
+                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                        : 'text-gray-400 hover:text-gray-200 bg-gray-800/40 border border-gray-700/30 hover:border-gray-600/40'
+                    }`}
+                  >
+                    {tab === FILTER_ALL ? 'Tümü' : tab === FILTER_SARRAFIYE ? 'Sarrafiye' : 'Döviz'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Stok Seviyesi Filtreleri */}
+              <div className="flex items-center gap-2 bg-gray-950/60 p-1 rounded-xl border border-gray-800 flex-wrap">
                 <button
-                  key={tab}
-                  onClick={() => setFilter(tab)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    filter === tab
-                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                      : 'text-gray-400 hover:text-gray-200 bg-gray-800/40 border border-gray-700/30 hover:border-gray-600/40'
+                  onClick={() => setLevelFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    levelFilter === 'all'
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
-                  {tab === FILTER_ALL ? 'Tümü' : tab === FILTER_SARRAFIYE ? 'Sarrafiye' : 'Döviz'}
+                  Tüm Seviyeler
                 </button>
-              ))}
+                <button
+                  onClick={() => setLevelFilter('critical')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                    levelFilter === 'critical'
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      : 'text-gray-400 hover:text-red-400'
+                  }`}
+                >
+                  <AlertTriangle size={13} />
+                  Kritik Seviye
+                  {analyticsSummary && analyticsSummary.totalCriticalCount > 0 && (
+                    <span className="px-1.5 py-0.2 bg-red-600 text-white text-[10px] font-mono rounded-full">
+                      {analyticsSummary.totalCriticalCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setLevelFilter('stagnant')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                    levelFilter === 'stagnant'
+                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                      : 'text-gray-400 hover:text-purple-400'
+                  }`}
+                >
+                  <Hourglass size={13} />
+                  Hareketsiz Stok
+                  {analyticsSummary && analyticsSummary.categoryCounts[TURNOVER_CATEGORIES.HAREKETSIZ] > 0 && (
+                    <span className="px-1.5 py-0.2 bg-purple-600 text-white text-[10px] font-mono rounded-full">
+                      {analyticsSummary.categoryCounts[TURNOVER_CATEGORIES.HAREKETSIZ]}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Stok Tablosu */}
@@ -914,11 +952,13 @@ export default function StocksPage() {
                       stock={stock}
                       onEdit={(s) => { setEditStock(s); setEditAmount(String(s.amount)); }}
                       livePrice={livePrices[stock.id] ?? livePrices[`${stock.id}TRY`]}
+                      turnoverItem={analyticsSummary?.items.find(i => i.product === stock.id)}
                     />
                   ))}
                 </div>
               )}
             </motion.div>
+
 
             {/* Son İşlem Geçmişi */}
             <motion.div
@@ -990,6 +1030,37 @@ export default function StocksPage() {
               <StatCard title="Toplam Stok Ağırlığı" value={`${totalBarcodeWeight.toFixed(2)} gr`} icon={Package} color="bg-purple-500/20" />
             </div>
 
+            {/* Toplu Seçim Eylem Çubuğu */}
+            {selectedProductIds.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3.5 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-center justify-between flex-wrap gap-3"
+              >
+                <div className="flex items-center gap-2">
+                  <CheckSquare className="text-yellow-400" size={18} />
+                  <span className="text-sm font-bold text-white">
+                    {selectedProductIds.length} adet ürün seçildi
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedProductIds([])}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white bg-gray-800 transition-colors"
+                  >
+                    Seçimi Temizle
+                  </button>
+                  <button
+                    onClick={() => setShowBatchPrintModal(true)}
+                    className="px-4 py-1.5 rounded-lg text-xs font-bold text-black bg-yellow-500 hover:bg-yellow-400 flex items-center gap-1.5 transition-all shadow-md shadow-yellow-500/20"
+                  >
+                    <Printer size={14} /> Toplu Etiket Yazdır ({selectedProductIds.length})
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Arama Barı */}
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -1014,6 +1085,15 @@ export default function StocksPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-800/40 bg-gray-900/20">
+                      <th className="px-4 py-3 text-center text-xs text-gray-500 font-bold uppercase tracking-wider w-10">
+                        <input
+                          type="checkbox"
+                          checked={filteredProducts.length > 0 && selectedProductIds.length === filteredProducts.length}
+                          onChange={handleSelectAllProducts}
+                          className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
+                          title="Tümünü Seç / Kaldır"
+                        />
+                      </th>
                       <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Barkod</th>
                       <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Kategori Detayı</th>
                       <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Toptancı</th>
@@ -1032,13 +1112,13 @@ export default function StocksPage() {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={13} className="px-5 py-12 text-center text-gray-500">
+                        <td colSpan={14} className="px-5 py-12 text-center text-gray-500">
                           <RefreshCw size={18} className="animate-spin inline mr-2" /> Yükleniyor...
                         </td>
                       </tr>
                     ) : filteredProducts.length === 0 ? (
                       <tr>
-                        <td colSpan={13} className="px-5 py-12 text-center text-gray-500">
+                        <td colSpan={14} className="px-5 py-12 text-center text-gray-500">
                           Barkodlu ürün bulunamadı.
                         </td>
                       </tr>
@@ -1053,6 +1133,14 @@ export default function StocksPage() {
 
                         return (
                           <tr key={item.id} className="border-b border-gray-800/30 hover:bg-yellow-500/3 transition-colors">
+                            <td className="px-4 py-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedProductIds.includes(item.id)}
+                                onChange={() => handleToggleSelectProduct(item.id)}
+                                className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
+                              />
+                            </td>
                             <td className="px-5 py-3 font-mono font-bold text-yellow-500 text-sm">
                               {item.barcode}
                             </td>
@@ -2249,9 +2337,44 @@ export default function StocksPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ─── TEKLİ KELEBEK ETİKET MODALI ─── */}
+      <KelebekLabelModal
+        item={labelModalProduct}
+        isOpen={!!labelModalProduct}
+        onClose={() => setLabelModalProduct(null)}
+        hasPrice={hasPrice}
+      />
+
+      {/* ─── TOPLU KELEBEK ETİKET MODALI ─── */}
+      <BatchLabelPrintModal
+        items={productItems.filter(p => selectedProductIds.includes(p.id))}
+        isOpen={showBatchPrintModal}
+        onClose={() => setShowBatchPrintModal(false)}
+        hasPrice={hasPrice}
+        onClearSelection={() => setSelectedProductIds([])}
+      />
+
+      {/* ─── SİPARİŞ TASLAĞI (REORDER DRAFT) MODALI ─── */}
+      <ReorderDraftModal
+        isOpen={showReorderModal}
+        onClose={() => setShowReorderModal(false)}
+        hasGoldPrice={hasPrice?.ask || 3000}
+      />
+
+      {/* ─── KAMERA BARKOD OKUYUCU MODAL ─── */}
+      <CameraScannerModal
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onScan={(scannedBarcode) => {
+          setSearchQuery(scannedBarcode);
+          setActiveView('barcode');
+        }}
+      />
     </>
   );
 }
+
 
 // Global scope support variable for typescript compilation
 const error: string | null = null;
