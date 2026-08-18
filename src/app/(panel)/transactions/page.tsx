@@ -446,17 +446,20 @@ export default function TransactionsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast(data.error ?? 'İşlemler kaydedilemedi.', 'error');
+        showToast(data.details ? `${data.error} (${data.details})` : (data.error ?? 'İşlemler kaydedilemedi.'), 'error');
+        return false;
       } else {
         showToast(`✓ ${validItems.length} adet işlem başarıyla kaydedildi.`, 'success');
         setBasket([]);
         setOrderNote('');
         setPaidAmount('0,00');
         await fetchAll();
+        return true;
       }
     } catch (e) {
       console.error(e);
       showToast('Ağ hatası oluştu.', 'error');
+      return false;
     } finally {
       setSubmitting(false);
     }

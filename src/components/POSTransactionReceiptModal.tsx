@@ -39,7 +39,7 @@ interface POSTransactionReceiptModalProps {
   storeName?: string;
   storePhone?: string;
   storeAddress?: string;
-  onConfirmAndSave?: () => Promise<void> | void;
+  onConfirmAndSave?: () => Promise<boolean | void> | boolean | void;
 }
 
 export default function POSTransactionReceiptModal({
@@ -65,7 +65,13 @@ export default function POSTransactionReceiptModal({
     if (onConfirmAndSave) {
       setSaving(true);
       try {
-        await onConfirmAndSave();
+        const result = await onConfirmAndSave();
+        if (result === false) {
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        return;
       } finally {
         setSaving(false);
       }
