@@ -403,7 +403,9 @@ export default function LogsClient({
                       <td className={THEME.TABLE.TD}>
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                            tx.type === 'buy' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'
+                            tx.type === 'buy'
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                           }`}>
                             {tx.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
                           </span>

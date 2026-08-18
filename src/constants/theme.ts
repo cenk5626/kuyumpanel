@@ -54,6 +54,8 @@ export const THEME = {
   BADGE_SUPER_ADMIN: 'inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-gradient-to-r from-amber-500/20 to-yellow-500/10 text-amber-400 border border-amber-500/30',
   BADGE_ADMIN: 'inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-blue-500/15 text-blue-400 border border-blue-500/30',
   BADGE_USER: 'inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-slate-800 text-slate-300 border border-slate-700',
+  BADGE_BUY: 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-rose-500/15 text-rose-400 border border-rose-500/30',
+  BADGE_SELL: 'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
 
   // Text Colors
   TEXT_PRIMARY: 'text-white',

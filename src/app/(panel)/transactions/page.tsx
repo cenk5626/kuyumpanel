@@ -1021,7 +1021,7 @@ export default function TransactionsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`${THEME.GLASS_CARD} p-5 flex flex-wrap lg:flex-nowrap items-center justify-between gap-6 border ${
-                      item.type === 'buy' ? 'border-emerald-500/20' : 'border-yellow-900/15'
+                      item.type === 'buy' ? 'border-rose-500/30 bg-rose-950/10' : 'border-emerald-500/30 bg-emerald-950/10'
                     }`}
                   >
                     {/* 1. Ürün Seçimi */}
@@ -1082,14 +1082,14 @@ export default function TransactionsPage() {
                       <select
                         value={item.type}
                         onChange={e => handleUpdateRowField(item.id, 'type', e.target.value)}
-                        className={`w-full px-3 py-2 rounded-xl text-xs font-bold text-white border focus:outline-none cursor-pointer transition-colors ${
+                        className={`w-full px-3 py-2 rounded-xl text-xs font-black text-white border focus:outline-none cursor-pointer transition-colors ${
                           item.type === 'buy'
-                            ? 'bg-emerald-800/90 border-emerald-700/80 text-emerald-100'
-                            : 'bg-red-800/90 border-red-700/80 text-red-100'
+                            ? 'bg-rose-800/90 border-rose-600 text-rose-100 shadow-sm shadow-rose-900/50'
+                            : 'bg-emerald-800/90 border-emerald-600 text-emerald-100 shadow-sm shadow-emerald-900/50'
                         }`}
                       >
-                        <option value="sell">Satış</option>
-                        <option value="buy">Alış</option>
+                        <option value="sell">Satış (Çıkış)</option>
+                        <option value="buy">Alış (Giriş)</option>
                       </select>
                     </div>
 
@@ -1113,7 +1113,9 @@ export default function TransactionsPage() {
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Birim Fiyat:</label>
                         {liveP && (
-                          <span className="text-[9px] text-gray-550 font-mono">
+                          <span className={`text-[9px] font-mono font-bold ${
+                            item.type === 'buy' ? 'text-rose-400/90' : 'text-emerald-400/90'
+                          }`}>
                             Ref: ₺{formatValue(item.type === 'buy' ? liveP.bid : liveP.ask, item.productType)}
                           </span>
                         )}
@@ -1126,7 +1128,9 @@ export default function TransactionsPage() {
                           value={item.productCode ? (isKeyboardLocked ? formatValue(item.price, item.productType) : item.price) : ''}
                           onClick={e => handleInputClick(e, 'row-price', item.id, item.price)}
                           onChange={e => handleUpdateRowField(item.id, 'price', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl text-emerald-400 font-bold font-mono text-right text-xs focus:outline-none focus:border-yellow-500/50 pr-8"
+                          className={`w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl font-bold font-mono text-right text-xs focus:outline-none focus:border-yellow-500/50 pr-8 ${
+                            item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
+                          }`}
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-mono font-semibold">₺</span>
                       </div>
@@ -1135,7 +1139,9 @@ export default function TransactionsPage() {
                     {/* 5. Toplam Tutar */}
                     <div className="w-28 flex flex-col gap-1 text-right">
                       <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Toplam:</label>
-                      <span className="text-base font-black font-mono leading-7 text-emerald-400">
+                      <span className={`text-base font-black font-mono leading-7 ${
+                        item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
+                      }`}>
                         ₺{item.productCode ? formatValue(item.total, item.productType) : '0'}
                       </span>
                     </div>
@@ -1169,10 +1175,10 @@ export default function TransactionsPage() {
                 <span className="text-[9px] text-gray-500 font-medium">Saniyede bir güncellenir</span>
               </div>
               
-              <div className="grid grid-cols-3 text-[10px] text-gray-500 font-bold uppercase tracking-wider border-b border-gray-850 pb-1.5">
-                <span>ÜRÜN</span>
-                <span className="text-right">ALIŞ</span>
-                <span className="text-right">SATIŞ</span>
+              <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider border-b border-gray-850 pb-1.5 font-black">
+                <span className="text-gray-500">ÜRÜN</span>
+                <span className="text-right text-rose-400">ALIŞ</span>
+                <span className="text-right text-emerald-400">SATIŞ</span>
               </div>
               
               <div className="flex flex-col gap-1.5 font-mono text-[10px]">
@@ -1193,11 +1199,11 @@ export default function TransactionsPage() {
                   const price = livePrices[p.id];
                   return (
                     <div key={p.id} className="grid grid-cols-3 text-gray-300">
-                      <span className="text-gray-450 font-sans font-bold text-[10px]">{p.label}</span>
-                      <span className="text-right font-extrabold text-emerald-400">
+                      <span className="text-gray-400 font-sans font-bold text-[10px]">{p.label}</span>
+                      <span className="text-right font-extrabold text-rose-400">
                         {price ? formatValue(price.bid, p.type) : '—'}
                       </span>
-                      <span className="text-right font-extrabold text-white">
+                      <span className="text-right font-extrabold text-emerald-400">
                         {price ? formatValue(price.ask, p.type) : '—'}
                       </span>
                     </div>
@@ -1269,7 +1275,7 @@ export default function TransactionsPage() {
               <div className={`p-4 rounded-xl border flex flex-col items-center justify-center text-center ${
                 netTotal >= 0
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                  : 'bg-red-500/10 border-red-500/30 text-red-400'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
               }`}>
                 <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-bold opacity-80 mb-1">
                   <Coins size={14} />
@@ -1281,16 +1287,16 @@ export default function TransactionsPage() {
               </div>
 
               {/* Toplam Detaylar (Alış/Satış kırılımı ve Has Çarpanı) */}
-              <div className="p-3 bg-gray-950/50 rounded-xl border border-gray-800/80 flex flex-col gap-1.5 text-xs text-gray-400 font-semibold">
+              <div className="p-3 bg-gray-950/50 rounded-xl border border-gray-800/80 flex flex-col gap-1.5 text-xs font-semibold">
                 <div className="flex justify-between">
-                  <span>Toplam Satış</span>
-                  <span className="font-mono text-white">
+                  <span className="text-emerald-400 font-bold">Toplam Satış</span>
+                  <span className="font-mono text-emerald-400 font-bold">
                     ₺{totalSales.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-gray-800/30 pt-1.5">
-                  <span>Toplam Alış</span>
-                  <span className="font-mono text-white">
+                  <span className="text-rose-400 font-bold">Toplam Alış</span>
+                  <span className="font-mono text-rose-400 font-bold">
                     ₺{totalPurchases.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -1348,11 +1354,9 @@ export default function TransactionsPage() {
                   Bilgi Fişi
                 </button>
               </div>
-
             </div>
           </div>
         </div>
-
       </div>
       )}
 
@@ -1455,7 +1459,7 @@ export default function TransactionsPage() {
                   onClick={() => setHistoryTypeFilter('SELL')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     historyTypeFilter === 'SELL'
-                      ? 'bg-blue-600 text-white shadow'
+                      ? 'bg-emerald-600 text-white shadow'
                       : 'bg-gray-800/80 text-gray-400 hover:text-white'
                   }`}
                 >
@@ -1466,7 +1470,7 @@ export default function TransactionsPage() {
                   onClick={() => setHistoryTypeFilter('BUY')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     historyTypeFilter === 'BUY'
-                      ? 'bg-emerald-600 text-white shadow'
+                      ? 'bg-rose-600 text-white shadow'
                       : 'bg-gray-800/80 text-gray-400 hover:text-white'
                   }`}
                 >
@@ -1564,10 +1568,10 @@ export default function TransactionsPage() {
                         </td>
                         <td className={THEME.TABLE.TD}>
                           <div className="flex items-center gap-1.5">
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-black ${
                               tx.type === 'buy'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                             }`}>
                               {tx.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
                             </span>

@@ -1092,10 +1092,10 @@ export default function StocksPage() {
                             {new Date(tx.createdAt).toLocaleString('tr-TR')}
                           </td>
                           <td className="px-5 py-3">
-                            <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                               tx.type === 'buy'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             }`}>
                               {tx.type === 'buy' ? '⬆ Alış' : '⬇ Satış'}
                             </span>
