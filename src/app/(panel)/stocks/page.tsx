@@ -314,7 +314,20 @@ export default function StocksPage() {
   // Edit stock amount modal states
   const [editStock, setEditStock] = useState<Stock | null>(null);
   const [editAmount, setEditAmount] = useState('');
+  const [editMinThreshold, setEditMinThreshold] = useState('5');
+  const [editOperation, setEditOperation] = useState<'SET' | 'ADD' | 'SUBTRACT'>('SET');
+  const [editDelta, setEditDelta] = useState('');
   const [savingStock, setSavingStock] = useState(false);
+
+  // Yeni Özel Sarrafiye / Döviz Stoğu Ekleme Modalı
+  const [showCustomStockModal, setShowCustomStockModal] = useState(false);
+  const [customStockForm, setCustomStockForm] = useState({
+    product: '',
+    label: '',
+    type: 'sarrafiye' as 'sarrafiye' | 'döviz',
+    amount: '0',
+    minThreshold: '5',
+  });
 
   const fetchAll = useCallback(async () => {
     try {
@@ -338,13 +351,28 @@ export default function StocksPage() {
         hasRes.json(),
         analyticsRes.json()
       ]);
-      setStocks(Array.isArray(stocksData) ? (stocksData as Stock[]) : []);
-      setTransactions(Array.isArray(txData) ? (txData as Transaction[]) : []);
-      setProductItems(Array.isArray(productsData) ? (productsData as ProductItem[]) : []);
-      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-      setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
-      setHasPrice(hasData && typeof hasData === 'object' && !('error' in hasData) ? hasData : null);
-      setAnalyticsSummary(analyticsData && typeof analyticsData === 'object' && !('error' in analyticsData) ? analyticsData : null);
+      
+      if (Array.isArray(stocksData)) {
+        setStocks(stocksData);
+      }
+      if (Array.isArray(txData)) {
+        setTransactions(txData);
+      }
+      if (Array.isArray(productsData)) {
+        setProductItems(productsData);
+      }
+      if (Array.isArray(categoriesData)) {
+        setCategories(categoriesData);
+      }
+      if (Array.isArray(suppliersData)) {
+        setSuppliers(suppliersData);
+      }
+      if (hasData && typeof hasData === 'object' && hasData.bid) {
+        setHasPrice(hasData);
+      }
+      if (analyticsData && !analyticsData.error) {
+        setAnalyticsSummary(analyticsData);
+      }
       
       const liveMap: Record<string, { bid: number; ask: number }> = {};
       if (Array.isArray(liveData)) {
@@ -474,20 +502,75 @@ export default function StocksPage() {
     }
   };
 
+  // Stok Düzenle / Hızlı Ekle / Çıkar Kaydet
   const handleEditSave = async () => {
     if (!editStock) return;
-    const amount = parseFloat(editAmount);
-    if (isNaN(amount)) return;
     setSavingStock(true);
     try {
+      let body: any = {
+        id: editStock.id,
+        minThreshold: parseFloat(editMinThreshold) || 5,
+      };
+
+      if (editOperation === 'SET') {
+        const amount = parseFloat(editAmount);
+        if (isNaN(amount)) return;
+        body.amount = amount;
+      } else if (editOperation === 'ADD') {
+        const delta = parseFloat(editDelta);
+        if (isNaN(delta) || delta <= 0) return;
+        body.delta = delta;
+      } else if (editOperation === 'SUBTRACT') {
+        const delta = parseFloat(editDelta);
+        if (isNaN(delta) || delta <= 0) return;
+        body.delta = -delta;
+      }
+
       const res = await fetch(ROUTES.API_STOCKS, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editStock.id, amount }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         await fetchAll();
         setEditStock(null);
+        setEditDelta('');
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Stok güncellenemedi.');
+      }
+    } finally {
+      setSavingStock(false);
+    }
+  };
+
+  // Yeni Özel Stok Tanımlama
+  const handleCreateCustomStock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customStockForm.product || !customStockForm.label) {
+      alert('Lütfen ürün kodu ve adını doldurun.');
+      return;
+    }
+    setSavingStock(true);
+    try {
+      const res = await fetch(ROUTES.API_STOCKS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product: customStockForm.product.trim(),
+          label: customStockForm.label.trim(),
+          type: customStockForm.type,
+          amount: parseFloat(customStockForm.amount) || 0,
+          minThreshold: parseFloat(customStockForm.minThreshold) || 5,
+        }),
+      });
+      if (res.ok) {
+        await fetchAll();
+        setShowCustomStockModal(false);
+        setCustomStockForm({ product: '', label: '', type: 'sarrafiye', amount: '0', minThreshold: '5' });
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Stok oluşturulamadı.');
       }
     } finally {
       setSavingStock(false);
@@ -933,9 +1016,19 @@ export default function StocksPage() {
               transition={{ duration: ANIM.DURATION.NORMAL }}
               className={`${THEME.GLASS_CARD} overflow-hidden`}
             >
-              <div className="px-5 py-4 border-b border-gray-800/40 flex items-center gap-3">
-                <Package size={18} className="text-yellow-500" />
-                <h2 className="text-white font-bold text-base">Stok Durumu</h2>
+              <div className="px-5 py-4 border-b border-gray-800/40 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <Package size={18} className="text-yellow-500" />
+                  <h2 className="text-white font-bold text-base">Sarrafiye & Döviz Stok Listesi</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomStockModal(true)}
+                  className="px-3 py-1.5 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+                >
+                  <Plus size={14} />
+                  Yeni Stok Kalemi Tanımla
+                </button>
               </div>
 
               {loading ? (
@@ -950,7 +1043,13 @@ export default function StocksPage() {
                     <StockRow
                       key={stock.id}
                       stock={stock}
-                      onEdit={(s) => { setEditStock(s); setEditAmount(String(s.amount)); }}
+                      onEdit={(s) => {
+                        setEditStock(s);
+                        setEditAmount(String(s.amount));
+                        setEditMinThreshold(String(s.minThreshold || 5));
+                        setEditOperation('SET');
+                        setEditDelta('');
+                      }}
                       livePrice={livePrices[stock.id] ?? livePrices[`${stock.id}TRY`]}
                       turnoverItem={analyticsSummary?.items.find(i => i.product === stock.id)}
                     />
@@ -1227,54 +1326,260 @@ export default function StocksPage() {
         )}
       </div>
 
-      {/* ─── STOK DÜZELTME MODALI ─── */}
+      {/* ─── GELİŞMİŞ STOK DÜZENLEME & HIZLI İKMAL MODALI ─── */}
       <AnimatePresence>
         {editStock && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
             onClick={() => setEditStock(null)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-gray-900 border border-gray-700/60 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+              className="bg-gray-900 border border-yellow-700/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-white font-bold text-lg">{MESSAGES.STOCKS_ADJUST_TITLE}</h3>
-                <button onClick={() => setEditStock(null)} className="text-gray-500 hover:text-white transition-colors">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <div>
+                  <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                    <Package className="text-yellow-400" size={20} />
+                    Stok Düzenleme & İkmal
+                  </h3>
+                  <p className="text-yellow-500/80 text-xs font-semibold mt-0.5">{editStock.label} ({editStock.id})</p>
+                </div>
+                <button onClick={() => setEditStock(null)} className="text-gray-400 hover:text-white p-1 rounded-lg">
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-gray-400 text-sm mb-1">{editStock.label}</p>
-              <p className="text-gray-600 text-xs mb-4">Mevcut: {editStock.amount}</p>
-              <input
-                type="number"
-                step="0.01"
-                value={editAmount}
-                onChange={e => setEditAmount(e.target.value)}
-                autoFocus
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-lg font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all mb-4"
-                placeholder="0"
-              />
-              <div className="flex gap-3">
+
+              {/* İşlem Modu Seçimi */}
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-gray-950 rounded-xl border border-gray-800">
                 <button
+                  type="button"
+                  onClick={() => setEditOperation('SET')}
+                  className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                    editOperation === 'SET'
+                      ? 'bg-yellow-500 text-gray-950 shadow-md'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  = Net Eşitle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditOperation('ADD')}
+                  className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                    editOperation === 'ADD'
+                      ? 'bg-emerald-500 text-gray-950 shadow-md'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  + Hızlı Ekle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditOperation('SUBTRACT')}
+                  className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                    editOperation === 'SUBTRACT'
+                      ? 'bg-red-500 text-white shadow-md'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  - Hızlı Çıkar
+                </button>
+              </div>
+
+              {/* Değer Girişi */}
+              {editOperation === 'SET' ? (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    Yeni Net Stok Miktarı ({UNIT_MAP[editStock.id] || 'Adet'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editAmount}
+                    onChange={e => setEditAmount(e.target.value)}
+                    autoFocus
+                    className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-xl text-white text-xl font-mono text-right focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/30"
+                    placeholder="0"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  <label className="block text-xs font-semibold text-gray-300">
+                    {editOperation === 'ADD' ? 'Stoğa Eklenecek Miktar' : 'Stoktan Düşülecek Miktar'}
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editDelta}
+                    onChange={e => setEditDelta(e.target.value)}
+                    autoFocus
+                    className={`w-full px-4 py-3 bg-gray-950 border rounded-xl text-white text-xl font-mono text-right focus:outline-none ${
+                      editOperation === 'ADD'
+                        ? 'border-emerald-500/50 focus:border-emerald-400'
+                        : 'border-red-500/50 focus:border-red-400'
+                    }`}
+                    placeholder="Miktar girin..."
+                  />
+                  {/* Hızlı Butonlar */}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[1, 5, 10, 25, 50].map(val => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setEditDelta(String(val))}
+                        className="px-2.5 py-1 text-xs font-mono font-bold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700"
+                      >
+                        {editOperation === 'ADD' ? `+${val}` : `-${val}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Kritik Stok Eşiği */}
+              <div className="pt-2 border-t border-gray-800/80">
+                <label className="block text-xs font-semibold text-gray-400 mb-1">
+                  Kritik Stok Uyarı Eşiği (minThreshold)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={editMinThreshold}
+                  onChange={e => setEditMinThreshold(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-yellow-400 text-sm font-mono"
+                  placeholder="5"
+                />
+                <span className="text-[10px] text-gray-500 mt-1 block">
+                  Stok bu sayının altına düştüğünde ana sayfada ve listede kırmızı uyarı verir.
+                </span>
+              </div>
+
+              {/* Butonlar */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
                   onClick={() => setEditStock(null)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-400 bg-gray-800 hover:bg-gray-700 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 bg-gray-800 hover:bg-gray-700 transition-colors"
                 >
                   İptal
                 </button>
                 <button
+                  type="button"
                   onClick={handleEditSave}
                   disabled={savingStock}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-black bg-yellow-500 hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-950 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/20 disabled:opacity-50"
                 >
                   {savingStock ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
-                  {MESSAGES.STOCKS_ADJUST_SAVE}
+                  Stoku Güncelle
                 </button>
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── YENİ ÖZEL SARRAFİYE / DÖVİZ STOK KALEMİ MODALI ─── */}
+      <AnimatePresence>
+        {showCustomStockModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-gray-900 border border-yellow-700/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <h3 className="text-white font-bold text-base flex items-center gap-2">
+                  <Plus className="text-yellow-400" size={18} />
+                  Yeni Sarrafiye / Döviz Stoğu Tanımla
+                </h3>
+                <button onClick={() => setShowCustomStockModal(false)} className="text-gray-400 hover:text-white p-1">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateCustomStock} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Ürün Kodu *</label>
+                  <input
+                    type="text"
+                    required
+                    value={customStockForm.product}
+                    onChange={e => setCustomStockForm({ ...customStockForm, product: e.target.value })}
+                    placeholder="Örn: GBP, CEYREK_YENI, KULCE_100GR"
+                    className={THEME.INPUT}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Ürün Adı / Açıklaması *</label>
+                  <input
+                    type="text"
+                    required
+                    value={customStockForm.label}
+                    onChange={e => setCustomStockForm({ ...customStockForm, label: e.target.value })}
+                    placeholder="Örn: İngiliz Sterlini, Yeni Çeyrek, 100gr Külçe"
+                    className={THEME.INPUT}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Kategori</label>
+                    <select
+                      value={customStockForm.type}
+                      onChange={e => setCustomStockForm({ ...customStockForm, type: e.target.value as any })}
+                      className={THEME.INPUT}
+                    >
+                      <option value="sarrafiye">Sarrafiye / Altın</option>
+                      <option value="döviz">Döviz</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Başlangıç Stoğu</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={customStockForm.amount}
+                      onChange={e => setCustomStockForm({ ...customStockForm, amount: e.target.value })}
+                      placeholder="0"
+                      className={THEME.INPUT}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Kritik Stok Eşiği</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={customStockForm.minThreshold}
+                    onChange={e => setCustomStockForm({ ...customStockForm, minThreshold: e.target.value })}
+                    placeholder="5"
+                    className={THEME.INPUT}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomStockModal(false)}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 bg-gray-800 hover:bg-gray-700"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingStock}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-950 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/20"
+                  >
+                    {savingStock ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
+                    Stoğu Ekle
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

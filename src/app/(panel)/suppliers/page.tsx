@@ -22,7 +22,8 @@ import {
   AlertCircle,
   X,
   CreditCard,
-  DollarSign
+  DollarSign,
+  ArrowRightLeft
 } from 'lucide-react';
 import { THEME, ANIM } from '@/constants/theme';
 import HeaderActions from '@/components/HeaderActions';
@@ -62,12 +63,14 @@ interface LiveHasPrice {
   ask: number;
 }
 
-const TRANSACTION_TYPES = {
+const TRANSACTION_TYPES: Record<string, { label: string; color: string }> = {
   PURCHASE: { label: '📦 Mal Alımı', color: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
   HAS_PAYMENT: { label: '🟡 Has Altın Ödemesi', color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' },
   TL_PAYMENT: { label: '💵 TL Ödemesi', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
   SETTLEMENT: { label: '⚖️ Mutabakat Düzeltmesi', color: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
-} as const;
+  VIRMAN_OUT: { label: '📤 Virman Çıkışı', color: 'bg-rose-500/10 text-rose-400 border-rose-500/30' },
+  VIRMAN_IN: { label: '📥 Virman Girişi', color: 'bg-teal-500/10 text-teal-400 border-teal-500/30' },
+};
 
 export default function SuppliersPage() {
   const [activeTab, setActiveTab] = useState<'reconciliation' | 'purchasing'>('reconciliation');
@@ -84,6 +87,8 @@ export default function SuppliersPage() {
   // Modallar
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showVirmanModal, setShowVirmanModal] = useState(false);
+
   const [newSupplierData, setNewSupplierData] = useState({
     name: '',
     phone: '',
@@ -99,6 +104,15 @@ export default function SuppliersPage() {
     hasAmount: '',
     tlAmount: '',
     documentNo: '',
+    description: '',
+  });
+
+  // Virman Transfer Formu
+  const [virmanFormData, setVirmanFormData] = useState({
+    fromSupplierId: '',
+    toSupplierId: '',
+    assetType: 'HAS' as 'TL' | 'HAS',
+    amount: '',
     description: '',
   });
 
@@ -331,6 +345,64 @@ export default function SuppliersPage() {
     }
   };
 
+  // Virman Transferi Gönder
+  const handleVirmanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!virmanFormData.fromSupplierId || !virmanFormData.toSupplierId) {
+      alert('Lütfen kaynak ve hedef toptancıları seçin.');
+      return;
+    }
+    if (virmanFormData.fromSupplierId === virmanFormData.toSupplierId) {
+      alert('Kaynak ve hedef toptancı aynı olamaz.');
+      return;
+    }
+    const amountNum = parseFloat(virmanFormData.amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      alert('Lütfen geçerli bir transfer miktarı girin.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch('/api/suppliers/virman', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromSupplierId: virmanFormData.fromSupplierId,
+          toSupplierId: virmanFormData.toSupplierId,
+          assetType: virmanFormData.assetType,
+          amount: amountNum,
+          unitPrice: hasPrice?.ask || null,
+          description: virmanFormData.description || `Toptancı Virmanı (${virmanFormData.assetType})`,
+        }),
+      });
+
+      if (res.ok) {
+        alert('Toptancılar arası virman transferi başarıyla gerçekleşti.');
+        setShowVirmanModal(false);
+        setVirmanFormData({
+          fromSupplierId: '',
+          toSupplierId: '',
+          assetType: 'HAS',
+          amount: '',
+          description: '',
+        });
+        await fetchSuppliers();
+        if (selectedSupplierId) {
+          await fetchTransactions(selectedSupplierId);
+        }
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Virman işlemi gerçekleştirilemedi.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Virman bağlantı hatası.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Ekstre Yazdırma (Print Window)
   const handlePrintStatement = () => {
     if (!selectedSupplier) return;
@@ -446,7 +518,13 @@ export default function SuppliersPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => setShowVirmanModal(true)}
+            className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 font-bold border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-purple-500/10"
+          >
+            <ArrowRightLeft size={16} /> Toptancı Virman Transferi
+          </button>
           <button
             onClick={() => setShowAddSupplierModal(true)}
             className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl text-xs flex items-center gap-2 transition-colors shadow-lg shadow-yellow-500/10"
@@ -1130,6 +1208,122 @@ export default function SuppliersPage() {
                     className="flex-1 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-500 disabled:opacity-50"
                   >
                     {saving ? 'İşleniyor...' : 'Ödemeyi Kaydet ve Borçtan Düş'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ─── TOPTANCI VİRMAN TRANSFERİ MODALI ─── */}
+        {showVirmanModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 border border-purple-500/30 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <ArrowRightLeft className="text-purple-400" size={20} />
+                  <h2 className="text-lg font-bold text-white">Toptancılar Arası Virman Transferi</h2>
+                </div>
+                <button onClick={() => setShowVirmanModal(false)} className="text-gray-400 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleVirmanSubmit} className="space-y-4">
+                {/* Kaynak Toptancı */}
+                <div>
+                  <label className={THEME.LABEL}>Kaynak Toptancı (Borcu Azalacak) *</label>
+                  <select
+                    required
+                    value={virmanFormData.fromSupplierId}
+                    onChange={e => setVirmanFormData({ ...virmanFormData, fromSupplierId: e.target.value })}
+                    className={THEME.SELECT}
+                  >
+                    <option value="">Kaynak Toptancı Seçin...</option>
+                    {suppliers.map(s => (
+                      <option key={s.id} value={s.id} disabled={s.id === virmanFormData.toSupplierId}>
+                        {s.name} (Has: {s.hasBalance.toFixed(3)} gr | TL: ₺{Math.round(s.tlBalance).toLocaleString('tr-TR')})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Hedef Toptancı */}
+                <div>
+                  <label className={THEME.LABEL}>Hedef Toptancı (Borcu Artacak) *</label>
+                  <select
+                    required
+                    value={virmanFormData.toSupplierId}
+                    onChange={e => setVirmanFormData({ ...virmanFormData, toSupplierId: e.target.value })}
+                    className={THEME.SELECT}
+                  >
+                    <option value="">Hedef Toptancı Seçin...</option>
+                    {suppliers.map(s => (
+                      <option key={s.id} value={s.id} disabled={s.id === virmanFormData.fromSupplierId}>
+                        {s.name} (Has: {s.hasBalance.toFixed(3)} gr | TL: ₺{Math.round(s.tlBalance).toLocaleString('tr-TR')})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Transfer Cinsi & Tutar */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={THEME.LABEL}>Transfer Cinsi *</label>
+                    <select
+                      value={virmanFormData.assetType}
+                      onChange={e => setVirmanFormData({ ...virmanFormData, assetType: e.target.value as 'TL' | 'HAS' })}
+                      className={THEME.SELECT}
+                    >
+                      <option value="HAS">🟡 Has Altın (Gram)</option>
+                      <option value="TL">💵 Türk Lirası (₺)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={THEME.LABEL}>Transfer Tutarı *</label>
+                    <input
+                      type="number"
+                      step={virmanFormData.assetType === 'HAS' ? '0.001' : '1'}
+                      required
+                      min="0.001"
+                      value={virmanFormData.amount}
+                      onChange={e => setVirmanFormData({ ...virmanFormData, amount: e.target.value })}
+                      placeholder={virmanFormData.assetType === 'HAS' ? 'Örn: 25.500 gr' : 'Örn: 50000 ₺'}
+                      className={THEME.INPUT}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={THEME.LABEL}>Açıklama / Not</label>
+                  <input
+                    type="text"
+                    value={virmanFormData.description}
+                    onChange={e => setVirmanFormData({ ...virmanFormData, description: e.target.value })}
+                    placeholder="Örn: Alyans teslimatı karşılığı toptancı mutabakat virmanı"
+                    className={THEME.INPUT}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowVirmanModal(false)}
+                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 py-2.5 bg-purple-600 text-white font-bold text-xs rounded-xl hover:bg-purple-500 flex items-center justify-center gap-1.5 shadow-lg shadow-purple-600/20 disabled:opacity-50"
+                  >
+                    {saving ? 'Virman Yapılıyor...' : 'Virmanı Onayla ve Aktar'}
                   </button>
                 </div>
               </form>

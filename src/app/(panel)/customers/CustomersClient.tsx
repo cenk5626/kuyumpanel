@@ -59,6 +59,8 @@ interface Customer {
   usdBalance: number;
   eurBalance: number;
   hasBalance?: number;
+  creditLimitTL?: number;
+  creditLimitHas?: number;
   totalHasEquivalent: number;
   transactionCount: number;
   createdAt: string;
@@ -151,6 +153,8 @@ export default function CustomersClient({
     tcNo: '',
     address: '',
     note: '',
+    creditLimitTL: '',
+    creditLimitHas: '',
   });
 
   // Borç / Tahsilat İşlem Modalı State
@@ -180,12 +184,14 @@ export default function CustomersClient({
       const res = await fetch(ROUTES.API_PRICES_LIVE);
       if (res.ok) {
         const prices = await res.json();
-        const has = prices.find((p: any) => p.id === 'GAUTRY')?.ask || 0;
-        const usd = prices.find((p: any) => p.id === 'USDTRY')?.ask || 0;
-        const eur = prices.find((p: any) => p.id === 'EURTRY')?.ask || 0;
-        if (has > 0) setHasPrice(has);
-        if (usd > 0) setUsdPrice(usd);
-        if (eur > 0) setEurPrice(eur);
+        if (Array.isArray(prices)) {
+          const has = prices.find((p: any) => p.id === 'GAUTRY');
+          const usd = prices.find((p: any) => p.id === 'USDTRY');
+          const eur = prices.find((p: any) => p.id === 'EURTRY');
+          if (has?.ask) setHasPrice(has.ask);
+          if (usd?.ask) setUsdPrice(usd.ask);
+          if (eur?.ask) setEurPrice(eur.ask);
+        }
       }
     } catch {
       /* quiet */
@@ -193,7 +199,8 @@ export default function CustomersClient({
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(fetchLivePrices, 10000);
+    fetchLivePrices();
+    const interval = setInterval(fetchLivePrices, 15000);
     return () => clearInterval(interval);
   }, [fetchLivePrices]);
 
@@ -212,7 +219,16 @@ export default function CustomersClient({
 
   // Müşteri Formu Sıfırla
   const resetCustomerForm = () => {
-    setCustomerFormData({ name: '', phone: '', email: '', tcNo: '', address: '', note: '' });
+    setCustomerFormData({
+      name: '',
+      phone: '',
+      email: '',
+      tcNo: '',
+      address: '',
+      note: '',
+      creditLimitTL: '',
+      creditLimitHas: '',
+    });
     setEditingCustomer(null);
     setError(null);
   };
@@ -278,6 +294,8 @@ export default function CustomersClient({
       tcNo: c.tcNo || '',
       address: c.address || '',
       note: c.note || '',
+      creditLimitTL: c.creditLimitTL ? String(c.creditLimitTL) : '',
+      creditLimitHas: c.creditLimitHas ? String(c.creditLimitHas) : '',
     });
     setError(null);
     setShowCustomerModal(true);
@@ -670,19 +688,33 @@ export default function CustomersClient({
                         </div>
                       </td>
 
-                      {/* TL Bakiyesi */}
+                      {/* TL Bakiyesi & Limit */}
                       <td className={THEME.TABLE.TD}>
-                        <span
-                          className={`text-sm font-mono font-bold ${
-                            c.tlBalance > 0
-                              ? 'text-red-400'
-                              : c.tlBalance < 0
-                              ? 'text-emerald-400'
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {formatCurrency(c.tlBalance, 'TL')}
-                        </span>
+                        <div>
+                          <span
+                            className={`text-sm font-mono font-bold ${
+                              c.tlBalance > 0
+                                ? 'text-red-400'
+                                : c.tlBalance < 0
+                                ? 'text-emerald-400'
+                                : 'text-gray-400'
+                            }`}
+                          >
+                            {formatCurrency(c.tlBalance, 'TL')}
+                          </span>
+                          {c.creditLimitTL != null && c.creditLimitTL > 0 && (
+                            <div className="mt-0.5">
+                              <span className="text-[10px] text-gray-500 block font-mono">
+                                Limit: ₺{c.creditLimitTL.toLocaleString('tr-TR')}
+                              </span>
+                              {c.tlBalance > c.creditLimitTL && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+                                  Limit Aşıldı! (+₺{(c.tlBalance - c.creditLimitTL).toLocaleString('tr-TR')})
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
 
                       {/* Döviz Bakiyeleri */}
@@ -856,6 +888,40 @@ export default function CustomersClient({
                     placeholder="Örn: Güvenilir müşteri, altın veresiyesi var"
                     className={THEME.INPUT}
                   />
+                </div>
+
+                {/* Borç / Kredi Limiti Tanımlama */}
+                <div className="p-3.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-yellow-400">
+                    <Scale size={14} />
+                    Müşteri Borç / Kredi Limitleri (0 = Limitsiz)
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-300 mb-1">Maks. TL Borç Limiti (₺)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={customerFormData.creditLimitTL}
+                        onChange={(e) => setCustomerFormData({ ...customerFormData, creditLimitTL: e.target.value })}
+                        placeholder="Örn: 50000 (0 = Limitsiz)"
+                        className={THEME.INPUT}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-300 mb-1">Maks. Has Borç Limiti (gr)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={customerFormData.creditLimitHas}
+                        onChange={(e) => setCustomerFormData({ ...customerFormData, creditLimitHas: e.target.value })}
+                        placeholder="Örn: 50.0 (0 = Limitsiz)"
+                        className={THEME.INPUT}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {error && (

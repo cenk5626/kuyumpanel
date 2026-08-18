@@ -25,6 +25,9 @@ describe('Milestone M3 - src/lib/z-report.ts Pure Format & Calculation Verificat
     debtSalesTL: 5000,
     totalTurnover: 85000,
     totalSalesCount: 12,
+    totalProfitTL: 4250,
+    profitMarginPercent: 5.3,
+    profitableTransactionsCount: 10,
 
     customerCashCollections: 12000,
     customerHasCollectionsGram: 3.5,

@@ -82,6 +82,14 @@ interface Transaction {
   quantity: number;
   price: number;
   total: number;
+  costPrice?: number | null;
+  profitAmount?: number | null;
+  profitMargin?: number | null;
+  isSuspicious?: boolean;
+  suspiciousReason?: string | null;
+  paymentMethod?: string;
+  employeeName?: string | null;
+  orderNote?: string | null;
   createdAt: string;
 }
 
@@ -150,6 +158,21 @@ export default function TransactionsPage() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank' | 'card'>('cash');
   const [cardFeePercent, setCardFeePercent] = useState<string>('5'); // Standart olarak %5
   const [orderNote, setOrderNote] = useState<string>('');
+
+  // Ana Tab Seçici (Hızlı POS Satış vs Geçmiş İşlemler & Kâr/Zarar)
+  const [activeMainTab, setActiveMainTab] = useState<'pos' | 'history'>('pos');
+
+  // İşlem Düzenleme & Silme Modal State'leri
+  const [editTxModal, setEditTxModal] = useState<Transaction | null>(null);
+  const [editTxForm, setEditTxForm] = useState({
+    quantity: '',
+    price: '',
+    paymentMethod: 'CASH',
+    reason: '',
+  });
+  const [deleteTxModal, setDeleteTxModal] = useState<Transaction | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Modaller
   const [activeRowIdForModal, setActiveRowIdForModal] = useState<string | null>(null);
@@ -442,6 +465,100 @@ export default function TransactionsPage() {
     showToast('Bilgi fişi yazdırılmıştır.', 'success', 2000);
   };
 
+  // İşlem Düzenleme Aç
+  const handleOpenEditModal = (tx: Transaction) => {
+    setEditTxModal(tx);
+    setEditTxForm({
+      quantity: String(tx.quantity),
+      price: String(tx.price),
+      paymentMethod: tx.paymentMethod || 'CASH',
+      reason: '',
+    });
+  };
+
+  // İşlem Düzenlemeyi Kaydet
+  const handleSaveEditTx = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTxModal) return;
+    if (!editTxForm.reason.trim()) {
+      alert('Lütfen düzenleme gerekçesini yazın.');
+      return;
+    }
+    const q = parseFloat(editTxForm.quantity);
+    const p = parseFloat(editTxForm.price);
+    if (isNaN(q) || q <= 0 || isNaN(p) || p <= 0) {
+      alert('Geçerli bir miktar ve birim fiyat girin.');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/transactions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editTxModal.id,
+          quantity: q,
+          price: p,
+          total: q * p,
+          paymentMethod: editTxForm.paymentMethod,
+          reason: editTxForm.reason.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        showToast('✓ İşlem başarıyla güncellendi ve stok farkı uygulandı.', 'success');
+        setEditTxModal(null);
+        await fetchAll();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'İşlem güncellenemedi.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Bağlantı hatası.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // İşlem Silme / İptal Aç
+  const handleOpenDeleteModal = (tx: Transaction) => {
+    setDeleteTxModal(tx);
+    setDeleteReason('');
+  };
+
+  // İşlem İptalini Onayla
+  const handleConfirmDeleteTx = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deleteTxModal) return;
+    if (!deleteReason.trim()) {
+      alert('Lütfen iptal gerekçesini belirtin.');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/transactions?id=${deleteTxModal.id}&reason=${encodeURIComponent(deleteReason.trim())}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        showToast('✓ İşlem iptal edildi ve stok iadesi yapıldı.', 'success');
+        setDeleteTxModal(null);
+        await fetchAll();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'İşlem silinemedi.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Bağlantı hatası.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // WhatsApp Fiş Gönder tetikleyicisi
   const handleSendWhatsAppReceipt = (phone?: string) => {
     const validItems = basket.filter(item => item.productCode !== '');
@@ -714,7 +831,34 @@ export default function TransactionsPage() {
         </div>
       </header>
 
+      {/* 2'Lİ ANA TAB SEÇİCİ */}
+      <div className="px-6 pt-4 pb-0 flex gap-2">
+        <div className="flex bg-gray-900/90 p-1.5 rounded-2xl border border-gray-800/80 max-w-xl backdrop-blur-md">
+          <button
+            onClick={() => setActiveMainTab('pos')}
+            className={`py-2 px-4 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+              activeMainTab === 'pos'
+                ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Coins size={15} /> 1. Hızlı POS Satış Masası
+          </button>
+          <button
+            onClick={() => setActiveMainTab('history')}
+            className={`py-2 px-4 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+              activeMainTab === 'history'
+                ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <ArrowLeftRight size={15} /> 2. Geçmiş İşlemler, Kâr/Zarar & Düzenleme ({transactions.length})
+          </button>
+        </div>
+      </div>
+
       {/* POS ANA ALAN */}
+      {activeMainTab === 'pos' && (
       <div className="p-6 flex flex-col gap-6 w-full max-w-[1920px] mx-auto">
         {/* Barkod Giriş ve Arama Alanı */}
         <div className={`${THEME.GLASS_CARD} p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap`}>
@@ -1097,6 +1241,359 @@ export default function TransactionsPage() {
         </div>
 
       </div>
+      )}
+
+      {/* ─── GEÇMİŞ İŞLEMLER, KÂR/ZARAR & DÜZENLEME ALANI ─── */}
+      {activeMainTab === 'history' && (
+        <div className="p-6 flex flex-col gap-6 w-full max-w-[1920px] mx-auto">
+          {/* Kâr / Zarar & Hasılat Özet Kartları */}
+          {(() => {
+            let totalSalesRevenue = 0;
+            let totalProfit = 0;
+            let profitableCount = 0;
+            let sellCount = 0;
+
+            transactions.forEach(tx => {
+              if (tx.type === 'sell') {
+                sellCount++;
+                totalSalesRevenue += tx.total;
+                if (tx.profitAmount != null) {
+                  totalProfit += tx.profitAmount;
+                  if (tx.profitAmount >= 0) profitableCount++;
+                }
+              }
+            });
+
+            const profitMargin = totalSalesRevenue > 0 ? (totalProfit / (totalSalesRevenue - totalProfit)) * 100 : 0;
+
+            return (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className={`${THEME.GLASS_CARD} p-4 border border-yellow-500/20`}>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Toplam Satış Hasılatı</p>
+                  <p className="text-xl font-black text-white font-mono mt-1">₺{Math.round(totalSalesRevenue).toLocaleString('tr-TR')}</p>
+                  <span className="text-[10px] text-gray-500">{sellCount} Satış İşlemi</span>
+                </div>
+                <div className={`${THEME.GLASS_CARD} p-4 border border-emerald-500/20`}>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Net Kâr / Zarar</p>
+                  <p className={`text-xl font-black font-mono mt-1 ${totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {totalProfit >= 0 ? `+₺${Math.round(totalProfit).toLocaleString('tr-TR')}` : `-₺${Math.round(Math.abs(totalProfit)).toLocaleString('tr-TR')}`}
+                  </p>
+                  <span className="text-[10px] text-emerald-500/80">{profitableCount} Kârlı İşlem</span>
+                </div>
+                <div className={`${THEME.GLASS_CARD} p-4 border border-blue-500/20`}>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Ortalama Kâr Marjı</p>
+                  <p className="text-xl font-black text-blue-400 font-mono mt-1">%{profitMargin.toFixed(1)}</p>
+                  <span className="text-[10px] text-gray-500">Maliyet üstü marj</span>
+                </div>
+                <div className={`${THEME.GLASS_CARD} p-4 border border-purple-500/20`}>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Toplam İşlem Adedi</p>
+                  <p className="text-xl font-black text-purple-300 font-mono mt-1">{transactions.length}</p>
+                  <span className="text-[10px] text-gray-500">Kayıtlı Alış / Satış</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* İşlem Listesi Tablosu */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`${THEME.GLASS_CARD} overflow-hidden`}
+          >
+            <div className="px-5 py-4 border-b border-gray-800/40 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2.5">
+                <ArrowLeftRight size={18} className="text-yellow-500" />
+                <h3 className="text-base font-bold text-white">İşlem Geçmişi, Kâr/Zarar ve Düzenleme</h3>
+              </div>
+              <span className="text-xs text-gray-400 font-mono">
+                Son {transactions.length} işlem listeleniyor
+              </span>
+            </div>
+
+            <div className={THEME.TABLE.WRAPPER}>
+              <table className={THEME.TABLE.MAIN}>
+                <thead className={THEME.TABLE.THEAD}>
+                  <tr>
+                    <th className={THEME.TABLE.TH}>Tarih & Saat</th>
+                    <th className={THEME.TABLE.TH}>Tür</th>
+                    <th className={THEME.TABLE.TH}>Ürün & Miktar</th>
+                    <th className={THEME.TABLE.TH}>Birim Fiyat</th>
+                    <th className={THEME.TABLE.TH}>Toplam Tutar</th>
+                    <th className={THEME.TABLE.TH}>Kâr / Zarar & Marj</th>
+                    <th className={THEME.TABLE.TH}>Ödeme / Personel</th>
+                    <th className={THEME.TABLE.TH}>İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody className={THEME.TABLE.TBODY}>
+                  {transactions.length > 0 ? (
+                    transactions.map((tx, i) => (
+                      <motion.tr
+                        key={tx.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.01 }}
+                        className={THEME.TABLE.TR}
+                      >
+                        <td className={THEME.TABLE.TD}>
+                          <div className="text-xs font-mono text-gray-400">
+                            {new Date(tx.createdAt).toLocaleString('tr-TR')}
+                          </div>
+                        </td>
+                        <td className={THEME.TABLE.TD}>
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                            tx.type === 'buy'
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                          }`}>
+                            {tx.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
+                          </span>
+                        </td>
+                        <td className={THEME.TABLE.TD}>
+                          <div>
+                            <span className="text-xs font-bold text-white block">{tx.productCode}</span>
+                            <span className="text-[11px] text-yellow-500/80 font-mono font-semibold">
+                              {tx.quantity} {tx.productType === 'döviz' ? '' : 'Adet'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className={THEME.TABLE.TD}>
+                          <span className="text-xs font-mono text-gray-300">
+                            ₺{tx.price.toLocaleString('tr-TR')}
+                          </span>
+                        </td>
+                        <td className={THEME.TABLE.TD}>
+                          <span className="text-sm font-bold text-white font-mono">
+                            ₺{tx.total.toLocaleString('tr-TR')}
+                          </span>
+                        </td>
+                        <td className={THEME.TABLE.TD}>
+                          {tx.profitAmount != null ? (
+                            <div>
+                              <span className={`text-xs font-bold font-mono ${tx.profitAmount >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {tx.profitAmount >= 0 ? `+₺${tx.profitAmount.toLocaleString('tr-TR')}` : `-₺${Math.abs(tx.profitAmount).toLocaleString('tr-TR')}`}
+                              </span>
+                              {tx.profitMargin != null && (
+                                <span className="text-[10px] text-gray-500 block font-mono">
+                                  Marj: %{tx.profitMargin.toFixed(1)}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 text-xs font-mono">—</span>
+                          )}
+                        </td>
+                        <td className={THEME.TABLE.TD}>
+                          <div>
+                            <span className="text-xs font-semibold text-gray-200 block">{tx.paymentMethod || 'Nakit'}</span>
+                            <span className="text-[10px] text-gray-500">{tx.employeeName || 'Kasiyer'}</span>
+                          </div>
+                        </td>
+                        <td className={THEME.TABLE.TD}>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleOpenEditModal(tx)}
+                              className="p-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg text-xs font-semibold transition-all"
+                              title="İşlemi Düzenle"
+                            >
+                              <FileText size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleOpenDeleteModal(tx)}
+                              className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-semibold transition-all"
+                              title="İşlemi İptal Et / Sil"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center text-gray-500 text-sm">
+                        Henüz kayıtlı işlem geçmişi bulunamadı.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ─── İŞLEM DÜZENLEME MODALI ─── */}
+      <AnimatePresence>
+        {editTxModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 border border-yellow-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <FileText className="text-yellow-400" size={18} />
+                    İşlem Bilgilerini Düzenle
+                  </h3>
+                  <p className="text-xs text-yellow-500/80 font-mono mt-0.5">
+                    İşlem No: #{editTxModal.id.slice(-8)} ({editTxModal.productCode})
+                  </p>
+                </div>
+                <button onClick={() => setEditTxModal(null)} className="text-gray-400 hover:text-white p-1">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditTx} className="space-y-3.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Miktar</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editTxForm.quantity}
+                      onChange={e => setEditTxForm({ ...editTxForm, quantity: e.target.value })}
+                      className={THEME.INPUT}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Birim Fiyat (₺)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editTxForm.price}
+                      onChange={e => setEditTxForm({ ...editTxForm, price: e.target.value })}
+                      className={THEME.INPUT}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Ödeme Yöntemi</label>
+                  <select
+                    value={editTxForm.paymentMethod}
+                    onChange={e => setEditTxForm({ ...editTxForm, paymentMethod: e.target.value })}
+                    className={THEME.SELECT}
+                  >
+                    <option value="CASH">Nakit</option>
+                    <option value="CARD">Kredi Kartı</option>
+                    <option value="BANK">Banka / Havale</option>
+                    <option value="DEBT">Veresiye / Açık Hesap</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-yellow-400 mb-1">
+                    Düzenleme Gerekçesi (Zorunlu) *
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={editTxForm.reason}
+                    onChange={e => setEditTxForm({ ...editTxForm, reason: e.target.value })}
+                    placeholder="Örn: Yanlış adet girilmişti, müşteri talebiyle düzeltildi..."
+                    className={THEME.INPUT}
+                  />
+                  <span className="text-[10px] text-gray-500 mt-1 block">
+                    Bu açıklama İşlem Revizyon Denetim Günlüğüne kaydedilecektir.
+                  </span>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditTxModal(null)}
+                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="flex-1 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/20 disabled:opacity-50"
+                  >
+                    {actionLoading ? 'Güncelleniyor...' : 'Düzeltmeyi Kaydet'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── İŞLEM SİLME / İPTAL MODALI ─── */}
+      <AnimatePresence>
+        {deleteTxModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+                <div className="flex items-center gap-2 text-red-400 font-bold text-base">
+                  <Trash2 size={18} />
+                  İşlemi İptal Et / Sil
+                </div>
+                <button onClick={() => setDeleteTxModal(null)} className="text-gray-400 hover:text-white p-1">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl space-y-1 text-xs">
+                <p className="text-white font-bold">
+                  {deleteTxModal.type === 'buy' ? 'Alış İşlemi İptal Edilecek' : 'Satış İşlemi İptal Edilecek'}
+                </p>
+                <p className="text-gray-300 font-mono">
+                  {deleteTxModal.quantity} Adet {deleteTxModal.productCode} — ₺{deleteTxModal.total.toLocaleString('tr-TR')}
+                </p>
+                <p className="text-yellow-400 text-[11px] pt-1">
+                  ⚠️ Bu işlem iptal edildiğinde stok miktarı otomatik olarak eski haline geri iade edilecektir.
+                </p>
+              </div>
+
+              <form onSubmit={handleConfirmDeleteTx} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-red-400 mb-1">
+                    İptal / Silme Gerekçesi (Zorunlu) *
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={deleteReason}
+                    onChange={e => setDeleteReason(e.target.value)}
+                    placeholder="Örn: Müşteri vazgeçti, hatalı kayıt girildi..."
+                    className={THEME.INPUT}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTxModal(null)}
+                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                  >
+                    Vazgeç
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/20 disabled:opacity-50"
+                  >
+                    {actionLoading ? 'İptal Ediliyor...' : 'İptali Onayla ve Stoğu İade Et'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ─── ÜRÜN SEÇİM MODALI ─────────────────────────────────────────── */}
       <AnimatePresence>

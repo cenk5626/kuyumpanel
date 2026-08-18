@@ -35,6 +35,9 @@ export interface DailyZReportMetrics {
   debtSalesTL: number;
   totalTurnover: number; // cash + card + bank + has
   totalSalesCount: number;
+  totalProfitTL: number;
+  profitMarginPercent: number;
+  profitableTransactionsCount: number;
 
   // Cari ve Tedarikçi Hareketleri
   customerCashCollections: number;
@@ -252,6 +255,9 @@ export async function calculateSessionMetrics(
   let scrapGoldGramsIn = 0;
   let scrapBuysCount = 0;
 
+  let totalProfitTL = 0;
+  let profitableTransactionsCount = 0;
+
   for (const tx of transactions) {
     if (tx.type === 'sell') {
       totalSalesCount++;
@@ -268,6 +274,11 @@ export async function calculateSessionMetrics(
         debtSalesTL += tx.total;
       } else {
         cashSales += tx.total;
+      }
+
+      if (tx.profitAmount != null) {
+        totalProfitTL += tx.profitAmount;
+        if (tx.profitAmount >= 0) profitableTransactionsCount++;
       }
     } else if (tx.type === 'buy') {
       scrapBuysCount++;
@@ -344,6 +355,9 @@ export async function calculateSessionMetrics(
   );
 
   const totalTurnover = Number((cashSales + cardSales + bankSales + hasSalesTL).toFixed(2));
+  const profitMarginPercent = totalTurnover > 0 && totalTurnover > totalProfitTL
+    ? Number(((totalProfitTL / (totalTurnover - totalProfitTL)) * 100).toFixed(2))
+    : 0;
 
   // Fiili Sayım & Fark
   const countedCashTL = session.countedCashTL != null ? session.countedCashTL : session.countedCash;
@@ -383,6 +397,9 @@ export async function calculateSessionMetrics(
     debtSalesTL: Number(debtSalesTL.toFixed(2)),
     totalTurnover,
     totalSalesCount,
+    totalProfitTL: Number(totalProfitTL.toFixed(2)),
+    profitMarginPercent,
+    profitableTransactionsCount,
 
     customerCashCollections: Number(customerCashCollections.toFixed(2)),
     customerHasCollectionsGram: Number(customerHasCollectionsGram.toFixed(3)),

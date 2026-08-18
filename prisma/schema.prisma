@@ -22,11 +22,12 @@ model User {
 }
 
 model Dealer {
-  id                   String                @id @default(cuid())
-  name                 String                @unique
+  id                   String                   @id @default(cuid())
+  name                 String                   @unique
   users                User[]
   stocks               Stock[]
   transactions         Transaction[]
+  transactionRevisions TransactionRevisionLog[]
   employees            Employee[]
   productItems         ProductItem[]
   categories           Category[]
@@ -35,8 +36,8 @@ model Dealer {
   auditLogs            AuditLog[]
   cashRegisterSessions CashRegisterSession[]
   cashMovements        CashMovement[]
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
 }
 
 // Aktif has fiyatı — singleton upsert (id="singleton"), geçmiş tutulmaz
@@ -87,24 +88,47 @@ model Stock {
 
 // Alış/Satış İşlemleri Geçmişi
 model Transaction {
-  id             String               @id @default(cuid())
+  id             String                   @id @default(cuid())
   dealerId       String
-  dealer         Dealer               @relation(fields: [dealerId], references: [id], onDelete: Cascade)
-  type           String               // "buy" (Alış - biz alıyoruz, stok artar) | "sell" (Satış - biz satıyoruz, stok azalır)
-  productType    String               // "sarrafiye" | "döviz" | "hurda" | "taki"
-  productCode    String               // Örn: "USD", "ECEYREKTL", "HURDA_22K"
-  quantity       Float                // İşlem miktarı
-  price          Float                // Birim fiyat (TL)
-  total          Float                // Toplam tutar (TL)
-  paymentMethod  String               @default("CASH") // "CASH" | "CARD" | "BANK" | "HAS" | "DEBT"
-  cardFeePercent Float?               // Kredi kartı komisyon oranı (%)
-  hasEquivalent  Float?               @default(0) // Has altın karşılığı (gr)
-  orderNote      String?              // Sipariş / İşlem notu
-  customerId     String?              // Müşteri ID (varsa)
-  sessionId      String?              // İlgili Kasa / Z-Raporu oturumu
-  session        CashRegisterSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  employeeName   String?              // İşlemi gerçekleştiren çalışan adı
-  createdAt      DateTime             @default(now())
+  dealer         Dealer                   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  type           String                   // "buy" (Alış - biz alıyoruz, stok artar) | "sell" (Satış - biz satıyoruz, stok azalır)
+  productType    String                   // "sarrafiye" | "döviz" | "hurda" | "taki"
+  productCode    String                   // Örn: "USD", "ECEYREKTL", "HURDA_22K"
+  quantity       Float                    // İşlem miktarı
+  price          Float                    // Birim fiyat (TL)
+  total          Float                    // Toplam tutar (TL)
+  costPrice      Float?                   // İşlem anındaki maliyet fiyatı (TL)
+  profitAmount   Float?                   // Net kâr/zarar tutarı (TL)
+  profitMargin   Float?                   // Kâr marjı (%)
+  isSuspicious   Boolean                  @default(false) // Şüpheli işlem bayrağı
+  suspiciousReason String?                // Şüphe nedeni
+  isDeleted      Boolean                  @default(false) // Mantıksal silme bayrağı
+  paymentMethod  String                   @default("CASH") // "CASH" | "CARD" | "BANK" | "HAS" | "DEBT"
+  cardFeePercent Float?                   // Kredi kartı komisyon oranı (%)
+  hasEquivalent  Float?                   @default(0) // Has altın karşılığı (gr)
+  orderNote      String?                  // Sipariş / İşlem notu
+  customerId     String?                  // Müşteri ID (varsa)
+  sessionId      String?                  // İlgili Kasa / Z-Raporu oturumu
+  session        CashRegisterSession?     @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  employeeName   String?                  // İşlemi gerçekleştiren çalışan adı
+  revisions      TransactionRevisionLog[]
+  createdAt      DateTime                 @default(now())
+}
+
+// İşlem Düzenleme & Silme Revizyon Günlüğü
+model TransactionRevisionLog {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  dealerId      String
+  dealer        Dealer      @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  actionType    String      // "EDIT" | "DELETE" | "RESTORE"
+  previousData  String      // JSON serialized previous transaction snapshot
+  newData       String?     // JSON serialized new transaction snapshot (null on delete)
+  reason        String      // Düzeltme / Silme nedeni
+  userEmail     String?
+  userName      String?
+  createdAt     DateTime    @default(now())
 }
 
 // Gün Sonu & Kasa Kapatma (Z-Raporu) Oturum Modeli
@@ -265,18 +289,20 @@ model Supplier {
 }
 
 model SupplierTransaction {
-  id           String   @id @default(cuid())
-  supplierId   String
-  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  dealerId     String
-  type         String   // "PURCHASE" (Mal Alımı) | "HAS_PAYMENT" (Has Ödemesi) | "TL_PAYMENT" (TL Ödemesi) | "SETTLEMENT" (Mutabakat Düzeltmesi)
-  hasAmount    Float    @default(0) // Has Altın Tutarı (gr Has)
-  tlAmount     Float    @default(0) // TL Tutarı (₺)
-  unitPrice    Float?   // İşlem anındaki Has altın fiyatı (TL/gr)
-  documentNo   String?  // Belge / İrsaliye / Fatura No
-  description  String?  // İşlem açıklaması
-  employeeName String?  // İşlemi yapan personel
-  createdAt    DateTime @default(now())
+  id                 String   @id @default(cuid())
+  supplierId         String
+  supplier           Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  dealerId           String
+  type               String   // "PURCHASE" | "HAS_PAYMENT" | "TL_PAYMENT" | "SETTLEMENT" | "VIRMAN_OUT" | "VIRMAN_IN"
+  hasAmount          Float    @default(0) // Has Altın Tutarı (gr Has)
+  tlAmount           Float    @default(0) // TL Tutarı (₺)
+  unitPrice          Float?   // İşlem anındaki Has altın fiyatı (TL/gr)
+  targetSupplierId   String?  // Virman yapılan hedef toptancı ID
+  targetSupplierName String?  // Virman yapılan hedef toptancı Adı
+  documentNo         String?  // Belge / İrsaliye / Fatura No
+  description        String?  // İşlem açıklaması
+  employeeName       String?  // İşlemi yapan personel
+  createdAt          DateTime @default(now())
 }
 
 // Sistem & İşlem Logları (Audit Log)
@@ -284,7 +310,7 @@ model AuditLog {
   id        String   @id @default(cuid())
   dealerId  String
   dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
-  action    String   // Örn: "POS Satış", "Stok Düzeltme", "Müşteri Borç Ekleme"
+  action    String   // Örn: "POS Satış", "Stok Düzeltme", "Müşteri Borç Ekleme", "Şüpheli İşlem"
   details   String   // Detaylı işlem açıklaması
   userEmail String?  // İşlemi yapan kullanıcı e-postası
   userName  String?  // İşlemi yapan kullanıcı adı
@@ -293,20 +319,22 @@ model AuditLog {
 
 // Müşteri Rehberi
 model Customer {
-  id           String                @id @default(cuid())
-  name         String
-  phone        String?
-  email        String?
-  tcNo         String?
-  address      String?
-  note         String?
-  hasBalance   Float                 @default(0) // gr Has cinsinden borç (+) veya alacak (-) bakiyesi
-  tlBalance    Float                 @default(0) // TL cinsinden borç (+) veya alacak (-) bakiyesi
-  dealerId     String
-  dealer       Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  id             String                @id @default(cuid())
+  name           String
+  phone          String?
+  email          String?
+  tcNo           String?
+  address        String?
+  note           String?
+  hasBalance     Float                 @default(0) // gr Has cinsinden borç (+) veya alacak (-) bakiyesi
+  tlBalance      Float                 @default(0) // TL cinsinden borç (+) veya alacak (-) bakiyesi
+  creditLimitTL  Float?                @default(0) // Tanımlanan maksimum TL borçlanma limiti (0 = limitsiz)
+  creditLimitHas Float?                @default(0) // Tanımlanan maksimum Has Altın borçlanma limiti (gr)
+  dealerId       String
+  dealer         Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   transactions CustomerTransaction[]
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt @default(now())
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt @default(now())
 }
 
 // Müşteri Borç / Alacak (Veresiye) İşlem Hareketleri

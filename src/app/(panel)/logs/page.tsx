@@ -36,11 +36,23 @@ export default async function LogsPage() {
   }
 
   try {
-    const dbLogs = await prisma.auditLog.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-    }).catch(() => []);
+    const [dbLogs, dbSuspicious, dbRevisions] = await Promise.all([
+      prisma.auditLog.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }).catch(() => []),
+      prisma.transaction.findMany({
+        where: { ...whereClause, isSuspicious: true },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      }).catch(() => []),
+      prisma.transactionRevisionLog.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      }).catch(() => []),
+    ]);
 
     const serializedLogs = dbLogs.map(l => ({
       id: l.id,
@@ -49,12 +61,42 @@ export default async function LogsPage() {
       details: l.details,
       userEmail: l.userEmail,
       userName: l.userName,
-      createdAt: l.createdAt ? new Date(l.createdAt).toISOString() : new Date().toISOString(),
+      createdAt: l.createdAt ? (l.createdAt instanceof Date ? l.createdAt.toISOString() : new Date(l.createdAt).toISOString()) : new Date().toISOString(),
+    }));
+
+    const serializedSuspicious = dbSuspicious.map(tx => ({
+      id: tx.id,
+      type: tx.type,
+      productType: tx.productType,
+      productCode: tx.productCode,
+      quantity: tx.quantity,
+      price: tx.price,
+      total: tx.total,
+      profitAmount: tx.profitAmount ?? null,
+      profitMargin: tx.profitMargin ?? null,
+      paymentMethod: tx.paymentMethod,
+      suspiciousReason: tx.suspiciousReason ?? 'Belirtilmemiş',
+      employeeName: tx.employeeName ?? 'Genel',
+      createdAt: tx.createdAt ? (tx.createdAt instanceof Date ? tx.createdAt.toISOString() : new Date(tx.createdAt).toISOString()) : new Date().toISOString(),
+    }));
+
+    const serializedRevisions = dbRevisions.map(r => ({
+      id: r.id,
+      transactionId: r.transactionId,
+      actionType: r.actionType,
+      previousData: r.previousData ? JSON.parse(r.previousData) : null,
+      newData: r.newData ? JSON.parse(r.newData) : null,
+      reason: r.reason,
+      userEmail: r.userEmail,
+      userName: r.userName,
+      createdAt: r.createdAt ? (r.createdAt instanceof Date ? r.createdAt.toISOString() : new Date(r.createdAt).toISOString()) : new Date().toISOString(),
     }));
 
     return (
       <LogsClient
         initialLogs={serializedLogs}
+        initialSuspicious={serializedSuspicious}
+        initialRevisions={serializedRevisions}
         currentUserRole={currentUserRole}
       />
     );
@@ -63,6 +105,8 @@ export default async function LogsPage() {
     return (
       <LogsClient
         initialLogs={[]}
+        initialSuspicious={[]}
+        initialRevisions={[]}
         currentUserRole={currentUserRole}
       />
     );

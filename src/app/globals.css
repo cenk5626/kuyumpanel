@@ -1,118 +1,150 @@
 @import "tailwindcss";
 
-/* Premium gold glow effects */
+/* ─────────────────────────────────────────────────────────────
+   KuyumPanel UI/UX Pro Max — High-End Luxury Design System
+   ───────────────────────────────────────────────────────────── */
+
+/* Swiss Luxury Jewelry Glow & Typography Defaults */
 @layer utilities {
   .gold-glow {
-    box-shadow: 0 0 60px rgba(234, 179, 8, 0.08), 0 0 120px rgba(234, 179, 8, 0.04);
+    box-shadow: 0 0 50px rgba(245, 158, 11, 0.12), 0 0 100px rgba(245, 158, 11, 0.05);
   }
   .gold-text-glow {
-    text-shadow: 0 0 40px rgba(234, 179, 8, 0.3);
+    text-shadow: 0 0 30px rgba(245, 158, 11, 0.35);
+  }
+  .tnum {
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Custom scrollbar */
+/* Custom Luxury Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgb(3 7 18);
+  background: #090d16;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgb(55 65 81);
-  border-radius: 3px;
+  background: #334155;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(75 85 99);
+  background: #f59e0b;
 }
 
-/* Selection color */
+/* Global Selection */
 ::selection {
-  background-color: rgba(234, 179, 8, 0.3);
-  color: white;
+  background-color: rgba(245, 158, 11, 0.35);
+  color: #ffffff;
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Aydınlık Mod (Light Mode) Teması ve Renk Haritası
+   Aydınlık Mod (Light Mode) — Platinum Pearl & Warm Gold
    ───────────────────────────────────────────────────────────── */
 
 html.light,
 html.light body {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
   color: #0f172a !important;
 }
 
 html.light ::-webkit-scrollbar-track {
-  background: #e2e8f0;
+  background: #f1f5f9;
 }
 
 html.light ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
 }
 
-html.light .bg-gray-950 {
-  background-color: #f1f5f9 !important;
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
 }
 
+/* Backgrounds & Cards */
+html.light .bg-slate-950,
+html.light .bg-gray-950 {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-slate-900,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/70,
 html.light .bg-gray-900,
 html.light .bg-gray-900\/95,
 html.light .bg-gray-900\/80,
 html.light .bg-gray-900\/60,
-html.light .bg-gray-900\/50,
-html.light .bg-gray-900\/20 {
+html.light .bg-gray-900\/50 {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
 }
 
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/60,
 html.light .bg-gray-950\/40,
 html.light .bg-gray-950\/60 {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light .bg-gray-800,
-html.light .bg-gray-800\/80,
-html.light .bg-gray-800\/60,
-html.light .bg-gray-800\/40,
-html.light .bg-gray-800\/30 {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
 
-html.light .border-gray-800,
-html.light .border-gray-800\/60,
-html.light .border-gray-800\/50,
-html.light .border-gray-800\/40,
-html.light .border-gray-800\/30,
-html.light .border-gray-700,
-html.light .border-gray-700\/60,
-html.light .border-gray-700\/50,
-html.light .border-gray-750,
-html.light .border-gray-850 {
-  border-color: #cbd5e1 !important;
+html.light .bg-slate-800,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/60,
+html.light .bg-gray-800,
+html.light .bg-gray-800\/80,
+html.light .bg-gray-800\/60 {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
+/* Borders */
+html.light .border-slate-800,
+html.light .border-slate-700,
+html.light .border-slate-700\/80,
+html.light .border-gray-800,
+html.light .border-gray-800\/60,
+html.light .border-gray-800\/40,
+html.light .border-gray-700,
+html.light .border-gray-700\/60,
+html.light .border-gray-700\/50 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .border-amber-500\/10,
+html.light .border-amber-500\/15,
+html.light .border-amber-500\/20,
+html.light .border-amber-500\/30,
 html.light .border-yellow-900\/20,
 html.light .border-yellow-900\/15,
 html.light .border-yellow-900\/10 {
-  border-color: rgba(234, 179, 8, 0.25) !important;
+  border-color: rgba(217, 119, 6, 0.25) !important;
 }
 
+/* Text Hierarchy in Light Mode */
 html.light .text-white {
   color: #0f172a !important;
 }
 
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300,
+html.light .text-gray-100,
 html.light .text-gray-200,
 html.light .text-gray-300 {
-  color: #334155 !important;
+  color: #1e293b !important;
 }
 
+html.light .text-slate-400,
+html.light .text-slate-500,
 html.light .text-gray-400,
 html.light .text-gray-500 {
   color: #64748b !important;
 }
 
+/* Forms in Light Mode */
 html.light input,
 html.light select,
 html.light textarea {
@@ -121,8 +153,12 @@ html.light textarea {
   border-color: #cbd5e1 !important;
 }
 
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
 html.light select option {
   background-color: #ffffff !important;
   color: #0f172a !important;
 }
-

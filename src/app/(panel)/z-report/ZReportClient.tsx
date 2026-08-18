@@ -559,6 +559,39 @@ export default function ZReportClient({
           </div>
         </div>
 
+        {/* GÜNLÜK KÂR / ZARAR & MARJ ANALİZ BANNER'I */}
+        {activeSession && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className={`${THEME.GLASS_CARD} p-4 border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between`}>
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">Gün Sonu Net Kâr / Zarar</span>
+              <div className="text-2xl font-black font-mono text-emerald-300 mt-1">
+                {(activeSession.totalProfitTL ?? 0) >= 0 ? '+' : ''}₺{(activeSession.totalProfitTL ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+              </div>
+              <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+                {activeSession.profitableTransactionsCount ?? 0} Kârlı Satış İşlemi
+              </span>
+            </div>
+            <div className={`${THEME.GLASS_CARD} p-4 border border-blue-500/30 bg-blue-950/20 flex flex-col justify-between`}>
+              <span className="text-xs font-bold text-blue-400 uppercase tracking-wider block">Ortalama Kâr Marjı</span>
+              <div className="text-2xl font-black font-mono text-blue-300 mt-1">
+                %{(activeSession.profitMarginPercent ?? 0).toFixed(1)}
+              </div>
+              <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+                Satış Hasılatı Üstü Net Kârlılık
+              </span>
+            </div>
+            <div className={`${THEME.GLASS_CARD} p-4 border border-yellow-500/30 bg-yellow-950/20 flex flex-col justify-between`}>
+              <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider block">Tamamlanan Satışlar</span>
+              <div className="text-2xl font-black font-mono text-yellow-300 mt-1">
+                {activeSession.totalSalesCount ?? 0} İşlem
+              </div>
+              <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+                Kasa Oturumu Boyunca Satışlar
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* 3. SEKME BAŞLIKLARI VE LİSTELER */}
         <div className={`${THEME.GLASS_CARD} flex flex-col overflow-hidden`}>
           {/* Sekme Butonları */}

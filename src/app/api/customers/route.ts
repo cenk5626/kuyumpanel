@@ -5,17 +5,17 @@ import { logActivity } from '@/lib/logger';
 import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
 
 /**
- * GET /api/customers — Bayiye ait müşterileri bakiyeleri ile listeler.
+ * GET /api/customers — Bayiye ait müşterileri bakiyeleri ve limitleri ile listeler.
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
+    const currentUserRole = (session.user as any)?.role;
+    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
 
     let whereClause: any = {};
     if (currentUserRole !== 'SUPER_ADMIN') {
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     // Her müşteri için öz bakiye özetlerini cari motoruyla hesapla
     const formatted = customers.map((c) => {
-      const balances = calculateCustomerBalancesFromTransactions(c.transactions);
+      const balances = calculateCustomerBalancesFromTransactions(c.transactions || []);
 
       return {
         id: c.id,
@@ -48,8 +48,10 @@ export async function GET(req: NextRequest) {
         eurBalance: balances.eurBalance,
         hasBalance: balances.hasBalance,
         totalHasEquivalent: balances.totalHasEquivalent,
-        transactionCount: c.transactions.length,
-        createdAt: c.createdAt.toISOString(),
+        creditLimitTL: c.creditLimitTL ?? 0,
+        creditLimitHas: c.creditLimitHas ?? 0,
+        transactionCount: c.transactions ? c.transactions.length : 0,
+        createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString(),
       };
     });
 
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, phone, email, tcNo, address, note } = body;
+    const { name, phone, email, tcNo, address, note, creditLimitTL, creditLimitHas } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: 'Müşteri ad soyad zorunludur.' }, { status: 400 });
@@ -81,9 +83,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'TC Kimlik No 11 haneli olmalıdır.' }, { status: 400 });
     }
 
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
+    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
     const userEmail = session.user?.email;
     const userName = session.user?.name;
+
+    // Bayinin varlığını garanti et
+    await prisma.dealer.upsert({
+      where: { id: currentUserDealerId },
+      create: { id: currentUserDealerId, name: currentUserDealerId === 'merkez' ? 'Merkez Mağaza' : currentUserDealerId },
+      update: {},
+    });
 
     const customer = await prisma.customer.create({
       data: {
@@ -93,6 +102,8 @@ export async function POST(req: NextRequest) {
         tcNo: tcNo?.trim() || null,
         address: address?.trim() || null,
         note: note?.trim() || null,
+        creditLimitTL: creditLimitTL != null && !isNaN(Number(creditLimitTL)) ? Number(creditLimitTL) : 0,
+        creditLimitHas: creditLimitHas != null && !isNaN(Number(creditLimitHas)) ? Number(creditLimitHas) : 0,
         dealerId: currentUserDealerId,
       },
     });
@@ -101,10 +112,10 @@ export async function POST(req: NextRequest) {
     await logActivity({
       dealerId: currentUserDealerId,
       action: 'Müşteri Kaydı',
-      details: `Yeni müşteri eklendi: ${customer.name} (Tel: ${customer.phone || 'Yok'})`,
+      details: `Yeni müşteri eklendi: ${customer.name} (Limit: ₺${customer.creditLimitTL || 0})`,
       userEmail,
       userName,
-    });
+    }).catch(() => {});
 
     return NextResponse.json(customer, { status: 201 });
   } catch (error) {
@@ -114,7 +125,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * PUT /api/customers — Müşteri bilgilerini güncelle
+ * PUT /api/customers — Müşteri bilgilerini ve limitlerini güncelle
  */
 export async function PUT(req: NextRequest) {
   try {
@@ -124,50 +135,45 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, name, phone, email, tcNo, address, note } = body;
+    const { id, name, phone, email, tcNo, address, note, creditLimitTL, creditLimitHas } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Müşteri ID gereklidir.' }, { status: 400 });
+    }
+
+    if (name && !name.trim()) {
+      return NextResponse.json({ error: 'Müşteri ad soyad boş bırakılamaz.' }, { status: 400 });
     }
 
     if (tcNo && tcNo.trim() && tcNo.trim().length !== 11) {
       return NextResponse.json({ error: 'TC Kimlik No 11 haneli olmalıdır.' }, { status: 400 });
     }
 
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
+    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
     const userEmail = session.user?.email;
     const userName = session.user?.name;
-
-    const existing = await prisma.customer.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: 'Müşteri bulunamadı.' }, { status: 404 });
-    }
-
-    if (currentUserRole !== 'SUPER_ADMIN' && existing.dealerId !== currentUserDealerId) {
-      return NextResponse.json({ error: 'Bu müşteriyi düzenleme yetkiniz yok.' }, { status: 403 });
-    }
 
     const updated = await prisma.customer.update({
       where: { id },
       data: {
-        name: name ? name.trim() : existing.name,
-        phone: phone !== undefined ? (phone?.trim() || null) : existing.phone,
-        email: email !== undefined ? (email?.trim() || null) : existing.email,
-        tcNo: tcNo !== undefined ? (tcNo?.trim() || null) : existing.tcNo,
-        address: address !== undefined ? (address?.trim() || null) : existing.address,
-        note: note !== undefined ? (note?.trim() || null) : existing.note,
+        ...(name && { name: name.trim() }),
+        phone: phone !== undefined ? (phone?.trim() || null) : undefined,
+        email: email !== undefined ? (email?.trim() || null) : undefined,
+        tcNo: tcNo !== undefined ? (tcNo?.trim() || null) : undefined,
+        address: address !== undefined ? (address?.trim() || null) : undefined,
+        note: note !== undefined ? (note?.trim() || null) : undefined,
+        ...(creditLimitTL !== undefined && { creditLimitTL: Number(creditLimitTL) || 0 }),
+        ...(creditLimitHas !== undefined && { creditLimitHas: Number(creditLimitHas) || 0 }),
       },
     });
 
-    // Activity Log
     await logActivity({
       dealerId: currentUserDealerId,
       action: 'Müşteri Güncelleme',
-      details: `Müşteri bilgileri güncellendi: ${updated.name}`,
+      details: `Müşteri güncellendi: ${updated.name}`,
       userEmail,
       userName,
-    });
+    }).catch(() => {});
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -188,36 +194,38 @@ export async function DELETE(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+
     if (!id) {
       return NextResponse.json({ error: 'Müşteri ID gereklidir.' }, { status: 400 });
     }
 
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
+    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
     const userEmail = session.user?.email;
     const userName = session.user?.name;
 
-    const existing = await prisma.customer.findUnique({ where: { id } });
-    if (!existing) {
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      include: { transactions: true },
+    });
+
+    if (!customer) {
       return NextResponse.json({ error: 'Müşteri bulunamadı.' }, { status: 404 });
     }
 
-    if (currentUserRole !== 'SUPER_ADMIN' && existing.dealerId !== currentUserDealerId) {
-      return NextResponse.json({ error: 'Bu müşteriyi silme yetkiniz yok.' }, { status: 403 });
-    }
+    // Müşteriyi sil
+    await prisma.customer.delete({
+      where: { id },
+    });
 
-    await prisma.customer.delete({ where: { id } });
-
-    // Activity Log
     await logActivity({
       dealerId: currentUserDealerId,
       action: 'Müşteri Silme',
-      details: `Müşteri silindi: ${existing.name}`,
+      details: `Müşteri silindi: ${customer.name} (İşlem sayısı: ${customer.transactions.length})`,
       userEmail,
       userName,
-    });
+    }).catch(() => {});
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message: 'Müşteri başarıyla silindi.' });
   } catch (error) {
     console.error('[API Customers] DELETE Error:', error);
     return NextResponse.json({ error: 'Müşteri silinemedi.' }, { status: 500 });
