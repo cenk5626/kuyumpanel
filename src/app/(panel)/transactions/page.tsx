@@ -74,9 +74,11 @@ interface LivePrice {
 
 interface Stock {
   id: string;
+  product?: string;
   label: string;
   type: string;
   amount: number;
+  minThreshold?: number | null;
 }
 
 interface Transaction {
@@ -108,7 +110,9 @@ interface BasketItem {
   total: number;
   barcodeDetail?: {
     id: string;
+    barcode?: string;
     title: string;
+    status?: string;
     carat: number;
     weight: number;
     laborType: string;
@@ -410,13 +414,55 @@ export default function TransactionsPage() {
     }
   };
 
-  // Sepeti API üzerinden kaydet
+  // Stok yeterlilik kontrolü (Stokta olmayan veya yetersiz olan ürünün satışı engellenir)
+  const validateStockAvailability = (): { valid: boolean; error?: string } => {
+    const sellQuantities: Record<string, number> = {};
+
+    for (const item of basket) {
+      if (item.productCode && item.type === 'sell') {
+        if (item.barcodeDetail) {
+          if (item.barcodeDetail.status === 'SOLD') {
+            return {
+              valid: false,
+              error: `"${item.barcodeDetail.title || item.productCode}" barkodlu ürün stokta bulunmuyor (Satılmış)! Stokta olmayan ürün satılamaz.`,
+            };
+          }
+        } else {
+          sellQuantities[item.productCode] = (sellQuantities[item.productCode] || 0) + item.quantity;
+        }
+      }
+    }
+
+    for (const [code, requestedQty] of Object.entries(sellQuantities)) {
+      const stockItem = stocks.find(s => s.product === code || s.id === code);
+      const available = stockItem ? stockItem.amount : 0;
+      if (requestedQty > available) {
+        const prodLabel = stockItem?.label || PRODUCT_OPTIONS.find(p => p.code === code)?.label || code;
+        return {
+          valid: false,
+          error: `Stok Yetersiz! "${prodLabel}" için mevcut stok: ${available} Adet, sepetteki satış: ${requestedQty} Adet. Stokta olmayan ürün satılamaz.`,
+        };
+      }
+    }
+
+    return { valid: true };
+  };
+
+  // Sepetteki tüm işlemleri tek tıkla kaydet
   const handleSaveTransactions = async () => {
     const validItems = basket.filter(item => item.productCode !== '');
     if (validItems.length === 0) {
       showToast('Sepetiniz boş veya ürün seçilmemiş!', 'error');
-      return;
+      return false;
     }
+
+    // Stokta olmayan ürün satışı engelleme kontrolü
+    const stockCheck = validateStockAvailability();
+    if (!stockCheck.valid) {
+      showToast(stockCheck.error || 'Stokta olmayan ürünün satışı yapılamaz!', 'error', 4500);
+      return false;
+    }
+
     setSubmitting(true);
     const normalizedPaymentMethod =
       paymentMethod === 'card'
@@ -446,7 +492,7 @@ export default function TransactionsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast(data.details ? `${data.error} (${data.details})` : (data.error ?? 'İşlemler kaydedilemedi.'), 'error');
+        showToast(data.details ? `${data.error} (${data.details})` : (data.error ?? 'İşlemler kaydedilemedi.'), 'error', 4500);
         return false;
       } else {
         showToast(`✓ ${validItems.length} adet işlem başarıyla kaydedildi.`, 'success');
@@ -470,6 +516,13 @@ export default function TransactionsPage() {
     const validItems = basket.filter(item => item.productCode !== '');
     if (validItems.length === 0) {
       showToast('Sepette yazdırılacak ürün bulunmuyor!', 'error');
+      return;
+    }
+
+    // Stokta olmayan ürün satışı engelleme kontrolü
+    const stockCheck = validateStockAvailability();
+    if (!stockCheck.valid) {
+      showToast(stockCheck.error || 'Stokta olmayan ürünün satışı yapılamaz!', 'error', 4500);
       return;
     }
 
@@ -669,6 +722,13 @@ export default function TransactionsPage() {
       showToast('Sepette ürün bulunmuyor!', 'error');
       return;
     }
+
+    // Stokta olmayan ürün satışı engelleme kontrolü
+    const stockCheck = validateStockAvailability();
+    if (!stockCheck.valid) {
+      showToast(stockCheck.error || 'Stokta olmayan ürünün satışı yapılamaz!', 'error', 4500);
+      return;
+    }
     const receiptItems = validItems.map(item => {
       const prodOption = PRODUCT_OPTIONS.find(p => p.code === item.productCode);
       const title = item.barcodeDetail?.title || prodOption?.label || item.productCode;
@@ -755,7 +815,9 @@ export default function TransactionsPage() {
           sellingMilyem,
           profitMargin: data.profitMargin,
           costPrice: data.costPrice,
-          supplierName: data.supplierName
+          supplierName: data.supplierName,
+          status: data.status,
+          barcode: data.barcode,
         }
       };
 
@@ -1073,6 +1135,47 @@ export default function TransactionsPage() {
                             Modal ile Seç
                           </button>
                         </>
+                      )}
+
+                      {/* Canlı Stok Durumu Rozeti */}
+                      {item.productCode && (
+                        (() => {
+                          if (item.barcodeDetail) {
+                            const isSold = item.barcodeDetail.status === 'SOLD';
+                            return (
+                              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md mt-1 w-fit ${
+                                isSold
+                                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              }`}>
+                                {isSold ? '❌ Stokta Yok (Satılmış)' : '✓ Stokta Mevcut'}
+                              </span>
+                            );
+                          }
+                          const currentStock = stocks.find(s => s.product === item.productCode || s.id === item.productCode);
+                          const available = currentStock ? currentStock.amount : 0;
+                          const isOutOfStock = available <= 0;
+                          const isExceeding = item.type === 'sell' && item.quantity > available;
+
+                          return (
+                            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                              <span className={`inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                                isOutOfStock
+                                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                  : available <= (currentStock?.minThreshold ?? 5)
+                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              }`}>
+                                {isOutOfStock ? '❌ Stok: 0 (Tükendi)' : `📦 Stok: ${available} Adet`}
+                              </span>
+                              {isExceeding && (
+                                <span className="text-[10px] text-rose-400 font-bold animate-pulse">
+                                  ⚠️ Yetersiz! En fazla {available} satılabilir.
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()
                       )}
                     </div>
 
@@ -1879,16 +1982,27 @@ export default function TransactionsPage() {
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sarrafiye Altın</h4>
                     <div className="grid grid-cols-2 gap-2">
-                      {filteredProducts.filter(p => p.type === 'sarrafiye').map(p => (
-                        <button
-                          key={p.code}
-                          onClick={() => handleSelectProductFromModal(p.code)}
-                          className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-gray-900/40 border-gray-800/80 text-gray-300 hover:border-gray-700 hover:bg-gray-800/40"
-                        >
-                          <span className="font-semibold text-xs truncate mr-1">{p.label}</span>
-                          <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
-                        </button>
-                      ))}
+                      {filteredProducts.filter(p => p.type === 'sarrafiye').map(p => {
+                        const st = stocks.find(s => s.product === p.code || s.id === p.code);
+                        const amt = st ? st.amount : 0;
+                        return (
+                          <button
+                            key={p.code}
+                            onClick={() => handleSelectProductFromModal(p.code)}
+                            className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-gray-900/40 border-gray-800/80 text-gray-300 hover:border-gray-700 hover:bg-gray-800/40"
+                          >
+                            <div className="flex flex-col min-w-0 pr-1">
+                              <span className="font-semibold text-xs truncate">{p.label}</span>
+                              <span className={`text-[10px] font-mono font-bold mt-0.5 ${
+                                amt > 0 ? 'text-emerald-400' : 'text-rose-400'
+                              }`}>
+                                {amt > 0 ? `Stok: ${amt} Adet` : '❌ Stok Yok'}
+                              </span>
+                            </div>
+                            <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -1898,16 +2012,27 @@ export default function TransactionsPage() {
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Döviz</h4>
                     <div className="grid grid-cols-2 gap-2">
-                      {filteredProducts.filter(p => p.type === 'döviz').map(p => (
-                        <button
-                          key={p.code}
-                          onClick={() => handleSelectProductFromModal(p.code)}
-                          className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-gray-900/40 border-gray-800/80 text-gray-300 hover:border-gray-700 hover:bg-gray-800/40"
-                        >
-                          <span className="font-semibold text-xs truncate mr-1">{p.label}</span>
-                          <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
-                        </button>
-                      ))}
+                      {filteredProducts.filter(p => p.type === 'döviz').map(p => {
+                        const st = stocks.find(s => s.product === p.code || s.id === p.code);
+                        const amt = st ? st.amount : 0;
+                        return (
+                          <button
+                            key={p.code}
+                            onClick={() => handleSelectProductFromModal(p.code)}
+                            className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-gray-900/40 border-gray-800/80 text-gray-300 hover:border-gray-700 hover:bg-gray-800/40"
+                          >
+                            <div className="flex flex-col min-w-0 pr-1">
+                              <span className="font-semibold text-xs truncate">{p.label}</span>
+                              <span className={`text-[10px] font-mono font-bold mt-0.5 ${
+                                amt > 0 ? 'text-emerald-400' : 'text-rose-400'
+                              }`}>
+                                {amt > 0 ? `Stok: ${amt}` : '❌ Stok Yok'}
+                              </span>
+                            </div>
+                            <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

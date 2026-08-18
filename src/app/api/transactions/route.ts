@@ -268,12 +268,19 @@ export async function POST(req: Request) {
           });
         }
 
-        // 3. Stok Yönetimi (Otomatik Düşüm / Artırım)
+        // 3. Stok Yönetimi (Otomatik Düşüm / Artırım & Yetersiz Stok Engeli)
         const dbProduct = await tx.productItem.findUnique({
           where: { barcode: productCode },
         });
 
         if (dbProduct) {
+          if (type === TX_TYPE_SELL && dbProduct.status !== 'IN_STOCK') {
+            throw new Error(
+              `Stokta Olmayan Ürün Satılamaz! "${dbProduct.title || dbProduct.barcode}" barkodlu ürünün mevcut durumu: ${
+                dbProduct.status === 'SOLD' ? 'SATILMIŞ' : dbProduct.status
+              }.`
+            );
+          }
           await tx.productItem.update({
             where: { barcode: productCode },
             data: { status: type === TX_TYPE_BUY ? 'IN_STOCK' : 'SOLD' },
@@ -287,6 +294,16 @@ export async function POST(req: Request) {
               },
             },
           });
+
+          // Satış işlemlerinde stok kontrolü:
+          if (type === TX_TYPE_SELL) {
+            const currentAmount = stockItem ? stockItem.amount : 0;
+            if (currentAmount < quantity) {
+              throw new Error(
+                `Stokta Olmayan veya Yetersiz Ürün Satılamaz! "${stockItem?.label || productCode}" için mevcut stok: ${currentAmount}, satılmak istenen miktar: ${quantity}.`
+              );
+            }
+          }
 
           const adjustment = type === TX_TYPE_BUY ? quantity : -quantity;
 
@@ -335,12 +352,13 @@ export async function POST(req: Request) {
     return NextResponse.json(results);
   } catch (error) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'İşlem gerçekleştirilemedi.';
     return NextResponse.json(
       {
-        error: 'İşlem gerçekleştirilemedi.',
-        details: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
+        details: errorMessage,
       },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
