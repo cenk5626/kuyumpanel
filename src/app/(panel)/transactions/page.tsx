@@ -23,7 +23,11 @@ import {
   Barcode,
   Camera,
   MessageSquare,
-  Send
+  Send,
+  Filter,
+  Eye,
+  AlertTriangle,
+  Receipt
 } from 'lucide-react';
 import Link from 'next/link';
 import { MESSAGES } from '@/constants/messages';
@@ -32,6 +36,7 @@ import { THEME, ANIM } from '@/constants/theme';
 import { PAYMENT_METHODS } from '@/constants/kasa';
 import HeaderActions from '@/components/HeaderActions';
 import CameraScannerModal from '@/components/CameraScannerModal';
+import POSTransactionReceiptModal, { ReceiptData } from '@/components/POSTransactionReceiptModal';
 import { generateWhatsAppReceiptUrl } from '@/lib/whatsapp';
 
 
@@ -161,6 +166,11 @@ export default function TransactionsPage() {
 
   // Ana Tab Seçici (Hızlı POS Satış vs Geçmiş İşlemler & Kâr/Zarar)
   const [activeMainTab, setActiveMainTab] = useState<'pos' | 'history'>('pos');
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'SELL' | 'BUY' | 'SUSPICIOUS'>('ALL');
+
+  // Termal Fiş Yazdırma Modalı
+  const [receiptModalData, setReceiptModalData] = useState<ReceiptData | null>(null);
 
   // İşlem Düzenleme & Silme Modal State'leri
   const [editTxModal, setEditTxModal] = useState<Transaction | null>(null);
@@ -454,15 +464,105 @@ export default function TransactionsPage() {
 
   // Fiş yazdır tetikleyicisi
   const handlePrintReceipt = () => {
-    if (basket.length === 0) return;
-    showToast('Fiş yazdırılmıştır.', 'success', 2000);
-    handleSaveTransactions();
+    const validItems = basket.filter(item => item.productCode !== '');
+    if (validItems.length === 0) {
+      showToast('Sepette yazdırılacak ürün bulunmuyor!', 'error');
+      return;
+    }
+
+    const receiptItems = validItems.map(item => {
+      const prodOption = PRODUCT_OPTIONS.find(p => p.code === item.productCode);
+      return {
+        code: item.productCode,
+        title: item.barcodeDetail?.title || prodOption?.label || item.productCode,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.total,
+        carat: item.barcodeDetail?.carat || (item.productCode.includes('22') ? 22 : item.productCode.includes('14') ? 14 : item.productCode.includes('24') ? 24 : undefined),
+        weight: item.barcodeDetail?.weight,
+        type: item.type,
+      };
+    });
+
+    const hasGoldPrice = getHasPrice('sell') || 3000;
+    const totalHas = basketTotal / hasGoldPrice;
+
+    setReceiptModalData({
+      receiptNo: `KP-${Date.now().toString().slice(-6)}`,
+      date: new Date(),
+      customerName: orderNote.trim() || undefined,
+      employeeName: activePersonnel || loggedInAdminName,
+      paymentMethod: paymentMethod === 'card' ? `Kredi Kartı (+%${feePercent})` : paymentMethod === 'bank' ? 'Banka / FAST' : 'Nakit',
+      items: receiptItems,
+      subTotal: netTotal,
+      feeAmount: feePercent > 0 ? (netTotal * feePercent / 100) : 0,
+      total: basketTotal,
+      totalHas,
+      isInfoOnly: false,
+    });
   };
 
   // Bilgi fişi tetikleyicisi
   const handlePrintInfo = () => {
-    if (basket.length === 0) return;
-    showToast('Bilgi fişi yazdırılmıştır.', 'success', 2000);
+    const validItems = basket.filter(item => item.productCode !== '');
+    if (validItems.length === 0) {
+      showToast('Sepette ürün bulunmuyor!', 'error');
+      return;
+    }
+
+    const receiptItems = validItems.map(item => {
+      const prodOption = PRODUCT_OPTIONS.find(p => p.code === item.productCode);
+      return {
+        code: item.productCode,
+        title: item.barcodeDetail?.title || prodOption?.label || item.productCode,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.total,
+        carat: item.barcodeDetail?.carat || (item.productCode.includes('22') ? 22 : item.productCode.includes('14') ? 14 : item.productCode.includes('24') ? 24 : undefined),
+        weight: item.barcodeDetail?.weight,
+        type: item.type,
+      };
+    });
+
+    const hasGoldPrice = getHasPrice('sell') || 3000;
+    const totalHas = basketTotal / hasGoldPrice;
+
+    setReceiptModalData({
+      receiptNo: `INF-${Date.now().toString().slice(-6)}`,
+      date: new Date(),
+      customerName: orderNote.trim() || undefined,
+      employeeName: activePersonnel || loggedInAdminName,
+      paymentMethod: paymentMethod === 'card' ? `Kredi Kartı (+%${feePercent})` : paymentMethod === 'bank' ? 'Banka / FAST' : 'Nakit',
+      items: receiptItems,
+      subTotal: netTotal,
+      feeAmount: feePercent > 0 ? (netTotal * feePercent / 100) : 0,
+      total: basketTotal,
+      totalHas,
+      isInfoOnly: true,
+    });
+  };
+
+  // Geçmiş İşlemden Fiş Yazdır
+  const handlePrintHistoricalTxReceipt = (tx: Transaction) => {
+    const prodOption = PRODUCT_OPTIONS.find(p => p.code === tx.productCode);
+    setReceiptModalData({
+      receiptNo: `TX-${tx.id.slice(-6).toUpperCase()}`,
+      date: tx.createdAt,
+      customerName: tx.orderNote || undefined,
+      employeeName: tx.employeeName || 'Kasiyer',
+      paymentMethod: tx.paymentMethod === 'CARD' ? 'Kredi Kartı' : tx.paymentMethod === 'BANK' ? 'Banka / FAST' : tx.paymentMethod === 'DEBT' ? 'Veresiye' : 'Nakit',
+      items: [{
+        code: tx.productCode,
+        title: prodOption?.label || tx.productCode,
+        quantity: tx.quantity,
+        price: tx.price,
+        total: tx.total,
+        type: tx.type as any,
+      }],
+      subTotal: tx.total,
+      total: tx.total,
+      isInfoOnly: false,
+    });
   };
 
   // İşlem Düzenleme Aç
@@ -831,30 +931,40 @@ export default function TransactionsPage() {
         </div>
       </header>
 
-      {/* 2'Lİ ANA TAB SEÇİCİ */}
-      <div className="px-6 pt-4 pb-0 flex gap-2">
-        <div className="flex bg-gray-900/90 p-1.5 rounded-2xl border border-gray-800/80 max-w-xl backdrop-blur-md">
+      {/* 2'Lİ ANA TAB SEÇİCİ BANNER */}
+      <div className="px-6 pt-4 pb-0 flex items-center justify-between flex-wrap gap-3">
+        <div className="flex bg-slate-900/90 p-1.5 rounded-2xl border border-amber-500/20 shadow-xl backdrop-blur-md w-full sm:w-auto">
           <button
+            type="button"
             onClick={() => setActiveMainTab('pos')}
-            className={`py-2 px-4 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+            className={`flex-1 sm:flex-initial py-2.5 px-6 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all ${
               activeMainTab === 'pos'
-                ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <Coins size={15} /> 1. Hızlı POS Satış Masası
+            <Coins size={16} /> 1. Hızlı POS Satış Masası
           </button>
           <button
+            type="button"
             onClick={() => setActiveMainTab('history')}
-            className={`py-2 px-4 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all ${
+            className={`flex-1 sm:flex-initial py-2.5 px-6 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all ${
               activeMainTab === 'history'
-                ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
             }`}
           >
-            <ArrowLeftRight size={15} /> 2. Geçmiş İşlemler, Kâr/Zarar & Düzenleme ({transactions.length})
+            <ArrowLeftRight size={16} /> 2. Geçmiş İşlemler & Kâr/Zarar ({transactions.length})
           </button>
         </div>
+
+        {activeMainTab === 'history' && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-amber-400/90 font-bold hidden md:inline-flex items-center gap-1">
+              <CheckCircle size={14} /> Otomatik Kâr/Zarar ve Stok Senkronizasyonu Aktif
+            </span>
+          </div>
+        )}
       </div>
 
       {/* POS ANA ALAN */}
@@ -1300,13 +1410,97 @@ export default function TransactionsPage() {
             animate={{ opacity: 1, y: 0 }}
             className={`${THEME.GLASS_CARD} overflow-hidden`}
           >
-            <div className="px-5 py-4 border-b border-gray-800/40 flex items-center justify-between flex-wrap gap-2">
+            {/* Tablo Başlık & Arama Çubuğu */}
+            <div className="p-5 border-b border-gray-800/60 bg-gray-950/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
-                <ArrowLeftRight size={18} className="text-yellow-500" />
-                <h3 className="text-base font-bold text-white">İşlem Geçmişi, Kâr/Zarar ve Düzenleme</h3>
+                <ArrowLeftRight size={20} className="text-yellow-500" />
+                <div>
+                  <h3 className="text-base font-bold text-white">İşlem Geçmişi, Kâr/Zarar ve Düzenleme</h3>
+                  <p className="text-xs text-gray-400">Tüm alış, satış, revizyon ve şüpheli işlemler kaydı</p>
+                </div>
               </div>
+
+              {/* Arama Kutusu */}
+              <div className="relative min-w-[260px]">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <input
+                  type="text"
+                  value={historySearch}
+                  onChange={e => setHistorySearch(e.target.value)}
+                  placeholder="Ürün, personel, fiş no veya tutar ara..."
+                  className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 transition-colors font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Filtreleme Butonları */}
+            <div className="px-5 py-3 border-b border-gray-800/40 bg-gray-900/30 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setHistoryTypeFilter('ALL')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    historyTypeFilter === 'ALL'
+                      ? 'bg-yellow-500 text-black shadow'
+                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Tümü ({transactions.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryTypeFilter('SELL')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    historyTypeFilter === 'SELL'
+                      ? 'bg-blue-600 text-white shadow'
+                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Satışlar ({transactions.filter(t => t.type === 'sell').length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryTypeFilter('BUY')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    historyTypeFilter === 'BUY'
+                      ? 'bg-emerald-600 text-white shadow'
+                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Alışlar ({transactions.filter(t => t.type === 'buy').length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryTypeFilter('SUSPICIOUS')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    historyTypeFilter === 'SUSPICIOUS'
+                      ? 'bg-rose-600 text-white shadow'
+                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Şüpheli ({transactions.filter(t => t.isSuspicious).length})
+                </button>
+              </div>
+
               <span className="text-xs text-gray-400 font-mono">
-                Son {transactions.length} işlem listeleniyor
+                {(() => {
+                  const count = transactions.filter(tx => {
+                    if (historyTypeFilter === 'SELL' && tx.type !== 'sell') return false;
+                    if (historyTypeFilter === 'BUY' && tx.type !== 'buy') return false;
+                    if (historyTypeFilter === 'SUSPICIOUS' && !tx.isSuspicious) return false;
+                    if (historySearch.trim()) {
+                      const q = historySearch.toLowerCase();
+                      const matchesCode = tx.productCode.toLowerCase().includes(q);
+                      const matchesEmp = (tx.employeeName || '').toLowerCase().includes(q);
+                      const matchesMethod = (tx.paymentMethod || '').toLowerCase().includes(q);
+                      const matchesTotal = String(tx.total).includes(q);
+                      const matchesId = tx.id.toLowerCase().includes(q);
+                      if (!matchesCode && !matchesEmp && !matchesMethod && !matchesTotal && !matchesId) return false;
+                    }
+                    return true;
+                  }).length;
+                  return `${count} işlem listeleniyor`;
+                })()}
               </span>
             </div>
 
@@ -1325,8 +1519,34 @@ export default function TransactionsPage() {
                   </tr>
                 </thead>
                 <tbody className={THEME.TABLE.TBODY}>
-                  {transactions.length > 0 ? (
-                    transactions.map((tx, i) => (
+                  {(() => {
+                    const filtered = transactions.filter(tx => {
+                      if (historyTypeFilter === 'SELL' && tx.type !== 'sell') return false;
+                      if (historyTypeFilter === 'BUY' && tx.type !== 'buy') return false;
+                      if (historyTypeFilter === 'SUSPICIOUS' && !tx.isSuspicious) return false;
+                      if (historySearch.trim()) {
+                        const q = historySearch.toLowerCase();
+                        const matchesCode = tx.productCode.toLowerCase().includes(q);
+                        const matchesEmp = (tx.employeeName || '').toLowerCase().includes(q);
+                        const matchesMethod = (tx.paymentMethod || '').toLowerCase().includes(q);
+                        const matchesTotal = String(tx.total).includes(q);
+                        const matchesId = tx.id.toLowerCase().includes(q);
+                        if (!matchesCode && !matchesEmp && !matchesMethod && !matchesTotal && !matchesId) return false;
+                      }
+                      return true;
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={8} className="px-6 py-12 text-center text-gray-500 text-sm">
+                            {historySearch ? 'Arama kriterlerine uygun işlem bulunamadı.' : 'Henüz kayıtlı işlem geçmişi bulunamadı.'}
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return filtered.map((tx, i) => (
                       <motion.tr
                         key={tx.id}
                         initial={{ opacity: 0 }}
@@ -1340,17 +1560,24 @@ export default function TransactionsPage() {
                           </div>
                         </td>
                         <td className={THEME.TABLE.TD}>
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                            tx.type === 'buy'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          }`}>
-                            {tx.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                              tx.type === 'buy'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            }`}>
+                              {tx.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
+                            </span>
+                            {tx.isSuspicious && (
+                              <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded text-[10px] font-black uppercase">
+                                Şüpheli
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className={THEME.TABLE.TD}>
                           <div>
-                            <span className="text-xs font-bold text-white block">{tx.productCode}</span>
+                            <span className="text-xs font-bold text-white block font-mono">{tx.productCode}</span>
                             <span className="text-[11px] text-yellow-500/80 font-mono font-semibold">
                               {tx.quantity} {tx.productType === 'döviz' ? '' : 'Adet'}
                             </span>
@@ -1390,14 +1617,27 @@ export default function TransactionsPage() {
                         </td>
                         <td className={THEME.TABLE.TD}>
                           <div className="flex items-center gap-1.5">
+                            {/* Fiş Yazdır Butonu */}
                             <button
+                              type="button"
+                              onClick={() => handlePrintHistoricalTxReceipt(tx)}
+                              className="p-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-semibold transition-all"
+                              title="İşlem Fişini Termal Yazdır"
+                            >
+                              <Printer size={14} />
+                            </button>
+                            {/* Düzenle Butonu */}
+                            <button
+                              type="button"
                               onClick={() => handleOpenEditModal(tx)}
                               className="p-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg text-xs font-semibold transition-all"
                               title="İşlemi Düzenle"
                             >
                               <FileText size={14} />
                             </button>
+                            {/* İptal / Sil Butonu */}
                             <button
+                              type="button"
                               onClick={() => handleOpenDeleteModal(tx)}
                               className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-semibold transition-all"
                               title="İşlemi İptal Et / Sil"
@@ -1407,14 +1647,8 @@ export default function TransactionsPage() {
                           </div>
                         </td>
                       </motion.tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-gray-500 text-sm">
-                        Henüz kayıtlı işlem geçmişi bulunamadı.
-                      </td>
-                    </tr>
-                  )}
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -1777,6 +2011,17 @@ export default function TransactionsPage() {
         onScan={(scannedBarcode) => {
           handleBarcodeSearch(scannedBarcode);
         }}
+      />
+
+      {/* TERMAL FİŞ & BİLGİ FİŞİ YAZDIRMA MODALI */}
+      <POSTransactionReceiptModal
+        isOpen={Boolean(receiptModalData)}
+        onClose={() => setReceiptModalData(null)}
+        receiptData={receiptModalData}
+        onConfirmAndSave={activeMainTab === 'pos' && basket.some(b => b.productCode !== '') ? async () => {
+          await handleSaveTransactions();
+          setReceiptModalData(null);
+        } : undefined}
       />
     </>
   );
