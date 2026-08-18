@@ -4,14 +4,22 @@ import { auth } from '@/lib/auth';
 import { USER_ROLES } from '@/constants/roles';
 import LogsClient from './LogsClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function LogsPage() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (e) {
+    console.error('LogsPage auth error:', e);
+  }
+
   if (!session) {
     redirect('/login');
   }
 
-  const currentUserRole = (session.user as any).role;
-  const currentUserDealerId = (session.user as any).dealerId || 'merkez';
+  const currentUserRole = (session.user as any)?.role;
+  const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
 
   // Sadece Admin ve Super Admin erişebilir
   if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
@@ -27,26 +35,36 @@ export default async function LogsPage() {
     whereClause.dealerId = currentUserDealerId;
   }
 
-  const dbLogs = await prisma.auditLog.findMany({
-    where: whereClause,
-    orderBy: { createdAt: 'desc' },
-    take: 200,
-  });
+  try {
+    const dbLogs = await prisma.auditLog.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    }).catch(() => []);
 
-  const serializedLogs = dbLogs.map(l => ({
-    id: l.id,
-    dealerId: l.dealerId,
-    action: l.action,
-    details: l.details,
-    userEmail: l.userEmail,
-    userName: l.userName,
-    createdAt: l.createdAt.toISOString(),
-  }));
+    const serializedLogs = dbLogs.map(l => ({
+      id: l.id,
+      dealerId: l.dealerId,
+      action: l.action,
+      details: l.details,
+      userEmail: l.userEmail,
+      userName: l.userName,
+      createdAt: l.createdAt ? new Date(l.createdAt).toISOString() : new Date().toISOString(),
+    }));
 
-  return (
-    <LogsClient
-      initialLogs={serializedLogs}
-      currentUserRole={currentUserRole}
-    />
-  );
+    return (
+      <LogsClient
+        initialLogs={serializedLogs}
+        currentUserRole={currentUserRole}
+      />
+    );
+  } catch (err) {
+    console.error('Error in LogsPage:', err);
+    return (
+      <LogsClient
+        initialLogs={[]}
+        currentUserRole={currentUserRole}
+      />
+    );
+  }
 }

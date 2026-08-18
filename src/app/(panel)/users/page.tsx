@@ -4,14 +4,22 @@ import { auth } from '@/lib/auth';
 import { USER_ROLES } from '@/constants/roles';
 import UsersClient from './UsersClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function UsersPage() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (e) {
+    console.error('UsersPage auth error:', e);
+  }
+
   if (!session) {
     redirect('/login');
   }
 
-  const currentUserRole = (session.user as any).role;
-  const currentUserDealerId = (session.user as any).dealerId;
+  const currentUserRole = (session.user as any)?.role;
+  const currentUserDealerId = (session.user as any)?.dealerId;
 
   // USER rolü bu sayfaya erişemez
   if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
@@ -27,87 +35,100 @@ export default async function UsersPage() {
     whereClause = { dealerId: currentUserDealerId };
   }
 
-  const users = await prisma.user.findMany({
-    where: whereClause,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      permissions: true,
-      dealerId: true,
-      dealer: {
-        select: {
-          name: true,
-        },
-      },
-      createdAt: true,
-    },
-    orderBy: { createdAt: 'asc' },
-  });
-
-  // Bayi listesini çek (Sadece SUPER_ADMIN yeni bayiler tanımlayabilir ve atayabilir)
-  let dealers: Array<{ id: string; name: string }> = [];
-  if (currentUserRole === USER_ROLES.SUPER_ADMIN) {
-    dealers = await prisma.dealer.findMany({
+  try {
+    const users = await prisma.user.findMany({
+      where: whereClause,
       select: {
         id: true,
         name: true,
+        email: true,
+        role: true,
+        permissions: true,
+        dealerId: true,
+        dealer: {
+          select: {
+            name: true,
+          },
+        },
+        createdAt: true,
       },
-      orderBy: { name: 'asc' },
-    });
-  } else if (currentUserDealerId) {
-    const adminDealer = await prisma.dealer.findUnique({
-      where: { id: currentUserDealerId },
-      select: { id: true, name: true },
-    });
-    if (adminDealer) {
-      dealers = [adminDealer];
+      orderBy: { createdAt: 'asc' },
+    }).catch(() => []);
+
+    // Bayi listesini çek (Sadece SUPER_ADMIN yeni bayiler tanımlayabilir ve atayabilir)
+    let dealers: Array<{ id: string; name: string }> = [];
+    if (currentUserRole === USER_ROLES.SUPER_ADMIN) {
+      dealers = await prisma.dealer.findMany({
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: { name: 'asc' },
+      }).catch(() => []);
+    } else if (currentUserDealerId) {
+      const adminDealer = await prisma.dealer.findUnique({
+        where: { id: currentUserDealerId },
+        select: { id: true, name: true },
+      }).catch(() => null);
+      if (adminDealer) {
+        dealers = [adminDealer];
+      }
     }
-  }
 
-  // Çalışanları (Employee) çek
-  let employeesClause = {};
-  if (currentUserRole === USER_ROLES.ADMIN) {
-    employeesClause = { dealerId: currentUserDealerId || '' };
-  }
-  const dbEmployees = await prisma.employee.findMany({
-    where: employeesClause,
-    include: {
-      dealer: {
-        select: { name: true },
+    // Çalışanları (Employee) çek
+    let employeesClause = {};
+    if (currentUserRole === USER_ROLES.ADMIN) {
+      employeesClause = { dealerId: currentUserDealerId || '' };
+    }
+    const dbEmployees = await prisma.employee.findMany({
+      where: employeesClause,
+      include: {
+        dealer: {
+          select: { name: true },
+        },
       },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+      orderBy: { createdAt: 'asc' },
+    }).catch(() => []);
 
-  const serializedEmployees = dbEmployees.map((e) => ({
-    id: e.id,
-    name: e.name,
-    dealerId: e.dealerId,
-    dealerName: e.dealer?.name ?? 'Merkez',
-    createdAt: e.createdAt.toISOString(),
-  }));
+    const serializedEmployees = dbEmployees.map((e) => ({
+      id: e.id,
+      name: e.name,
+      dealerId: e.dealerId,
+      dealerName: e.dealer?.name ?? 'Merkez',
+      createdAt: e.createdAt ? new Date(e.createdAt).toISOString() : new Date().toISOString(),
+    }));
 
-  // Serialize dates for client component
-  const serializedUsers = users.map((u) => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    role: u.role,
-    permissions: u.permissions || '["dashboard","prices","stocks","transactions","suppliers","price-check","users"]',
-    dealerId: u.dealerId,
-    dealerName: u.dealer?.name ?? 'Merkez',
-    createdAt: u.createdAt.toISOString(),
-  }));
+    // Serialize dates for client component
+    const serializedUsers = users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      permissions: u.permissions || '["dashboard","prices","stocks","transactions","suppliers","price-check","users"]',
+      dealerId: u.dealerId,
+      dealerName: u.dealer?.name ?? 'Merkez',
+      createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),
+    }));
 
-  return (
-    <UsersClient
-      initialUsers={serializedUsers}
-      initialEmployees={serializedEmployees}
-      dealers={dealers}
-      currentUserRole={currentUserRole}
-      currentUserDealerId={currentUserDealerId}
-    />
-  );
+    return (
+      <UsersClient
+        initialUsers={serializedUsers}
+        initialEmployees={serializedEmployees}
+        dealers={dealers}
+        currentUserRole={currentUserRole}
+        currentUserDealerId={currentUserDealerId}
+      />
+    );
+  } catch (err) {
+    console.error('Error rendering UsersPage:', err);
+    return (
+      <UsersClient
+        initialUsers={[]}
+        initialEmployees={[]}
+        dealers={[]}
+        currentUserRole={currentUserRole}
+        currentUserDealerId={currentUserDealerId}
+      />
+    );
+  }
 }

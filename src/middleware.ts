@@ -15,11 +15,11 @@ const PUBLIC_ROUTES: string[] = [
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Static dosyalar, API auth ve Public sayfalara doğrudan izin ver
+  // Static dosyalar, tüm /api/ uç noktaları ve Public sayfalara doğrudan izin ver
   if (
     PUBLIC_ROUTES.includes(pathname) ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/') ||
     pathname.startsWith('/icons/') ||
     pathname.includes('.')
   ) {
