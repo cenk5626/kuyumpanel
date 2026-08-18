@@ -570,7 +570,7 @@ export default function StocksPage() {
         setCustomStockForm({ product: '', label: '', type: 'sarrafiye', amount: '0', minThreshold: '5' });
       } else {
         const d = await res.json();
-        alert(d.error || 'Stok oluşturulamadı.');
+        alert(d.details ? `${d.error} (${d.details})` : (d.error || 'Stok oluşturulamadı.'));
       }
     } finally {
       setSavingStock(false);
