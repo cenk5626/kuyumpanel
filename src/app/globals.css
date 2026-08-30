@@ -7,10 +7,10 @@
 /* Swiss Luxury Jewelry Glow & Typography Defaults */
 @layer utilities {
   .gold-glow {
-    box-shadow: 0 0 50px rgba(245, 158, 11, 0.12), 0 0 100px rgba(245, 158, 11, 0.05);
+    box-shadow: 0 0 50px rgba(245, 158, 11, 0.14), 0 0 100px rgba(245, 158, 11, 0.06);
   }
   .gold-text-glow {
-    text-shadow: 0 0 30px rgba(245, 158, 11, 0.35);
+    text-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
   }
   .tnum {
     font-feature-settings: 'tnum';
@@ -18,13 +18,24 @@
   }
 }
 
-/* Custom Luxury Scrollbar */
+/* ─────────────────────────────────────────────────────────────
+   Karanlık Mod (Dark Mode) — Onyx Obsidian & Champagne Gold
+   ───────────────────────────────────────────────────────────── */
+
+html,
+body {
+  background-color: #080c14;
+  color: #f8fafc;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Custom Luxury Dark Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #080c14;
 }
 ::-webkit-scrollbar-thumb {
   background: #334155;
@@ -41,12 +52,12 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Aydınlık Mod (Light Mode) — Platinum Pearl & Warm Gold
+   Aydınlık Mod (Light Mode) — Pearl Alabaster & Warm Bronze Gold
    ───────────────────────────────────────────────────────────── */
 
 html.light,
 html.light body {
-  background-color: #f8fafc !important;
+  background-color: #f4f6f9 !important;
   color: #0f172a !important;
 }
 
@@ -62,48 +73,67 @@ html.light ::-webkit-scrollbar-thumb:hover {
   background: #d97706;
 }
 
-/* Backgrounds & Cards */
+/* ─── 1. Backgrounds & Surfaces (Aydınlık Mod) ─── */
 html.light .bg-slate-950,
 html.light .bg-gray-950 {
-  background-color: #f8fafc !important;
+  background-color: #f4f6f9 !important;
 }
 
 html.light .bg-slate-900,
+html.light .bg-slate-900\/95,
 html.light .bg-slate-900\/90,
+html.light .bg-slate-900\/85,
 html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/75,
 html.light .bg-slate-900\/70,
 html.light .bg-gray-900,
 html.light .bg-gray-900\/95,
 html.light .bg-gray-900\/80,
+html.light .bg-gray-900\/75,
 html.light .bg-gray-900\/60,
 html.light .bg-gray-900\/50 {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
 }
 
+/* Inset Boxes & Secondary Containers */
+html.light .bg-slate-950\/90,
+html.light .bg-slate-950\/80,
 html.light .bg-slate-950\/70,
 html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/50,
+html.light .bg-gray-950\/80,
+html.light .bg-gray-950\/60,
+html.light .bg-gray-950\/50,
 html.light .bg-gray-950\/40,
-html.light .bg-gray-950\/60 {
-  background-color: #f1f5f9 !important;
+html.light .bg-gray-950\/30 {
+  background-color: #f8fafc !important;
   color: #0f172a !important;
+  border-color: #e2e8f0 !important;
 }
 
 html.light .bg-slate-800,
 html.light .bg-slate-800\/80,
 html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/50,
 html.light .bg-gray-800,
 html.light .bg-gray-800\/80,
-html.light .bg-gray-800\/60 {
+html.light .bg-gray-800\/60,
+html.light .bg-gray-800\/50 {
   background-color: #e2e8f0 !important;
-  color: #0f172a !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
 }
 
-/* Borders */
+/* ─── 2. Borders (Aydınlık Mod) ─── */
 html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-800\/60,
 html.light .border-slate-700,
 html.light .border-slate-700\/80,
+html.light .border-slate-700\/50,
 html.light .border-gray-800,
 html.light .border-gray-800\/60,
 html.light .border-gray-800\/40,
@@ -123,34 +153,222 @@ html.light .border-yellow-900\/10 {
   border-color: rgba(217, 119, 6, 0.25) !important;
 }
 
-/* Text Hierarchy in Light Mode */
+/* ─── 3. Typography & Text Colors (Aydınlık Mod) ─── */
+
+/* Ana Metinler */
 html.light .text-white {
   color: #0f172a !important;
 }
 
 html.light .text-slate-100,
 html.light .text-slate-200,
-html.light .text-slate-300,
 html.light .text-gray-100,
-html.light .text-gray-200,
-html.light .text-gray-300 {
+html.light .text-gray-200 {
   color: #1e293b !important;
 }
 
+html.light .text-slate-300,
+html.light .text-gray-300 {
+  color: #334155 !important;
+}
+
+/* İkincil Başlıklar ve Etiketler */
 html.light .text-slate-400,
 html.light .text-slate-500,
 html.light .text-gray-400,
 html.light .text-gray-500 {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 
-/* Forms in Light Mode */
+/* Altın & Sarı Aksanlar (Beyaz üzerinde okunaklı sıcak bronz altın) */
+html.light .text-amber-400,
+html.light .text-amber-500,
+html.light .text-yellow-400,
+html.light .text-yellow-500,
+html.light .text-amber-300,
+html.light .text-yellow-300 {
+  color: #b45309 !important;
+}
+
+/* Alış / Zarar / Hata Kırmızısı */
+html.light .text-rose-400,
+html.light .text-rose-500,
+html.light .text-red-400,
+html.light .text-red-500 {
+  color: #be123c !important;
+}
+
+/* Satış / Kâr / Başarı Yeşili */
+html.light .text-emerald-400,
+html.light .text-emerald-500,
+html.light .text-green-400,
+html.light .text-green-500 {
+  color: #047857 !important;
+}
+
+/* Mavi & Mor & Cyan */
+html.light .text-blue-400,
+html.light .text-blue-500,
+html.light .text-sky-400,
+html.light .text-cyan-400 {
+  color: #0369a1 !important;
+}
+
+html.light .text-purple-400,
+html.light .text-purple-500,
+html.light .text-indigo-400 {
+  color: #7e22ce !important;
+}
+
+/* ─── 4. Koyu Renkli Butonların ve Rozetlerin Metin Koruması (ÖNEMLİ) ─── */
+/* Dolgulu renkli butonlarda ve kartlarda beyaz yazıların siyah olmasını engelle */
+html.light button.bg-emerald-600,
+html.light button.bg-emerald-700,
+html.light button.bg-rose-600,
+html.light button.bg-rose-700,
+html.light button.bg-blue-600,
+html.light button.bg-blue-700,
+html.light button.bg-purple-600,
+html.light button.bg-purple-700,
+html.light button.bg-cyan-600,
+html.light button.bg-indigo-600,
+html.light button.bg-slate-900,
+html.light .bg-emerald-600,
+html.light .bg-emerald-700,
+html.light .bg-rose-600,
+html.light .bg-rose-700,
+html.light .bg-blue-600,
+html.light .bg-blue-700,
+html.light .bg-purple-600,
+html.light .bg-purple-700,
+html.light .bg-cyan-600,
+html.light .bg-indigo-600,
+html.light [class*="bg-emerald-600"],
+html.light [class*="bg-rose-600"],
+html.light [class*="bg-blue-600"],
+html.light [class*="bg-purple-600"],
+html.light [class*="bg-cyan-600"] {
+  color: #ffffff !important;
+}
+
+html.light button.bg-emerald-600 *,
+html.light button.bg-rose-600 *,
+html.light button.bg-blue-600 *,
+html.light button.bg-purple-600 *,
+html.light .bg-emerald-600 *,
+html.light .bg-rose-600 *,
+html.light .bg-blue-600 *,
+html.light .bg-purple-600 * {
+  color: #ffffff !important;
+}
+
+/* Sarı / Amber Butonlarda Siyah Yazı */
+html.light button.bg-gradient-to-r.from-amber-500,
+html.light button.bg-yellow-400,
+html.light button.bg-yellow-500,
+html.light .bg-yellow-400,
+html.light .bg-yellow-500 {
+  color: #0f172a !important;
+}
+
+html.light button.bg-gradient-to-r.from-amber-500 *,
+html.light button.bg-yellow-400 *,
+html.light button.bg-yellow-500 * {
+  color: #0f172a !important;
+}
+
+/* ─── 5. Rozetler & Yumuşak Renk Kutuları (Aydınlık Mod) ─── */
+html.light .bg-rose-500\/10,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-500\/20,
+html.light .bg-red-500\/10,
+html.light .bg-red-500\/20 {
+  background-color: #ffe4e6 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light .bg-emerald-500\/10,
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/20,
+html.light .bg-green-500\/10,
+html.light .bg-green-500\/20 {
+  background-color: #d1fae5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light .bg-blue-500\/10,
+html.light .bg-blue-500\/15,
+html.light .bg-blue-500\/20,
+html.light .bg-sky-500\/10,
+html.light .bg-sky-500\/20 {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #bae6fd !important;
+}
+
+html.light .bg-amber-500\/10,
+html.light .bg-amber-500\/15,
+html.light .bg-amber-500\/20,
+html.light .bg-yellow-500\/10,
+html.light .bg-yellow-500\/15,
+html.light .bg-yellow-500\/20 {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+html.light .bg-purple-500\/10,
+html.light .bg-purple-500\/15,
+html.light .bg-purple-500\/20 {
+  background-color: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border-color: #e9d5ff !important;
+}
+
+/* ─── 6. Tablolar (Aydınlık Mod) ─── */
+html.light table {
+  border-color: #e2e8f0 !important;
+}
+
+html.light table thead,
+html.light table thead tr {
+  background-color: #f1f5f9 !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+html.light table th {
+  color: #1e293b !important;
+  font-weight: 800 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html.light table td {
+  color: #0f172a !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+html.light table tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* ─── 7. Form Elemanları (Aydınlık Mod) ─── */
 html.light input,
 html.light select,
 html.light textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15) !important;
+  outline: none !important;
 }
 
 html.light input::placeholder,
@@ -162,3 +380,42 @@ html.light select option {
   background-color: #ffffff !important;
   color: #0f172a !important;
 }
+
+/* ─── 8. Sidebar & Header (Aydınlık Mod) ─── */
+html.light aside {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light aside a[class*="LINK_ACTIVE"],
+html.light aside a.bg-gradient-to-r {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+html.light aside a[class*="LINK_INACTIVE"] {
+  color: #475569 !important;
+}
+
+html.light aside a[class*="LINK_INACTIVE"]:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.light header {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* ─── 9. Modallar & Açılır Pencereler (Aydınlık Mod) ─── */
+html.light .fixed.inset-0.bg-black\/70,
+html.light .fixed.inset-0.bg-black\/60,
+html.light .fixed.inset-0.bg-black\/50,
+html.light .fixed.inset-0.bg-gray-950\/80 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+}
+

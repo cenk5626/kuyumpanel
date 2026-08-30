@@ -537,7 +537,7 @@ export default function CustomersClient({
                 <TrendingUp size={10} /> Müşteri Veresiyesi
               </span>
             </div>
-            <div className="p-3 bg-black/50 rounded-xl border border-emerald-900/30 text-emerald-400 font-bold">
+            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400 font-bold">
               ₺
             </div>
           </div>
@@ -559,7 +559,7 @@ export default function CustomersClient({
               <span className={THEME.STAT_LABEL}>Net Dolar Bakiyesi</span>
               <span className="text-[11px] text-gray-500 block mt-0.5">USD/TRY: ₺{usdPrice.toFixed(2)}</span>
             </div>
-            <div className="p-3 bg-black/50 rounded-xl border border-green-900/30 text-green-400">
+            <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20 text-green-400">
               <DollarSign size={20} />
             </div>
           </div>
@@ -581,7 +581,7 @@ export default function CustomersClient({
               <span className={THEME.STAT_LABEL}>Net Euro Bakiyesi</span>
               <span className="text-[11px] text-gray-500 block mt-0.5">EUR/TRY: ₺{eurPrice.toFixed(2)}</span>
             </div>
-            <div className="p-3 bg-black/50 rounded-xl border border-blue-900/30 text-blue-400">
+            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
               <Euro size={20} />
             </div>
           </div>

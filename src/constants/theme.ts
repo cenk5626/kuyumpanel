@@ -1,41 +1,41 @@
 // Tailwind class sabitleri — UI/UX Pro Max Luxury Jewelry Design System
 export const THEME = {
   // Layout
-  LAYOUT_WRAPPER: 'flex min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500/30 selection:text-amber-200',
+  LAYOUT_WRAPPER: 'flex min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500/30 selection:text-amber-200 transition-colors duration-200',
   MAIN_CONTENT: 'flex-1 ml-64 flex flex-col min-h-screen transition-all duration-300',
   PAGE_WRAPPER: 'flex-1 p-6 md:p-8 max-w-[1920px] mx-auto w-full space-y-6',
 
   // Sidebar
   SIDEBAR: {
-    WRAPPER: 'fixed left-0 top-0 w-64 h-screen bg-slate-900/90 backdrop-blur-2xl border-r border-amber-500/10 flex flex-col z-50 shadow-2xl shadow-black/40',
-    BRAND: 'px-6 py-5 text-xl font-extrabold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent border-b border-amber-500/10 tracking-tight',
+    WRAPPER: 'fixed left-0 top-0 w-64 h-screen bg-slate-900/95 backdrop-blur-2xl border-r border-amber-500/15 flex flex-col z-50 shadow-2xl shadow-black/40 transition-all duration-300',
+    BRAND: 'px-6 py-5 text-xl font-extrabold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent border-b border-amber-500/15 tracking-tight flex items-center justify-between',
     NAV: 'flex-1 px-3 py-4 space-y-1.5 overflow-y-auto',
     LINK: 'flex items-center px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200 gap-3',
     LINK_ACTIVE: 'bg-gradient-to-r from-amber-500/20 to-yellow-500/10 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/5',
     LINK_INACTIVE: 'text-slate-400 hover:text-amber-300 hover:bg-slate-800/60',
-    FOOTER: 'px-4 py-4 border-t border-amber-500/10',
+    FOOTER: 'px-4 py-4 border-t border-amber-500/15',
     LOGOUT: 'flex items-center w-full px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 gap-2.5',
   },
 
   // Header
-  HEADER: 'sticky top-0 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-amber-500/10 px-6 py-4 shadow-sm',
-  HEADER_TITLE: 'text-xl md:text-2xl font-bold text-white tracking-tight',
+  HEADER: 'sticky top-0 z-40 bg-slate-900/85 backdrop-blur-xl border-b border-amber-500/15 px-6 py-4 shadow-sm transition-colors duration-200',
+  HEADER_TITLE: 'text-xl md:text-2xl font-black text-white tracking-tight',
 
   // Cards
-  GLASS_CARD: 'bg-slate-900/70 backdrop-blur-xl border border-amber-500/15 rounded-2xl shadow-xl shadow-black/30 transition-all duration-200',
-  STAT_CARD: 'bg-slate-900/70 backdrop-blur-xl border border-amber-500/15 rounded-2xl p-5 hover:-translate-y-0.5 hover:border-amber-500/30 transition-all duration-300 shadow-lg shadow-black/20',
+  GLASS_CARD: 'bg-slate-900/75 backdrop-blur-xl border border-amber-500/15 rounded-2xl shadow-xl shadow-black/30 transition-all duration-200',
+  STAT_CARD: 'bg-slate-900/75 backdrop-blur-xl border border-amber-500/15 rounded-2xl p-5 hover:-translate-y-0.5 hover:border-amber-500/30 transition-all duration-300 shadow-lg shadow-black/20',
   STAT_ICON_WRAPPER: 'p-3 bg-gradient-to-br from-amber-500/20 to-yellow-500/10 rounded-xl border border-amber-500/30 text-amber-400',
-  STAT_LABEL: 'text-slate-400 text-xs font-semibold uppercase tracking-wider',
+  STAT_LABEL: 'text-slate-400 text-xs font-bold uppercase tracking-wider',
   STAT_VALUE: 'text-2xl md:text-3xl font-black text-white tracking-tight font-mono',
 
   // Table
   TABLE: {
-    WRAPPER: 'overflow-x-auto rounded-xl',
+    WRAPPER: 'overflow-x-auto rounded-xl border border-slate-800/80',
     MAIN: 'w-full text-left border-collapse',
-    THEAD: 'bg-slate-950/80 border-b border-amber-500/15',
+    THEAD: 'bg-slate-950/90 border-b border-amber-500/20',
     TH: 'px-5 py-3.5 text-[11px] font-bold text-amber-400/90 uppercase tracking-wider',
     TBODY: 'divide-y divide-slate-800/60',
-    TR: 'hover:bg-amber-500/[0.03] transition-colors duration-150',
+    TR: 'hover:bg-amber-500/[0.04] transition-colors duration-150',
     TD: 'px-5 py-3.5 text-xs whitespace-nowrap',
   },
 
@@ -86,3 +86,4 @@ export const ANIM = {
     SLOW: 0.5,
   },
 } as const;
+

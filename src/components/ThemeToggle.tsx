@@ -22,8 +22,8 @@ export default function ThemeToggle({ isCollapsed = false, className = '' }: The
       title={isDark ? 'Aydınlık Moda Geç' : 'Karanlık Moda Geç'}
       className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
         isDark
-          ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20'
-          : 'text-amber-700 bg-amber-100 border border-amber-300 hover:bg-amber-200'
+          ? 'text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20'
+          : 'text-amber-900 bg-amber-50 border border-amber-300 hover:bg-amber-100'
       } ${isCollapsed ? 'justify-center px-0' : 'w-full justify-between'} ${className}`}
     >
       <div className="flex items-center">
@@ -34,7 +34,7 @@ export default function ThemeToggle({ isCollapsed = false, className = '' }: The
           className={isCollapsed ? '' : 'mr-3'}
         >
           {isDark ? (
-            <Sun className="w-5 h-5 text-yellow-400" />
+            <Sun className="w-5 h-5 text-amber-400" />
           ) : (
             <Moon className="w-5 h-5 text-amber-700" />
           )}
@@ -48,7 +48,7 @@ export default function ThemeToggle({ isCollapsed = false, className = '' }: The
 
       {!isCollapsed && (
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase font-mono ${
-          isDark ? 'bg-yellow-500/20 text-yellow-300' : 'bg-amber-200 text-amber-900'
+          isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-200 text-amber-900'
         }`}>
           {isDark ? 'Karanlık' : 'Aydınlık'}
         </span>

@@ -48,15 +48,15 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
   });
 
   return (
-    <aside className={`fixed left-0 top-0 h-screen bg-gray-900/95 backdrop-blur-xl border-r border-yellow-900/20 flex flex-col z-50 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
+    <aside className={`fixed left-0 top-0 h-screen bg-slate-900/95 backdrop-blur-xl border-r border-amber-500/15 flex flex-col z-50 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
       {/* Brand */}
-      <div className="px-6 py-5 text-xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent border-b border-yellow-900/20 flex items-center justify-between">
+      <div className="px-6 py-5 text-xl font-extrabold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-clip-text text-transparent border-b border-amber-500/15 flex items-center justify-between">
         {!isCollapsed ? (
           <>
-            <span className="truncate">{MESSAGES.APP_NAME}</span>
+            <span className="truncate tracking-tight">{MESSAGES.APP_NAME}</span>
             <button
               onClick={onToggle}
-              className="p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+              className="p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-amber-400 transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
@@ -65,9 +65,9 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
           <div className="w-full flex justify-center">
             <button
               onClick={onToggle}
-              className="p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+              className="p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-amber-400 transition-colors"
             >
-              <Menu size={18} className="text-yellow-500" />
+              <Menu size={18} className="text-amber-400" />
             </button>
           </div>
         )}
