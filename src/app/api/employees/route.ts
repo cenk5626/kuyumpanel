@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     const { name, dealerId } = body;
 
     if (!name) {
-      return NextResponse.json({ error: 'Çalışan ismi zorunludur.' }, { status: 450 });
+      return NextResponse.json({ error: 'Çalışan ismi zorunludur.' }, { status: 400 });
     }
 
     const currentUserRole = (session.user as any).role;
