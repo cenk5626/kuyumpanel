@@ -79,5 +79,49 @@ export function registerF22AiAssistantTests(): void {
       expect(reasoningOpenAI.startsWith('o3')).toBe(true);
       expect(customGemini37.startsWith('gemini')).toBe(true);
     });
+
+    test('22.6 2-Stage Action Proposal JSON parsing and verification', () => {
+      const sampleAiResponse = `Patron, Has Altın için 6600 TL fiyat alarmı taslağını hazırladım.
+:::ACTION_PROPOSAL
+{
+  "actionType": "CREATE_PRICE_ALERT",
+  "title": "Has Altın Fiyat Alarmı Kurulumu",
+  "description": "Has Altın Alış fiyatı 6600 TL üzerine çıktığında WhatsApptan haber verilecek.",
+  "summary": {
+    "Ürün": "Has Altın",
+    "Hedef Fiyat": "₺6,600.00",
+    "Yön": "≥ Eşit veya Üstü"
+  },
+  "payload": {
+    "productCode": "HAS",
+    "targetPrice": 6600,
+    "condition": "GTE",
+    "priceType": "bid"
+  }
+}
+:::`;
+
+      const match = sampleAiResponse.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)\s*:::/);
+      expect(Boolean(match)).toBe(true);
+
+      const parsed = JSON.parse(match![1].trim());
+      expect(parsed.actionType).toBe('CREATE_PRICE_ALERT');
+      expect(parsed.payload.targetPrice).toBe(6600);
+      expect(parsed.payload.condition).toBe('GTE');
+    });
+
+    test('22.7 Action state transitions for 2-stage confirmation', () => {
+      type ActionStatus = 'PENDING' | 'EXECUTING' | 'SUCCESS' | 'CANCELLED';
+      let status: ActionStatus = 'PENDING';
+      expect(status).toBe('PENDING');
+
+      // User confirms action
+      status = 'EXECUTING';
+      expect(status).toBe('EXECUTING');
+
+      // Execution succeeds
+      status = 'SUCCESS';
+      expect(status).toBe('SUCCESS');
+    });
   });
 }

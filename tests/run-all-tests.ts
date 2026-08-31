@@ -116,7 +116,7 @@ async function main() {
   // 4. Register Tier 4 (8 chronological simulation steps)
   registerTier4Tests();
 
-  const totalRegistered = 223;
+  const totalRegistered = 225;
   console.log(`[INFO] Registered total test suites. Starting execution...\n`);
 
   const globalStart = performance.now();
