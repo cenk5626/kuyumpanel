@@ -312,39 +312,99 @@ export default function AiSettingsClient() {
             )}
 
             {/* Model Seçimi */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={THEME.LABEL}>Yapay Zeka Modeli</label>
-                <select
-                  value={aiModel}
-                  onChange={(e) => setAiModel(e.target.value)}
-                  className={THEME.SELECT}
-                >
-                  {aiProvider === 'GEMINI' ? (
-                    <>
-                      <option value="gemini-2.0-flash">Gemini 2.0 Flash (En Hızlı & Önerilen)</option>
-                      <option value="gemini-1.5-pro">Gemini 1.5 Pro (Detaylı Analiz)</option>
-                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="gpt-4o-mini">GPT-4o Mini (Hızlı & Ekonomik)</option>
-                      <option value="gpt-4o">GPT-4o (En Yüksek Akıl Yürütme)</option>
-                    </>
-                  )}
-                </select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className={THEME.LABEL}>Yapay Zeka Modeli</label>
+                    <span className="text-[10px] text-yellow-400 font-bold">2026 En Yeni Sürümler</span>
+                  </div>
+                  <select
+                    value={
+                      aiProvider === 'GEMINI'
+                        ? ['gemini-2.0-flash', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.0-pro-exp-02-05', 'gemini-1.5-pro', 'gemini-1.5-flash'].includes(aiModel)
+                          ? aiModel
+                          : 'CUSTOM'
+                        : ['gpt-4o', 'gpt-4o-mini', 'o3-mini', 'o1', 'gpt-4.5-preview'].includes(aiModel)
+                        ? aiModel
+                        : 'CUSTOM'
+                    }
+                    onChange={(e) => {
+                      if (e.target.value === 'CUSTOM') {
+                        setAiModel('');
+                      } else {
+                        setAiModel(e.target.value);
+                      }
+                    }}
+                    className={THEME.SELECT}
+                  >
+                    {aiProvider === 'GEMINI' ? (
+                      <>
+                        <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (En Hızlı & Önerilen)</option>
+                        <option value="gemini-2.0-flash-thinking-exp-01-21">🧠 Gemini 2.0 Flash Thinking (Derin Akıl Yürütme & Düşünme)</option>
+                        <option value="gemini-2.0-pro-exp-02-05">🏆 Gemini 2.0 Pro (En Yüksek Analiz & Zeka)</option>
+                        <option value="gemini-1.5-pro">📚 Gemini 1.5 Pro (Geniş Bağlam)</option>
+                        <option value="gemini-1.5-flash">🚀 Gemini 1.5 Flash</option>
+                        <option value="CUSTOM">✍️ Özel Model ID Yaz (Örn: gemini-3.7, gemini-exp...)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="gpt-4o">👑 GPT-4o (Amiral Gemisi & En Popüler)</option>
+                        <option value="gpt-4o-mini">⚡ GPT-4o Mini (Hızlı & Ekonomik)</option>
+                        <option value="o3-mini">🧠 o3-mini (En Yeni Akıl Yürütme & Mantık Modeli)</option>
+                        <option value="o1">🔬 o1 (Gelişmiş Muhakeme Modeli)</option>
+                        <option value="gpt-4.5-preview">✨ GPT-4.5 Preview</option>
+                        <option value="CUSTOM">✍️ Özel Model ID Yaz (Örn: o3, gpt-5...)</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={THEME.LABEL}>Özel Mağaza Talimatı (Prompt Eki)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Sadece Cuma günleri toptancı vadelerini hatırlat"
+                    value={aiSystemPromptExtra}
+                    onChange={(e) => setAiSystemPromptExtra(e.target.value)}
+                    className={THEME.INPUT}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className={THEME.LABEL}>Özel Mağaza Talimatı (Prompt Eki)</label>
-                <input
-                  type="text"
-                  placeholder="Örn: Sadece Cuma günleri toptancı vadelerini hatırlat"
-                  value={aiSystemPromptExtra}
-                  onChange={(e) => setAiSystemPromptExtra(e.target.value)}
-                  className={THEME.INPUT}
-                />
-              </div>
+              {/* Özel / Serbest Model İsmi Yazma Alanı */}
+              {(![
+                'gemini-2.0-flash',
+                'gemini-2.0-flash-thinking-exp-01-21',
+                'gemini-2.0-pro-exp-02-05',
+                'gemini-1.5-pro',
+                'gemini-1.5-flash',
+                'gpt-4o',
+                'gpt-4o-mini',
+                'o3-mini',
+                'o1',
+                'gpt-4.5-preview',
+              ].includes(aiModel) || aiModel === '') && (
+                <div className="p-3.5 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-yellow-400">
+                      Özel / Yeni Çıkan Model Kimliği (Model ID)
+                    </label>
+                    <span className="text-[10px] text-gray-400">Google veya OpenAI API formatında</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={aiProvider === 'GEMINI' ? 'Örn: gemini-3.7-flash veya gemini-2.5-pro' : 'Örn: o3-mini veya gpt-5'}
+                    value={aiModel}
+                    onChange={(e) => setAiModel(e.target.value)}
+                    className={`${THEME.INPUT} font-mono`}
+                    required
+                  />
+                  <p className="text-[10px] text-gray-400">
+                    Google AI Studio veya OpenAI platformuna yeni eklenen herhangi bir modeli anında buraya yazıp kullanabilirsiniz.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

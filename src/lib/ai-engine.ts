@@ -135,9 +135,10 @@ ${extraPrompt ? `\nÖZEL MAĞAZA TALİMATLARI:\n${extraPrompt}` : ''}
 
 /**
  * Google Gemini API ile içerik üretir.
+ * Tüm güncel Gemini modellerini (gemini-2.0-flash, gemini-2.0-flash-thinking-exp, gemini-2.0-pro-exp, gemini-1.5-pro vb.) ve özel model ID'lerini destekler.
  */
 async function callGeminiApi(apiKey: string, model: string, systemPrompt: string, messages: AiChatMessage[]): Promise<string> {
-  const geminiModel = model.includes('gemini') ? model : 'gemini-2.0-flash';
+  const geminiModel = (model && model.trim()) ? model.trim() : 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
 
   // Gemini contents format
@@ -163,14 +164,14 @@ async function callGeminiApi(apiKey: string, model: string, systemPrompt: string
       contents,
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
       },
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Google Gemini API Hatası (${response.status}): ${errText}`);
+    throw new Error(`Google Gemini API Hatası (${response.status} - Model: ${geminiModel}): ${errText}`);
   }
 
   const data = await response.json();
@@ -183,16 +184,29 @@ async function callGeminiApi(apiKey: string, model: string, systemPrompt: string
 }
 
 /**
- * OpenAI (ChatGPT) API ile içerik üretir.
+ * OpenAI (ChatGPT / Reasoning) API ile içerik üretir.
+ * Tüm güncel OpenAI modellerini (gpt-4o, gpt-4o-mini, o3-mini, o1, gpt-4.5-preview vb.) ve özel model ID'lerini destekler.
  */
 async function callOpenAiApi(apiKey: string, model: string, systemPrompt: string, messages: AiChatMessage[]): Promise<string> {
-  const openaiModel = model.includes('gpt') ? model : 'gpt-4o-mini';
+  const openaiModel = (model && model.trim()) ? model.trim() : 'gpt-4o-mini';
   const url = 'https://api.openai.com/v1/chat/completions';
 
+  const isReasoningModel = openaiModel.startsWith('o1') || openaiModel.startsWith('o3');
+
   const formattedMessages = [
-    { role: 'system', content: systemPrompt },
+    { role: isReasoningModel ? 'user' : 'system', content: isReasoningModel ? `[Sistem Talimatı]: ${systemPrompt}` : systemPrompt },
     ...messages,
   ];
+
+  const requestBody: any = {
+    model: openaiModel,
+    messages: formattedMessages,
+  };
+
+  // o1 ve o3-mini modelleri sabit temperature kullanır, parametre gönderilmez
+  if (!isReasoningModel) {
+    requestBody.temperature = 0.7;
+  }
 
   const response = await fetch(url, {
     method: 'POST',
@@ -200,16 +214,12 @@ async function callOpenAiApi(apiKey: string, model: string, systemPrompt: string
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: openaiModel,
-      messages: formattedMessages,
-      temperature: 0.7,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`OpenAI API Hatası (${response.status}): ${errText}`);
+    throw new Error(`OpenAI API Hatası (${response.status} - Model: ${openaiModel}): ${errText}`);
   }
 
   const data = await response.json();

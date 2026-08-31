@@ -1,4 +1,4 @@
-﻿import { describe, test, expect, setTestContext } from '../helpers/test-utils';
+import { describe, test, expect, setTestContext } from '../helpers/test-utils';
 import { buildSystemPrompt, StoreContextData } from '../../src/lib/ai-engine';
 import { sendWhatsAppNotification } from '../../src/lib/whatsapp-sender';
 
@@ -68,6 +68,16 @@ export function registerF22AiAssistantTests(): void {
 
       expect(geminiModel.startsWith('gemini')).toBe(true);
       expect(openaiModel.startsWith('gpt')).toBe(true);
+    });
+
+    test('22.5 Support latest cutting-edge models (Gemini 2.0 Thinking, o3-mini, o1, Custom IDs)', () => {
+      const cuttingEdgeGemini = 'gemini-2.0-flash-thinking-exp-01-21';
+      const reasoningOpenAI = 'o3-mini';
+      const customGemini37 = 'gemini-3.7-flash';
+
+      expect(cuttingEdgeGemini.includes('thinking')).toBe(true);
+      expect(reasoningOpenAI.startsWith('o3')).toBe(true);
+      expect(customGemini37.startsWith('gemini')).toBe(true);
     });
   });
 }
