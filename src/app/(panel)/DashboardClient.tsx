@@ -250,7 +250,7 @@ export default function DashboardClient({
         )}
 
         {/* METRİK VE ÖZET KARTLARI */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Stok Takip Kartı */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -327,11 +327,11 @@ export default function DashboardClient({
         </div>
 
         {/* İKİLİ ANA İÇERİK BLOĞU */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
           {/* SOL PANEL (7 COL): SON ALIŞ / SATIŞ İŞLEMLERİ AKIŞI */}
           <motion.div
             {...ANIM.FADE_UP}
-            className={`${THEME.GLASS_CARD} p-6 lg:col-span-7 space-y-4`}
+            className={`${THEME.GLASS_CARD} p-4 sm:p-6 lg:col-span-7 space-y-4`}
           >
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -373,8 +373,8 @@ export default function DashboardClient({
                           <td className="px-3 py-2.5 font-bold">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] ${
                               isSell 
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
+                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
                             }`}>
                               {isSell ? <ArrowUpRight size={12} /> : <ArrowDownLeft size={12} />}
                               {isSell ? 'Satış' : 'Alış'}

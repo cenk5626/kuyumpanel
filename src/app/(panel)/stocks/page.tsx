@@ -905,10 +905,10 @@ export default function StocksPage() {
         </div>
       </header>
 
-      <div className="p-6 flex flex-col gap-6">
+      <div className="p-3.5 sm:p-6 flex flex-col gap-4 sm:gap-6 min-w-0">
         
         {/* Main View Switcher */}
-        <div className="flex border-b border-gray-800/40 pb-px gap-6">
+        <div className="flex border-b border-gray-800/40 pb-px gap-4 sm:gap-6 overflow-x-auto">
           <button
             onClick={() => setActiveView('standard')}
             className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
@@ -1586,12 +1586,12 @@ export default function StocksPage() {
       {/* ─── YENİ TAKI BARKOD MODALI ─── */}
       <AnimatePresence>
         {showProductModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 overflow-y-auto py-8">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-3 sm:px-4 overflow-y-auto py-4 sm:py-8">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl p-8 shadow-2xl my-auto"
+              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl p-4 sm:p-8 shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
             >
               {/* Modal Başlığı */}
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800/60">
@@ -2054,12 +2054,12 @@ export default function StocksPage() {
       {/* ─── TAKI BARKOD DÜZENLEME MODALİ ─── */}
       <AnimatePresence>
         {showEditProductModal && editingProductItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 overflow-y-auto py-8">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-3 sm:px-4 overflow-y-auto py-4 sm:py-8">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl p-8 shadow-2xl my-auto"
+              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl p-4 sm:p-8 shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
             >
               {/* Modal Başlığı */}
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800/60">

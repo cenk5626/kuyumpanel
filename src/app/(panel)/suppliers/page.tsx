@@ -505,11 +505,11 @@ export default function SuppliersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
       {/* BAŞLIK & HEADER ACTIONS */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
             <Truck className="text-yellow-400" size={26} />
             Toptancı & Mutabakat Yönetimi
           </h1>
@@ -518,28 +518,28 @@ export default function SuppliersPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => setShowVirmanModal(true)}
-            className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 font-bold border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-purple-500/10"
+            className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 font-bold border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-purple-500/10 min-h-[40px]"
           >
-            <ArrowRightLeft size={16} /> Toptancı Virman Transferi
+            <ArrowRightLeft size={16} /> Virman Transferi
           </button>
           <button
             onClick={() => setShowAddSupplierModal(true)}
-            className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl text-xs flex items-center gap-2 transition-colors shadow-lg shadow-yellow-500/10"
+            className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl text-xs flex items-center gap-2 transition-colors shadow-lg shadow-yellow-500/10 min-h-[40px]"
           >
-            <Plus size={16} /> Yeni Toptancı Ekle
+            <Plus size={16} /> Yeni Toptancı
           </button>
           <HeaderActions />
         </div>
       </div>
 
       {/* İKİLİ TAB SEÇİCİ */}
-      <div className="flex bg-gray-900/80 p-1.5 rounded-2xl border border-gray-800/80 max-w-xl backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row bg-gray-900/80 p-1.5 rounded-2xl border border-gray-800/80 max-w-xl backdrop-blur-md gap-1">
         <button
           onClick={() => setActiveTab('reconciliation')}
-          className={`flex-1 py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'reconciliation'
               ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
               : 'text-gray-400 hover:text-white'
@@ -549,7 +549,7 @@ export default function SuppliersPage() {
         </button>
         <button
           onClick={() => setActiveTab('purchasing')}
-          className={`flex-1 py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'purchasing'
               ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
               : 'text-gray-400 hover:text-white'
@@ -560,7 +560,7 @@ export default function SuppliersPage() {
       </div>
 
       {/* TOPLAM STAT KARTLARI */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
           <div>
             <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Toplam Has Borcumuz</p>

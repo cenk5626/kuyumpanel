@@ -756,8 +756,8 @@ export default function PricesPage() {
       </header>
 
       {/* ── ANA İÇERİK ──────────────────────────────────────────────── */}
-      <div className={`${THEME.PAGE_WRAPPER} flex flex-col min-h-[calc(100vh-100px)]`}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 items-stretch min-h-[calc(100vh-140px)]">
+      <div className={`${THEME.PAGE_WRAPPER} flex flex-col min-h-0 lg:min-h-[calc(100vh-100px)]`}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 flex-1 items-stretch min-h-0 lg:min-h-[calc(100vh-140px)]">
 
           {/* ════════════════════ SOL KOLON (HAS & DÖVİZ) ════════════════════ */}
           <motion.div
@@ -768,18 +768,19 @@ export default function PricesPage() {
             <CardHeader title="HAS & DÖVİZ" />
 
             {/* Aktif kaynak — büyük */}
-            <div className="px-6 py-6 border-b border-gray-800/50 flex-1 flex flex-col justify-center">
+            <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-800/50 flex-1 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs font-bold text-yellow-500 uppercase tracking-widest">
                   {SOURCE_LABELS[activeSrcKey]} · {MESSAGES.PRICES_ACTIVE_SOURCE} (HAS)
                 </span>
                 <StatusDot status={statusMap[activeSrcKey]} />
               </div>
+
               {activeHas ? (
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
+                <div className="flex items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1 font-semibold">{MESSAGES.PRICES_ALIS}</p>
-                    <div className={`py-2.5 px-4 rounded-xl border font-mono font-black text-3xl lg:text-4xl xl:text-4xl tracking-tight text-center ${
+                    <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate ${
                       activeHas.dir === 'up' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                       activeHas.dir === 'down' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
                       'bg-gray-950/60 border-gray-800/60 text-white'
@@ -787,12 +788,12 @@ export default function PricesPage() {
                       {fmtTL(activeHas.bid)}
                     </div>
                   </div>
-                  <div className="w-8 flex justify-center items-center">
+                  <div className="w-6 sm:w-8 flex justify-center items-center shrink-0">
                     <DirIcon dir={activeHas.dir} />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1 font-semibold text-right">{MESSAGES.PRICES_SATIS}</p>
-                    <div className={`py-2.5 px-4 rounded-xl border font-mono font-black text-3xl lg:text-4xl xl:text-4xl tracking-tight text-center ${
+                    <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate ${
                       activeHas.dir === 'up' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                       activeHas.dir === 'down' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
                       'bg-gray-950/60 border-gray-800/60 text-white'

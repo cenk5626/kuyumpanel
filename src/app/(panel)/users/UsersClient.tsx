@@ -389,7 +389,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
 
       {/* Tabs */}
       {(isSuperAdmin || currentUserRole === USER_ROLES.ADMIN) && (
-        <div className="px-6 pt-6 flex gap-3 border-b border-gray-800/40">
+        <div className="px-3.5 sm:px-6 pt-4 sm:pt-6 flex gap-3 border-b border-gray-800/40 overflow-x-auto">
           <button
             onClick={() => setActiveTab('users')}
             className={`pb-3 px-2 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${

@@ -288,13 +288,13 @@ export default function ZReportClient({
       </AnimatePresence>
 
       {/* ─── ÜST BAŞLIK & KONTROLLER ─── */}
-      <header className="sticky top-0 z-30 bg-gray-950/80 backdrop-blur-md border-b border-gray-800/80 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 bg-gray-950/80 backdrop-blur-md border-b border-gray-800/80 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-2xl">
+          <div className="p-2 sm:p-2.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-2xl">
             <Building size={22} />
           </div>
           <div>
-            <h1 className="text-lg font-black text-white flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
               Gün Sonu & Kasa Kapatma (Z-Raporu)
               {isSessionOpen ? (
                 <span className="px-2.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-extrabold rounded-full flex items-center gap-1">
@@ -395,7 +395,7 @@ export default function ZReportClient({
       </header>
 
       {/* ─── ANA İÇERİK ALANI ─── */}
-      <main className="p-6 max-w-[1920px] mx-auto w-full flex flex-col gap-6">
+      <main className="p-3.5 sm:p-6 max-w-[1920px] mx-auto w-full flex flex-col gap-4 sm:gap-6 min-w-0">
         {/* 1. AKTİF OTURUM DURUM BANDI */}
         {activeSession && (
           <div className={`${THEME.GLASS_CARD} p-5 border border-yellow-500/20 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-gray-900 via-gray-900 to-yellow-950/20`}>

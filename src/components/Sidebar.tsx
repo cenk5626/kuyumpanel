@@ -24,7 +24,19 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; size?: n
   History,
 };
 
-export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
+interface SidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}
+
+export default function Sidebar({
+  isCollapsed,
+  onToggle,
+  isMobileOpen = false,
+  onCloseMobile,
+}: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   
@@ -48,58 +60,80 @@ export default function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolea
   });
 
   return (
-    <aside className={`fixed left-0 top-0 h-screen bg-slate-900/95 backdrop-blur-xl border-r border-amber-500/15 flex flex-col z-50 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
-      {/* Brand */}
-      <div className="px-6 py-5 text-xl font-extrabold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-clip-text text-transparent border-b border-amber-500/15 flex items-center justify-between">
-        {!isCollapsed ? (
-          <>
-            <span className="truncate tracking-tight">{MESSAGES.APP_NAME}</span>
+    <>
+      {/* Mobil Backdrop Karartma */}
+      {isMobileOpen && (
+        <div
+          onClick={onCloseMobile}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Ana Kenar Çubuğu (Desktop & Mobile Drawer) */}
+      <aside
+        className={`fixed left-0 top-0 h-screen bg-slate-900/95 backdrop-blur-2xl border-r border-amber-500/15 flex flex-col z-50 transition-all duration-300 ${
+          isMobileOpen
+            ? 'translate-x-0 w-64 shadow-2xl shadow-black/80'
+            : '-translate-x-full md:translate-x-0 ' + (isCollapsed ? 'md:w-16' : 'md:w-64')
+        }`}
+      >
+        {/* Brand */}
+        <div className="px-5 py-4 sm:py-5 text-lg sm:text-xl font-extrabold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-clip-text text-transparent border-b border-amber-500/15 flex items-center justify-between">
+          <span className="truncate tracking-tight">{MESSAGES.APP_NAME}</span>
+          
+          <div className="flex items-center gap-1">
+            {/* Desktop Kolay Daraltma Butonu */}
             <button
               onClick={onToggle}
-              className="p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-amber-400 transition-colors"
+              className="hidden md:flex p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-amber-400 transition-colors"
+              title={isCollapsed ? 'Genişlet' : 'Daralt'}
             >
-              <ChevronLeft size={16} />
+              {isCollapsed ? <Menu size={18} className="text-amber-400" /> : <ChevronLeft size={16} />}
             </button>
-          </>
-        ) : (
-          <div className="w-full flex justify-center">
+
+            {/* Mobil Drawer Kapatma Butonu */}
             <button
-              onClick={onToggle}
-              className="p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-amber-400 transition-colors"
+              onClick={onCloseMobile}
+              className="flex md:hidden p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-rose-400 transition-colors"
+              title="Menüyü Kapat"
             >
-              <Menu size={18} className="text-amber-400" />
+              <ChevronLeft size={20} />
             </button>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Navigation */}
-      <nav className={THEME.SIDEBAR.NAV}>
-        {visibleMenuItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = iconMap[item.icon];
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              title={isCollapsed ? item.label : undefined}
-              className={`${THEME.SIDEBAR.LINK} ${isActive ? THEME.SIDEBAR.LINK_ACTIVE : THEME.SIDEBAR.LINK_INACTIVE} ${isCollapsed ? 'justify-center px-0' : ''}`}
-            >
-              {Icon && <Icon className={`w-5 h-5 ${isCollapsed ? '' : 'mr-3'}`} />}
-              {!isCollapsed && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
+        {/* Navigation */}
+        <nav className={THEME.SIDEBAR.NAV}>
+          {visibleMenuItems.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = iconMap[item.icon];
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                onClick={() => {
+                  if (onCloseMobile) onCloseMobile();
+                }}
+                title={isCollapsed ? item.label : undefined}
+                className={`${THEME.SIDEBAR.LINK} ${
+                  isActive ? THEME.SIDEBAR.LINK_ACTIVE : THEME.SIDEBAR.LINK_INACTIVE
+                } ${isCollapsed ? 'md:justify-center md:px-0' : ''} min-h-[44px]`}
+              >
+                {Icon && <Icon className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? 'md:mr-0 mr-3' : 'mr-3'}`} />}
+                <span className={`truncate ${isCollapsed ? 'md:hidden' : ''}`}>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* Footer Info */}
-      <div className={THEME.SIDEBAR.FOOTER}>
-        {!isCollapsed && (
-          <div className="text-[10px] text-gray-500 font-mono text-center">
+        {/* Footer Info */}
+        <div className={THEME.SIDEBAR.FOOTER}>
+          <div className={`text-[10px] text-gray-500 font-mono text-center ${isCollapsed ? 'md:hidden' : ''}`}>
             {MESSAGES.APP_NAME} v1.0
           </div>
-        )}
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   );
 }

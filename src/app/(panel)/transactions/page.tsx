@@ -1034,10 +1034,10 @@ export default function TransactionsPage() {
 
       {/* POS ANA ALAN */}
       {activeMainTab === 'pos' && (
-      <div className="p-6 flex flex-col gap-6 w-full max-w-[1920px] mx-auto">
+      <div className="p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 w-full max-w-[1920px] mx-auto min-w-0">
         {/* Barkod Giriş ve Arama Alanı */}
-        <div className={`${THEME.GLASS_CARD} p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap`}>
-          <div className="relative flex-1 min-w-[240px]">
+        <div className={`${THEME.GLASS_CARD} p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 flex-wrap sm:flex-nowrap`}>
+          <div className="relative flex-1 min-w-[200px] w-full">
             <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
               <Barcode className="text-yellow-500" size={18} />
             </span>
@@ -1046,31 +1046,33 @@ export default function TransactionsPage() {
               value={barcodeQuery}
               onChange={e => setBarcodeQuery(e.target.value)}
               onKeyDown={handleBarcodeKeyDown}
-              placeholder="Barkod okutun (Örn: K000001) veya manuel yazıp Enter'a basın..."
-              className="w-full pl-10 pr-4 py-3 bg-gray-950/60 border border-gray-800 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 transition-colors font-mono"
+              placeholder="Barkod okutun veya yazın..."
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-gray-950/60 border border-gray-800 rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 transition-colors font-mono"
             />
           </div>
-          <button
-            onClick={() => handleBarcodeSearch(barcodeQuery)}
-            className="px-5 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-sm rounded-xl transition-all shadow-lg shadow-yellow-500/10 flex items-center gap-2 shrink-0"
-          >
-            <Search size={16} /> Barkod Ara
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => handleBarcodeSearch(barcodeQuery)}
+              className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-yellow-500/10 flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
+            >
+              <Search size={16} /> Barkod Ara
+            </button>
 
-          <button
-            onClick={() => setIsCameraModalOpen(true)}
-            className="px-5 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-extrabold text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2 shrink-0"
-          >
-            <Camera size={18} /> Kamera İle Oku
-          </button>
+            <button
+              onClick={() => setIsCameraModalOpen(true)}
+              className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
+            >
+              <Camera size={18} /> Kamera
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 min-w-0">
 
           {/* === SOL SUTUN: ISLEM SATIRLARI (Sepet) === */}
-          <div className="xl:col-span-2 flex flex-col gap-4">
+          <div className="xl:col-span-2 flex flex-col gap-3 sm:gap-4 min-w-0">
             {basket.length === 0 ? (
-              <div className={`${THEME.GLASS_CARD} p-12 text-center text-gray-500 text-sm font-semibold`}>
+              <div className={`${THEME.GLASS_CARD} p-8 sm:p-12 text-center text-gray-500 text-xs sm:text-sm font-semibold`}>
                 İşlem sepeti boş. Başlamak için sağ üstten "+ Ürün Ekle" butonuna basın.
               </div>
             ) : (
@@ -1082,12 +1084,12 @@ export default function TransactionsPage() {
                     key={item.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`${THEME.GLASS_CARD} p-5 flex flex-wrap lg:flex-nowrap items-center justify-between gap-6 border ${
+                    className={`${THEME.GLASS_CARD} p-3.5 sm:p-5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-stretch sm:items-center justify-between gap-3 sm:gap-4 border ${
                       item.type === 'buy' ? 'border-rose-500/30 bg-rose-950/10' : 'border-emerald-500/30 bg-emerald-950/10'
                     }`}
                   >
                     {/* 1. Ürün Seçimi */}
-                    <div className="flex-1 min-w-[160px] flex flex-col gap-1">
+                    <div className="flex-1 min-w-[160px] w-full flex flex-col gap-1">
                       <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Ürün:</label>
                       {item.productCode && (item.productCode.startsWith('K') || item.barcodeDetail) ? (
                         <div className="py-2 px-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
@@ -1179,81 +1181,83 @@ export default function TransactionsPage() {
                       )}
                     </div>
 
-                    {/* 2. İşlem Yönü */}
-                    <div className="w-24 flex flex-col gap-1">
-                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">İşlem Tipi:</label>
-                      <select
-                        value={item.type}
-                        onChange={e => handleUpdateRowField(item.id, 'type', e.target.value)}
-                        className={`w-full px-3 py-2 rounded-xl text-xs font-black text-white border focus:outline-none cursor-pointer transition-colors ${
-                          item.type === 'buy'
-                            ? 'bg-rose-800/90 border-rose-600 text-rose-100 shadow-sm shadow-rose-900/50'
-                            : 'bg-emerald-800/90 border-emerald-600 text-emerald-100 shadow-sm shadow-emerald-900/50'
-                        }`}
-                      >
-                        <option value="sell">Satış (Çıkış)</option>
-                        <option value="buy">Alış (Giriş)</option>
-                      </select>
-                    </div>
-
-                    {/* 3. Miktar */}
-                    <div className="w-16 flex flex-col gap-1">
-                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Miktar:</label>
-                      <input
-                        type={isKeyboardLocked ? "text" : "number"}
-                        step="0.01"
-                        min="0.01"
-                        readOnly={isKeyboardLocked}
-                        value={item.quantity}
-                        onClick={e => handleInputClick(e, 'row-qty', item.id, item.quantity)}
-                        onChange={e => handleUpdateRowField(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl text-white text-xs font-mono text-center focus:outline-none focus:border-yellow-500/50"
-                      />
-                    </div>
-
-                    {/* 4. Birim Fiyat */}
-                    <div className="flex-1 min-w-[140px] flex flex-col gap-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Birim Fiyat:</label>
-                        {liveP && (
-                          <span className={`text-[9px] font-mono font-bold ${
-                            item.type === 'buy' ? 'text-rose-400/90' : 'text-emerald-400/90'
-                          }`}>
-                            Ref: ₺{formatValue(item.type === 'buy' ? liveP.bid : liveP.ask, item.productType)}
-                          </span>
-                        )}
+                    {/* 2. İşlem Yönü & Miktar & Fiyat Grubu */}
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto flex-1">
+                      {/* İşlem Yönü */}
+                      <div className="flex flex-col gap-1 w-full sm:w-28">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">İşlem Tipi:</label>
+                        <select
+                          value={item.type}
+                          onChange={e => handleUpdateRowField(item.id, 'type', e.target.value)}
+                          className={`w-full px-2.5 sm:px-3 py-2 rounded-xl text-xs font-black text-white border focus:outline-none cursor-pointer transition-colors min-h-[38px] ${
+                            item.type === 'buy'
+                              ? 'bg-rose-800/90 border-rose-600 text-rose-100 shadow-sm shadow-rose-900/50'
+                              : 'bg-emerald-800/90 border-emerald-600 text-emerald-100 shadow-sm shadow-emerald-900/50'
+                          }`}
+                        >
+                          <option value="sell">Satış (Çıkış)</option>
+                          <option value="buy">Alış (Giriş)</option>
+                        </select>
                       </div>
-                      <div className="flex gap-1.5 relative">
+
+                      {/* Miktar */}
+                      <div className="flex flex-col gap-1 w-full sm:w-20">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Miktar:</label>
                         <input
                           type={isKeyboardLocked ? "text" : "number"}
-                          step="1"
+                          step="0.01"
+                          min="0.01"
                           readOnly={isKeyboardLocked}
-                          value={item.productCode ? (isKeyboardLocked ? formatValue(item.price, item.productType) : item.price) : ''}
-                          onClick={e => handleInputClick(e, 'row-price', item.id, item.price)}
-                          onChange={e => handleUpdateRowField(item.id, 'price', parseFloat(e.target.value) || 0)}
-                          className={`w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl font-bold font-mono text-right text-xs focus:outline-none focus:border-yellow-500/50 pr-8 ${
-                            item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
-                          }`}
+                          value={item.quantity}
+                          onClick={e => handleInputClick(e, 'row-qty', item.id, item.quantity)}
+                          onChange={e => handleUpdateRowField(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                          className="w-full px-2.5 sm:px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl text-white text-xs font-mono text-center focus:outline-none focus:border-yellow-500/50 min-h-[38px]"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-mono font-semibold">₺</span>
+                      </div>
+
+                      {/* Birim Fiyat */}
+                      <div className="col-span-2 sm:flex-1 min-w-[140px] flex flex-col gap-1 w-full">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Birim Fiyat:</label>
+                          {liveP && (
+                            <span className={`text-[9px] font-mono font-bold ${
+                              item.type === 'buy' ? 'text-rose-400/90' : 'text-emerald-400/90'
+                            }`}>
+                              Ref: ₺{formatValue(item.type === 'buy' ? liveP.bid : liveP.ask, item.productType)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-1.5 relative">
+                          <input
+                            type={isKeyboardLocked ? "text" : "number"}
+                            step="1"
+                            readOnly={isKeyboardLocked}
+                            value={item.productCode ? (isKeyboardLocked ? formatValue(item.price, item.productType) : item.price) : ''}
+                            onClick={e => handleInputClick(e, 'row-price', item.id, item.price)}
+                            onChange={e => handleUpdateRowField(item.id, 'price', parseFloat(e.target.value) || 0)}
+                            className={`w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl font-bold font-mono text-right text-xs focus:outline-none focus:border-yellow-500/50 pr-8 min-h-[38px] ${
+                              item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
+                            }`}
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-mono font-semibold">₺</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* 5. Toplam Tutar */}
-                    <div className="w-28 flex flex-col gap-1 text-right">
-                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Toplam:</label>
-                      <span className={`text-base font-black font-mono leading-7 ${
-                        item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
-                      }`}>
-                        ₺{item.productCode ? formatValue(item.total, item.productType) : '0'}
-                      </span>
-                    </div>
+                    {/* 3. Toplam Tutar & Sil Butonu */}
+                    <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/40">
+                      <div className="flex flex-col sm:text-right">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Toplam:</label>
+                        <span className={`text-sm sm:text-base font-black font-mono leading-tight sm:leading-7 ${
+                          item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
+                        }`}>
+                          ₺{item.productCode ? formatValue(item.total, item.productType) : '0'}
+                        </span>
+                      </div>
 
-                    {/* 6. Sil Butonu */}
-                    <div className="flex-shrink-0">
                       <button
                         onClick={() => handleRemoveRow(item.id)}
-                        className="px-3.5 py-2.5 bg-red-650 hover:bg-red-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors min-h-[38px]"
                       >
                         <Trash2 size={13} />
                         Sil

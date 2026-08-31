@@ -187,11 +187,11 @@ export default function LogsClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
             <History className="text-yellow-400" size={28} />
             İşlem Logları & Güvenlik Radarı
           </h1>
@@ -203,7 +203,7 @@ export default function LogsClient({
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className={`${THEME.BTN_SECONDARY} gap-2 text-xs`}
+            className={`${THEME.BTN_SECONDARY} gap-2 text-xs min-h-[40px]`}
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             Yenile
@@ -213,10 +213,10 @@ export default function LogsClient({
       </div>
 
       {/* 3'lü TAB SEÇİCİ */}
-      <div className="flex bg-gray-900/80 p-1.5 rounded-2xl border border-gray-800/80 max-w-2xl backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row bg-gray-900/80 p-1.5 rounded-2xl border border-gray-800/80 max-w-2xl backdrop-blur-md gap-1">
         <button
           onClick={() => setActiveTab('audit')}
-          className={`flex-1 py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'audit'
               ? 'bg-yellow-500 text-gray-950 shadow-lg shadow-yellow-500/20'
               : 'text-gray-400 hover:text-white'
@@ -226,7 +226,7 @@ export default function LogsClient({
         </button>
         <button
           onClick={() => setActiveTab('suspicious')}
-          className={`flex-1 py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'suspicious'
               ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
               : 'text-gray-400 hover:text-red-400'
@@ -236,13 +236,13 @@ export default function LogsClient({
         </button>
         <button
           onClick={() => setActiveTab('revisions')}
-          className={`flex-1 py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'revisions'
               ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
               : 'text-gray-400 hover:text-purple-300'
           }`}
         >
-          <FileEdit size={15} /> 3. Düzeltme & Silme Geçmişi ({revisionsList.length})
+          <FileEdit size={15} /> 3. Düzeltme & Silme ({revisionsList.length})
         </button>
       </div>
 

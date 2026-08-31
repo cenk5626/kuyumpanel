@@ -800,12 +800,12 @@ export default function CustomersClient({
       {/* ─── MÜŞTERİ EKLEME / DÜZENLEME MODALI ─── */}
       <AnimatePresence>
         {showCustomerModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`${THEME.GLASS_CARD} w-full max-w-lg p-6`}
+              className={`${THEME.GLASS_CARD} w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto`}
             >
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -1188,12 +1188,12 @@ export default function CustomersClient({
       {/* ─── GELİŞMİŞ HESAP EKSTRESİ & YÜRÜYEN BAKİYE (RUNNING BALANCE) MODALI ─── */}
       <AnimatePresence>
         {showStatementModal && statementCustomer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto print:p-0 print:bg-white print:static">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className={`${THEME.GLASS_CARD} w-full max-w-4xl p-6 my-8 print:border-none print:shadow-none print:bg-white print:text-black print:my-0`}
+              className={`${THEME.GLASS_CARD} w-full max-w-4xl p-4 sm:p-6 my-4 sm:my-8 max-h-[90vh] overflow-y-auto print:border-none print:shadow-none print:bg-white print:text-black print:my-0`}
             >
               {/* Ekstre Üst Başlık */}
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-5 border-b border-gray-800 print:border-black pb-4">

@@ -1,9 +1,9 @@
 // Tailwind class sabitleri — UI/UX Pro Max Luxury Jewelry Design System
 export const THEME = {
   // Layout
-  LAYOUT_WRAPPER: 'flex min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500/30 selection:text-amber-200 transition-colors duration-200',
-  MAIN_CONTENT: 'flex-1 ml-64 flex flex-col min-h-screen transition-all duration-300',
-  PAGE_WRAPPER: 'flex-1 p-6 md:p-8 max-w-[1920px] mx-auto w-full space-y-6',
+  LAYOUT_WRAPPER: 'flex min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500/30 selection:text-amber-200 transition-colors duration-200 overflow-x-hidden',
+  MAIN_CONTENT: 'flex-1 ml-0 md:ml-64 flex flex-col min-h-screen transition-all duration-300 w-full min-w-0 overflow-x-hidden',
+  PAGE_WRAPPER: 'flex-1 p-3.5 sm:p-6 md:p-8 max-w-[1920px] mx-auto w-full space-y-4 sm:space-y-6 min-w-0 overflow-x-hidden',
 
   // Sidebar
   SIDEBAR: {
