@@ -123,5 +123,33 @@ export function registerF22AiAssistantTests(): void {
       status = 'SUCCESS';
       expect(status).toBe('SUCCESS');
     });
+
+    test('22.8 Stock quantity update and product item creation action proposals', () => {
+      const sampleStockResponse = `Patron, Çeyrek Altın stoğunuzu 25 adet yapma taslağını oluşturdum:
+:::ACTION_PROPOSAL
+{
+  "actionType": "UPDATE_STOCK_QUANTITY",
+  "title": "Çeyrek Altın Stoğu Güncelleme",
+  "description": "Çeyrek altın mevcut stoğu 25 adet olarak eşitlenecektir.",
+  "summary": {
+    "Ürün": "Çeyrek Altın",
+    "Yeni Miktar": "25 Adet"
+  },
+  "payload": {
+    "product": "ECEYREKTL",
+    "amount": 25,
+    "operation": "SET"
+  }
+}
+:::`;
+
+      const match = sampleStockResponse.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)\s*:::/);
+      expect(Boolean(match)).toBe(true);
+
+      const parsed = JSON.parse(match![1].trim());
+      expect(parsed.actionType).toBe('UPDATE_STOCK_QUANTITY');
+      expect(parsed.payload.product).toBe('ECEYREKTL');
+      expect(parsed.payload.amount).toBe(25);
+    });
   });
 }

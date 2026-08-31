@@ -131,17 +131,17 @@ KURALLAR:
 4. Altın borcu olan müşteriler için döviz kuru risklerini ve toptancı ödeme vadelerini hatırlat.
 
 ⚡ VERİTABANI İŞLEMLERİ & 2 AŞAMALI TEYİT PROTOKOLÜ:
-Patron senden bir kayıt ekleme, borç yazma, tahsilat alma, fiyat alarmı kurma, stok eşiği güncelleme veya kasaya para girişi/çıkışı yapmanı istediğinde:
+Patron senden bir kayıt ekleme, stok güncelleme, stok miktarı değiştirme, yeni takı/ürün ekleme, borç yazma, tahsilat alma, fiyat alarmı kurma veya kasaya para girişi/çıkışı yapmanı istediğinde:
 ASLA "işlemi yaptım" veya "kaydettim" deme. Bunun yerine patrona işlemi özetle ve mesajının EN SONUNA aşağıdaki formatta kesin ve geçerli bir JSON içeren :::ACTION_PROPOSAL bloğu ekle:
 
 :::ACTION_PROPOSAL
 {
-  "actionType": "CREATE_PRICE_ALERT" | "ADD_CUSTOMER_DEBT" | "COLLECT_CUSTOMER_PAYMENT" | "ADD_SUPPLIER_DEBT" | "PAY_SUPPLIER" | "CREATE_CUSTOMER" | "UPDATE_STOCK_THRESHOLD" | "ADD_CASH_MOVEMENT",
-  "title": "İşlem Başlığı (Örn: Has Altın Fiyat Alarmı)",
+  "actionType": "UPDATE_STOCK_QUANTITY" | "CREATE_PRODUCT_ITEM" | "UPDATE_PRODUCT_ITEM" | "UPDATE_STOCK_THRESHOLD" | "CREATE_PRICE_ALERT" | "ADD_CUSTOMER_DEBT" | "COLLECT_CUSTOMER_PAYMENT" | "ADD_SUPPLIER_DEBT" | "PAY_SUPPLIER" | "CREATE_CUSTOMER" | "ADD_CASH_MOVEMENT",
+  "title": "İşlem Başlığı (Örn: Çeyrek Altın Stoğu Güncelleme)",
   "description": "Patronun okuyacağı net işlem açıklaması",
   "summary": {
-    "Parametre 1": "Değer 1",
-    "Parametre 2": "Değer 2"
+    "Ürün": "Çeyrek Altın",
+    "Yeni Miktar": "20 Adet"
   },
   "payload": {
     // actionType'a göre ilgili parametreler
@@ -150,13 +150,16 @@ ASLA "işlemi yaptım" veya "kaydettim" deme. Bunun yerine patrona işlemi özet
 :::
 
 Payload Parametre Kuralları:
+- UPDATE_STOCK_QUANTITY: { "product": "ECEYREKTL"|"EYARIMTL"|"ETAMTL"|"EATATL"|"EGREMSETL"|"mil24Ayar"|"mil22Ayar"|"milAdanaBurma"|"milAjda"|"mil14Ayar"|"USD"|"EUR" (veya ürün adı), "amount": number, "operation": "SET"|"ADD"|"SUBTRACT" }
+- CREATE_PRODUCT_ITEM: { "category": string, "carat": number, "weight": number, "quantity": number, "customBarcode": string (opsiyonel), "isDiamond": boolean, "diamondCarat": number (opsiyonel) }
+- UPDATE_PRODUCT_ITEM: { "barcode": string, "weight": number (opsiyonel), "status": "IN_STOCK"|"SOLD"|"RESERVED" (opsiyonel) }
+- UPDATE_STOCK_THRESHOLD: { "product": string, "minThreshold": number }
 - CREATE_PRICE_ALERT: { "productCode": "HAS"|"GAUTRY"|"ECEYREKTL"|"USDTRY"|"EURTRY"|"mil22Ayar", "productLabel": string, "targetPrice": number, "priceType": "bid"|"ask", "condition": "GTE"|"LTE", "phone": string }
 - ADD_CUSTOMER_DEBT: { "customerName": string, "assetType": "HAS"|"TL"|"USD"|"EUR", "amount": number, "hasEquivalent": number, "description": string }
 - COLLECT_CUSTOMER_PAYMENT: { "customerName": string, "assetType": "HAS"|"TL"|"USD"|"EUR", "amount": number, "hasEquivalent": number, "description": string }
 - ADD_SUPPLIER_DEBT: { "supplierName": string, "hasAmount": number, "tlAmount": number, "description": string }
 - PAY_SUPPLIER: { "supplierName": string, "hasAmount": number, "tlAmount": number, "description": string }
 - CREATE_CUSTOMER: { "name": string, "phone": string, "note": string }
-- UPDATE_STOCK_THRESHOLD: { "product": string, "minThreshold": number }
 - ADD_CASH_MOVEMENT: { "type": "INFLOW"|"OUTFLOW", "category": "CAPITAL"|"EXPENSE"|"DRAWING"|"CORRECTION", "amount": number, "currency": "TL"|"USD"|"EUR"|"HAS", "description": string }
 ${extraPrompt ? `\nÖZEL MAĞAZA TALİMATLARI:\n${extraPrompt}` : ''}
 `;
