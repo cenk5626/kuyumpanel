@@ -135,52 +135,78 @@ ${extraPrompt ? `\nÖZEL MAĞAZA TALİMATLARI:\n${extraPrompt}` : ''}
 
 /**
  * Google Gemini API ile içerik üretir.
- * Tüm güncel Gemini modellerini (gemini-2.0-flash, gemini-2.0-flash-thinking-exp, gemini-2.0-pro-exp, gemini-1.5-pro vb.) ve özel model ID'lerini destekler.
+ * Native system_instruction, temiz contents formatı ve aşırı yük (503/404) durumunda otomatik fallback destekler.
  */
 async function callGeminiApi(apiKey: string, model: string, systemPrompt: string, messages: AiChatMessage[]): Promise<string> {
-  const geminiModel = (model && model.trim()) ? model.trim() : 'gemini-2.0-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+  const targetModel = (model && model.trim()) ? model.trim() : 'gemini-3.5-flash';
+  
+  // Format clean alternating contents
+  const validMessages = messages.filter(m => m.content && m.content.trim().length > 0);
+  const contents = validMessages.length > 0 
+    ? validMessages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content.trim() }],
+      }))
+    : [{ role: 'user', parts: [{ text: 'Selam' }] }];
 
-  // Gemini contents format
-  const contents = [
-    {
-      role: 'user',
-      parts: [{ text: `[SİSTEM TALİMATI]\n${systemPrompt}` }],
+  const payload = {
+    system_instruction: {
+      parts: [{ text: systemPrompt }]
     },
-    {
-      role: 'model',
-      parts: [{ text: 'Anlaşıldı patron. Mağazanızın tüm canlı verilerini inceledim. Size nasıl yardımcı olabilirim?' }],
+    contents,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2048,
     },
-    ...messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    })),
-  ];
+  };
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-      },
-    }),
-  });
+  // Helper to attempt a model call with 30s timeout
+  async function attemptCall(modelName: string): Promise<string> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Google Gemini API Hatası (${response.status} - Model: ${geminiModel}): ${errText}`);
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Google API (${response.status}): ${errText}`);
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        throw new Error('Gemini API boş yanıt döndürdü.');
+      }
+      return text;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error('Gemini API yanıt üretemedi.');
-  }
+  try {
+    return await attemptCall(targetModel);
+  } catch (primaryErr: any) {
+    console.warn(`[Gemini Primary Model Error (${targetModel})]:`, primaryErr.message);
 
-  return text;
+    // If primary model failed (e.g. 503 overloaded, 404 not found, or timeout), try fast fallback model
+    if (targetModel !== 'gemini-3.5-flash' && targetModel !== 'gemini-3.1-flash-lite') {
+      try {
+        console.log('[Gemini Auto-Fallback] Retrying with gemini-3.5-flash...');
+        return await attemptCall('gemini-3.5-flash');
+      } catch (fallbackErr: any) {
+        console.log('[Gemini Fallback 2] Retrying with gemini-3.1-flash-lite...');
+        return await attemptCall('gemini-3.1-flash-lite');
+      }
+    }
+    throw primaryErr;
+  }
 }
 
 /**

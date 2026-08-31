@@ -322,7 +322,7 @@ export default function AiSettingsClient() {
                   <select
                     value={
                       aiProvider === 'GEMINI'
-                        ? ['gemini-2.0-flash', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.0-pro-exp-02-05', 'gemini-1.5-pro', 'gemini-1.5-flash'].includes(aiModel)
+                        ? ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-flash-latest', 'gemini-pro-latest'].includes(aiModel)
                           ? aiModel
                           : 'CUSTOM'
                         : ['gpt-4o', 'gpt-4o-mini', 'o3-mini', 'o1', 'gpt-4.5-preview'].includes(aiModel)
@@ -340,12 +340,12 @@ export default function AiSettingsClient() {
                   >
                     {aiProvider === 'GEMINI' ? (
                       <>
-                        <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (En Hızlı & Önerilen)</option>
-                        <option value="gemini-2.0-flash-thinking-exp-01-21">🧠 Gemini 2.0 Flash Thinking (Derin Akıl Yürütme & Düşünme)</option>
-                        <option value="gemini-2.0-pro-exp-02-05">🏆 Gemini 2.0 Pro (En Yüksek Analiz & Zeka)</option>
-                        <option value="gemini-1.5-pro">📚 Gemini 1.5 Pro (Geniş Bağlam)</option>
-                        <option value="gemini-1.5-flash">🚀 Gemini 1.5 Flash</option>
-                        <option value="CUSTOM">✍️ Özel Model ID Yaz (Örn: gemini-3.7, gemini-exp...)</option>
+                        <option value="gemini-3.5-flash">⚡ Gemini 3.5 Flash (En Hızlı & Önerilen - 2026)</option>
+                        <option value="gemini-3.1-flash-lite">🚀 Gemini 3.1 Flash Lite (Ultra Düşük Gecikme)</option>
+                        <option value="gemini-3.6-flash">🏆 Gemini 3.6 Flash (Gelişmiş Finans & Akıl Yürütme)</option>
+                        <option value="gemini-3.7-flash">🧠 Gemini 3.7 Flash (Düşünme / Thinking Modu)</option>
+                        <option value="gemini-flash-latest">✨ Gemini Flash Latest</option>
+                        <option value="CUSTOM">✍️ Özel Model ID Yaz (Örn: gemini-3.8, gemini-exp...)</option>
                       </>
                     ) : (
                       <>
@@ -374,11 +374,12 @@ export default function AiSettingsClient() {
 
               {/* Özel / Serbest Model İsmi Yazma Alanı */}
               {(![
-                'gemini-2.0-flash',
-                'gemini-2.0-flash-thinking-exp-01-21',
-                'gemini-2.0-pro-exp-02-05',
-                'gemini-1.5-pro',
-                'gemini-1.5-flash',
+                'gemini-3.5-flash',
+                'gemini-3.1-flash-lite',
+                'gemini-3.6-flash',
+                'gemini-3.7-flash',
+                'gemini-flash-latest',
+                'gemini-pro-latest',
                 'gpt-4o',
                 'gpt-4o-mini',
                 'o3-mini',
@@ -394,7 +395,7 @@ export default function AiSettingsClient() {
                   </div>
                   <input
                     type="text"
-                    placeholder={aiProvider === 'GEMINI' ? 'Örn: gemini-3.7-flash veya gemini-2.5-pro' : 'Örn: o3-mini veya gpt-5'}
+                    placeholder={aiProvider === 'GEMINI' ? 'Örn: gemini-3.5-flash veya gemini-3.1-flash-lite' : 'Örn: o3-mini veya gpt-5'}
                     value={aiModel}
                     onChange={(e) => setAiModel(e.target.value)}
                     className={`${THEME.INPUT} font-mono`}
