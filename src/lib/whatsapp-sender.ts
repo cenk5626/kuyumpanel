@@ -1,16 +1,18 @@
-﻿import { prisma } from './prisma';
+import { prisma } from './prisma';
 import { buildWhatsAppLink } from './whatsapp';
 
 export interface WhatsAppSendResult {
   success: boolean;
-  provider: 'WEB_INTENT' | 'CLOUD_API' | 'GATEWAY';
+  provider: 'WEB_INTENT' | 'GATEWAY';
   webLink?: string;
   messageId?: string;
   error?: string;
 }
 
 /**
- * Bayinin tanımladığı WhatsApp sağlayıcısına göre mesajı iletir.
+ * Bayinin tanımladığı WhatsApp sağlayıcısına göre mesajı iletir:
+ * 1. WEB_INTENT (wa.me Doğrudan Cihaz Linki - Ücretsiz & Sıfır Kurulum)
+ * 2. GATEWAY (QR Kod ile Mağaza Numarasını Eşleme - UltraMsg / GreenAPI ile Arka Planda Otomatik Gönderim)
  */
 export async function sendWhatsAppNotification(
   dealerId: string,
@@ -22,14 +24,12 @@ export async function sendWhatsAppNotification(
     select: {
       whatsappProvider: true,
       whatsappPhone: true,
-      waCloudAccessToken: true,
-      waCloudPhoneId: true,
       waGatewayInstanceId: true,
       waGatewayToken: true,
     },
   });
 
-  const provider = (dealer?.whatsappProvider || 'WEB_INTENT').toUpperCase() as 'WEB_INTENT' | 'CLOUD_API' | 'GATEWAY';
+  const provider = (dealer?.whatsappProvider === 'GATEWAY' ? 'GATEWAY' : 'WEB_INTENT') as 'WEB_INTENT' | 'GATEWAY';
   const recipientPhone = targetPhone || dealer?.whatsappPhone;
 
   if (!recipientPhone) {
@@ -40,7 +40,7 @@ export async function sendWhatsAppNotification(
     };
   }
 
-  // 1. WEB INTENT (wa.me Linki)
+  // 1. WEB INTENT (wa.me Doğrudan Cihaz / Web Linki - %100 Ücretsiz)
   if (provider === 'WEB_INTENT') {
     const webLink = buildWhatsAppLink(recipientPhone, messageText);
     return {
@@ -50,61 +50,7 @@ export async function sendWhatsAppNotification(
     };
   }
 
-  // 2. META CLOUD API
-  if (provider === 'CLOUD_API') {
-    if (!dealer?.waCloudAccessToken || !dealer?.waCloudPhoneId) {
-      // Bilgiler eksikse güvenli geri dönüş olarak webLink üret
-      const webLink = buildWhatsAppLink(recipientPhone, messageText);
-      return {
-        success: true,
-        provider: 'WEB_INTENT',
-        webLink,
-        error: 'Meta Cloud API anahtarları eksik, tarayıcı linki oluşturuldu.',
-      };
-    }
-
-    try {
-      const cleanPhone = recipientPhone.replace(/\D/g, '');
-      const formattedPhone = cleanPhone.startsWith('90') ? cleanPhone : `90${cleanPhone.replace(/^0/, '')}`;
-
-      const res = await fetch(`https://graph.facebook.com/v22.0/${dealer.waCloudPhoneId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${dealer.waCloudAccessToken}`,
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to: formattedPhone,
-          type: 'text',
-          text: { body: messageText },
-        }),
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson?.error?.message || 'Meta API gönderim hatası.');
-      }
-
-      const resData = await res.json();
-      return {
-        success: true,
-        provider: 'CLOUD_API',
-        messageId: resData?.messages?.[0]?.id,
-      };
-    } catch (err: any) {
-      const webLink = buildWhatsAppLink(recipientPhone, messageText);
-      return {
-        success: false,
-        provider: 'CLOUD_API',
-        webLink,
-        error: err.message,
-      };
-    }
-  }
-
-  // 3. QR GATEWAY (GreenAPI / UltraMsg)
+  // 2. QR KOD GATEWAY (UltraMsg / GreenAPI ile Mağaza Numarasından Otomatik Gönderim)
   if (provider === 'GATEWAY') {
     if (!dealer?.waGatewayInstanceId || !dealer?.waGatewayToken) {
       const webLink = buildWhatsAppLink(recipientPhone, messageText);
@@ -112,7 +58,7 @@ export async function sendWhatsAppNotification(
         success: true,
         provider: 'WEB_INTENT',
         webLink,
-        error: 'Gateway anahtarları eksik, tarayıcı linki oluşturuldu.',
+        error: 'QR Gateway anahtarları eksik, tarayıcı linki oluşturuldu.',
       };
     }
 
@@ -120,7 +66,7 @@ export async function sendWhatsAppNotification(
       const cleanPhone = recipientPhone.replace(/\D/g, '');
       const formattedPhone = cleanPhone.startsWith('90') ? cleanPhone : `90${cleanPhone.replace(/^0/, '')}`;
 
-      // UltraMsg REST endpoint standardı
+      // UltraMsg / GreenAPI REST standardı
       const res = await fetch(`https://api.ultramsg.com/${dealer.waGatewayInstanceId}/messages/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -159,3 +105,4 @@ export async function sendWhatsAppNotification(
     webLink,
   };
 }
+

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -39,12 +39,9 @@ export default function AiSettingsClient() {
   const [aiModel, setAiModel] = useState('gemini-2.0-flash');
   const [aiSystemPromptExtra, setAiSystemPromptExtra] = useState('');
 
-  // WhatsApp Ayarları
-  const [whatsappProvider, setWhatsappProvider] = useState<'WEB_INTENT' | 'CLOUD_API' | 'GATEWAY'>('WEB_INTENT');
+  // WhatsApp Ayarları: 1 (Web Intent) ve 3 (QR Kod Gateway)
+  const [whatsappProvider, setWhatsappProvider] = useState<'WEB_INTENT' | 'GATEWAY'>('WEB_INTENT');
   const [whatsappPhone, setWhatsappPhone] = useState('');
-  const [waCloudAccessToken, setWaCloudAccessToken] = useState('');
-  const [waCloudPhoneId, setWaCloudPhoneId] = useState('');
-  const [waCloudBusinessId, setWaCloudBusinessId] = useState('');
   const [waGatewayInstanceId, setWaGatewayInstanceId] = useState('');
   const [waGatewayToken, setWaGatewayToken] = useState('');
 
@@ -62,10 +59,9 @@ export default function AiSettingsClient() {
           if (data.geminiApiKeyMasked) setGeminiApiKeyMasked(data.geminiApiKeyMasked);
           if (data.openaiApiKeyMasked) setOpenaiApiKeyMasked(data.openaiApiKeyMasked);
 
-          if (data.whatsappProvider) setWhatsappProvider(data.whatsappProvider);
+          if (data.whatsappProvider === 'GATEWAY') setWhatsappProvider('GATEWAY');
+          else setWhatsappProvider('WEB_INTENT');
           if (data.whatsappPhone) setWhatsappPhone(data.whatsappPhone);
-          if (data.waCloudPhoneId) setWaCloudPhoneId(data.waCloudPhoneId);
-          if (data.waCloudBusinessId) setWaCloudBusinessId(data.waCloudBusinessId);
           if (data.waGatewayInstanceId) setWaGatewayInstanceId(data.waGatewayInstanceId);
         }
       } catch (err: any) {
@@ -91,15 +87,12 @@ export default function AiSettingsClient() {
         aiSystemPromptExtra,
         whatsappProvider,
         whatsappPhone,
-        waCloudPhoneId,
-        waCloudBusinessId,
         waGatewayInstanceId,
       };
 
       // Yalnızca yeni anahtar girilmişse gönder
       if (geminiApiKey.trim()) payload.geminiApiKey = geminiApiKey.trim();
       if (openaiApiKey.trim()) payload.openaiApiKey = openaiApiKey.trim();
-      if (waCloudAccessToken.trim()) payload.waCloudAccessToken = waCloudAccessToken.trim();
       if (waGatewayToken.trim()) payload.waGatewayToken = waGatewayToken.trim();
 
       const res = await fetch('/api/dealer/ai-settings', {
@@ -115,7 +108,6 @@ export default function AiSettingsClient() {
         if (openaiApiKey) setOpenaiApiKeyMasked(`${openaiApiKey.substring(0, 6)}...`);
         setGeminiApiKey('');
         setOpenaiApiKey('');
-        setWaCloudAccessToken('');
         setWaGatewayToken('');
       } else {
         setStatusMessage({ type: 'error', text: data.error || 'Ayarlar kaydedilemedi.' });
@@ -366,45 +358,46 @@ export default function AiSettingsClient() {
               <span className="text-[11px] text-gray-400">Patron ve Müşteri Bildirimleri</span>
             </div>
 
-            {/* Sağlayıcı Seçimi */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Sağlayıcı Seçimi: 1 (Web Intent) ve 3 (QR Kod Gateway) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setWhatsappProvider('WEB_INTENT')}
-                className={`p-3.5 rounded-2xl border text-left transition-all ${
+                className={`p-4 rounded-2xl border text-left transition-all ${
                   whatsappProvider === 'WEB_INTENT'
                     ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-md'
                     : 'bg-gray-950/60 border-gray-800 text-gray-400 hover:border-gray-700'
                 }`}
               >
-                <span className="font-bold text-xs text-emerald-400 block mb-1">1. Web Intent (wa.me)</span>
-                <p className="text-[10px] text-gray-400">Ücretsiz tarayıcı/telefon bağlantısı. Sıfır kurulum.</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setWhatsappProvider('CLOUD_API')}
-                className={`p-3.5 rounded-2xl border text-left transition-all ${
-                  whatsappProvider === 'CLOUD_API'
-                    ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-md'
-                    : 'bg-gray-950/60 border-gray-800 text-gray-400 hover:border-gray-700'
-                }`}
-              >
-                <span className="font-bold text-xs text-emerald-400 block mb-1">2. Meta Cloud API</span>
-                <p className="text-[10px] text-gray-400">Resmi Meta API. Arka planda otomatik sessiz bildirim.</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-xs text-emerald-400">1. Doğrudan Web Intent (wa.me)</span>
+                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-md">
+                    Ücretsiz & Sıfır Kurulum
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Fiş, garanti belgesi veya alarm oluşturulduğunda cihazınızdaki WhatsApp tek tıkla açılır.
+                </p>
               </button>
 
               <button
                 type="button"
                 onClick={() => setWhatsappProvider('GATEWAY')}
-                className={`p-3.5 rounded-2xl border text-left transition-all ${
+                className={`p-4 rounded-2xl border text-left transition-all ${
                   whatsappProvider === 'GATEWAY'
                     ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-md'
                     : 'bg-gray-950/60 border-gray-800 text-gray-400 hover:border-gray-700'
                 }`}
               >
-                <span className="font-bold text-xs text-emerald-400 block mb-1">3. QR Kod Gateway</span>
-                <p className="text-[10px] text-gray-400">UltraMsg / GreenAPI ile mağaza numarasını bağlama.</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-xs text-emerald-400">2. QR Kod Gateway (UltraMsg / GreenAPI)</span>
+                  <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] font-bold rounded-md">
+                    Otomatik Gönderim
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Mağazanızın kendi telefon numarasını QR ile bağlayarak arka planda sessiz ve otomatik mesaj atın.
+                </p>
               </button>
             </div>
 
@@ -425,54 +418,27 @@ export default function AiSettingsClient() {
                   disabled={testingWhatsApp}
                   className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shrink-0"
                 >
-                  <Send size={14} /> Test Et
+                  <Send size={14} /> Test Bildirimi Gönder
                 </button>
               </div>
             </div>
 
-            {/* Meta Cloud API Özel Alanları */}
-            {whatsappProvider === 'CLOUD_API' && (
-              <div className="space-y-4 pt-3 border-t border-gray-850">
-                <h4 className="text-xs font-bold text-yellow-400 uppercase">Meta Cloud API Bilgileri</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className={THEME.LABEL}>Phone Number ID</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: 10982374615234"
-                      value={waCloudPhoneId}
-                      onChange={(e) => setWaCloudPhoneId(e.target.value)}
-                      className={THEME.INPUT}
-                    />
-                  </div>
-                  <div>
-                    <label className={THEME.LABEL}>WABA Business ID</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: 5827361928374"
-                      value={waCloudBusinessId}
-                      onChange={(e) => setWaCloudBusinessId(e.target.value)}
-                      className={THEME.INPUT}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className={THEME.LABEL}>Meta Permanent Access Token</label>
-                  <input
-                    type="password"
-                    placeholder="EAAB..."
-                    value={waCloudAccessToken}
-                    onChange={(e) => setWaCloudAccessToken(e.target.value)}
-                    className={`${THEME.INPUT} font-mono`}
-                  />
-                </div>
-              </div>
-            )}
-
             {/* QR Gateway Özel Alanları */}
             {whatsappProvider === 'GATEWAY' && (
               <div className="space-y-4 pt-3 border-t border-gray-850">
-                <h4 className="text-xs font-bold text-yellow-400 uppercase">Gateway Bilgileri (UltraMsg / GreenAPI)</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-yellow-400 uppercase flex items-center gap-1.5">
+                    <QrCode size={14} /> Gateway Bilgileri (UltraMsg / GreenAPI)
+                  </h4>
+                  <a
+                    href="https://ultramsg.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-yellow-400 hover:underline flex items-center gap-1"
+                  >
+                    UltraMsg Hesabı Aç <ExternalLink size={12} />
+                  </a>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className={THEME.LABEL}>Instance ID</label>
@@ -488,7 +454,7 @@ export default function AiSettingsClient() {
                     <label className={THEME.LABEL}>Token</label>
                     <input
                       type="password"
-                      placeholder="Token..."
+                      placeholder="Gizli Token..."
                       value={waGatewayToken}
                       onChange={(e) => setWaGatewayToken(e.target.value)}
                       className={`${THEME.INPUT} font-mono`}
