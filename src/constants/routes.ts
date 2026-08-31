@@ -38,6 +38,11 @@ export const ROUTES = {
   API_STOCK_AUDIT: '/api/stocks/audit',
   API_BACKUP_EXPORT: '/api/backup/export',
   API_BACKUP_IMPORT: '/api/backup/import',
+  AI_ASSISTANT: '/ai-assistant',
+  SETTINGS_AI: '/settings/ai',
+  API_AI_CHAT: '/api/ai/chat',
+  API_AI_BRIEFING: '/api/ai/briefing',
+  API_DEALER_AI_SETTINGS: '/api/dealer/ai-settings',
 } as const;
 
 

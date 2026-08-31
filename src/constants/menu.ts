@@ -69,6 +69,18 @@ export const MENU_ITEMS = [
     icon: 'BellRing',
   },
   {
+    id: 'ai-assistant',
+    label: MESSAGES.MENU_AI_ASSISTANT,
+    href: ROUTES.AI_ASSISTANT,
+    icon: 'Bot',
+  },
+  {
+    id: 'settings-ai',
+    label: MESSAGES.MENU_SETTINGS_AI,
+    href: ROUTES.SETTINGS_AI,
+    icon: 'Settings',
+  },
+  {
     id: 'logs',
     label: MESSAGES.MENU_LOGS,
     href: ROUTES.LOGS,

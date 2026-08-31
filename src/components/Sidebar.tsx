@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History, Building, TrendingUp, ClipboardCheck, FileSpreadsheet, BellRing } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History, Building, TrendingUp, ClipboardCheck, FileSpreadsheet, BellRing, Bot, Settings } from 'lucide-react';
 import { MENU_ITEMS } from '@/constants/menu';
 import { MESSAGES } from '@/constants/messages';
 import { THEME } from '@/constants/theme';
@@ -26,6 +26,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; size?: n
   ClipboardCheck,
   FileSpreadsheet,
   BellRing,
+  Bot,
+  Settings,
 };
 
 interface SidebarProps {
@@ -47,12 +49,12 @@ export default function Sidebar({
   const role = (session?.user as any)?.role;
   const userPermissionsRaw = (session?.user as any)?.permissions;
 
-  let allowedPermissions: string[] = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'z-report', 'balance-sheet', 'stock-audit', 'data-hub', 'alerts', 'logs', 'price-check', 'users'];
+  let allowedPermissions: string[] = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'z-report', 'balance-sheet', 'stock-audit', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
   if (role !== 'SUPER_ADMIN' && userPermissionsRaw) {
     try {
       allowedPermissions = typeof userPermissionsRaw === 'string' ? JSON.parse(userPermissionsRaw) : userPermissionsRaw;
     } catch (e) {
-      allowedPermissions = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'z-report', 'balance-sheet', 'stock-audit', 'data-hub', 'alerts', 'logs', 'price-check', 'users'];
+      allowedPermissions = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'customers', 'z-report', 'balance-sheet', 'stock-audit', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
     }
   }
 

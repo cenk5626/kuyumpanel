@@ -38,6 +38,23 @@ model Dealer {
   cashMovements        CashMovement[]
   priceAlerts          PriceAlert[]
   stockAuditSessions   StockAuditSession[]
+
+  // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
+  aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
+  geminiApiKey         String?
+  openaiApiKey         String?
+  aiModel              String?                  @default("gemini-2.0-flash") // "gemini-2.0-flash" | "gpt-4o" | "gpt-4o-mini"
+  aiSystemPromptExtra  String?
+
+  // WhatsApp Entegrasyon Ayarları
+  whatsappProvider     String?                  @default("WEB_INTENT") // "WEB_INTENT" | "CLOUD_API" | "GATEWAY"
+  whatsappPhone        String?                  // Patronun bildirim alacağı GSM numarası (örn: 90532xxxxxxx)
+  waCloudAccessToken   String?
+  waCloudPhoneId       String?
+  waCloudBusinessId    String?
+  waGatewayInstanceId  String?
+  waGatewayToken       String?
+
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }

@@ -33,6 +33,7 @@ import { registerF18Tests } from './tier1/f18_turnover_velocity_analytics.test';
 import { registerF19Tests } from './tier1/f19_critical_stock_reorder_draft.test';
 import { registerF20Tests } from './tier1/f20_e2e_verification_harness.test';
 import { registerF21EnterpriseTests } from './tier1/f21_enterprise_modules.test';
+import { registerF22AiAssistantTests } from './tier1/f22_ai_patron_assistant.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -68,17 +69,18 @@ const FEATURE_NAMES: Record<number, string> = {
   19: 'Visual Critical Stock Alerts & Reorder',
   20: 'E2E Integration & Verification Harness',
   21: 'Enterprise Modules (Alerts, Balance Sheet, 4C, Audit, Data Hub)',
+  22: 'AI Patron Assistant & WhatsApp Engine',
 };
 
 async function main() {
   console.log('\n' + '='.repeat(80));
   console.log('       👑 KUYUMPANEL ENTERPRISE JEWELRY ERP — AUTOMATED TEST RUNNER 👑       ');
   console.log('='.repeat(80));
-  console.log('Registering Test Suites across Tiers 1-4 for 21 Features...\n');
+  console.log('Registering Test Suites across Tiers 1-4 for 22 Features...\n');
 
   clearRegistry();
 
-  // 1. Register Tier 1 (105 tests)
+  // 1. Register Tier 1 (109 tests)
   registerF01Tests();
   registerF02Tests();
   registerF03Tests();
@@ -100,6 +102,7 @@ async function main() {
   registerF19Tests();
   registerF20Tests();
   registerF21EnterpriseTests();
+  registerF22AiAssistantTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();
@@ -113,7 +116,7 @@ async function main() {
   // 4. Register Tier 4 (8 chronological simulation steps)
   registerTier4Tests();
 
-  const totalRegistered = 218;
+  const totalRegistered = 222;
   console.log(`[INFO] Registered total test suites. Starting execution...\n`);
 
   const globalStart = performance.now();
@@ -130,7 +133,7 @@ async function main() {
 
   // Group by Feature
   const featureMatrix: Record<number, { featureName: string; tier1: number; tier2: number; tier3: number; tier4: number; passed: boolean }> = {};
-  for (let i = 1; i <= 21; i++) {
+  for (let i = 1; i <= 22; i++) {
     featureMatrix[i] = {
       featureName: FEATURE_NAMES[i] || `Feature ${i}`,
       tier1: 0,

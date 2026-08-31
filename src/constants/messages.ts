@@ -214,6 +214,15 @@ export const MESSAGES = {
   DATA_HUB_IMPORT_EXCEL: 'Excel Dosyası Yükle (Toplu Import)',
   DATA_HUB_BACKUP_FULL: 'Tam Sistem Yedeği Al (JSON)',
   DATA_HUB_RESTORE_FULL: 'Yedekten Geri Yükle',
+
+  // 6. Yapay Zeka (AI) Patron Danışmanı & WhatsApp
+  MENU_AI_ASSISTANT: 'Kuyumcu Asistanı AI',
+  MENU_SETTINGS_AI: 'Yapay Zeka & WhatsApp Ayarları',
+  AI_ASSISTANT_TITLE: 'Kuyumcu Asistanı AI (Patron Danışmanı)',
+  AI_ASSISTANT_SUBTITLE: 'Canlı vitrin stoğunuzu, kasa nakit durumunuzu, kârlılığınızı ve müşteri cari risklerini analiz eden akıllı Kapalıçarşı danışmanı.',
+  AI_CHAT_PLACEHOLDER: 'Mağazanız hakkında bir soru sorun (örn: Bu ay en karlı ürünler neler? Vadesi geçen alacaklar kimde?)...',
+  AI_BRIEFING_BUTTON: 'Haftalık Patron Brifingi Çıkar',
+  AI_WHATSAPP_SHARE_BUTTON: 'WhatsApp ile Bana Gönder',
 } as const;
 
 
