@@ -164,6 +164,57 @@ export const MESSAGES = {
   REORDER_SUGGESTED: 'Önerilen Sipariş',
   REORDER_TOTAL_ESTIMATE: 'Tahmini Has Maliyeti',
   STOCK_CRITICAL_ALERT: 'Kritik Stok Uyarısı',
+
+  // 1. Fiyat Alarmları
+  MENU_ALERTS: 'Fiyat Alarmları',
+  ALERTS_TITLE: 'Mağaza Özel Fiyat Alarmları',
+  ALERTS_SUBTITLE: 'Belirlediğiniz piyasa eşik kurları gerçekleştiğinde anlık sesli, görsel ve WhatsApp bildirim motoru.',
+  ALERTS_ADD_BUTTON: 'Yeni Fiyat Alarmı Kur',
+  ALERTS_TARGET_PRICE: 'Hedef Fiyat (TL)',
+  ALERTS_DIRECTION: 'Tetiklenme Yönü',
+  ALERTS_TRIGGERED_BADGE: 'Tetiklendi',
+  ALERTS_ACTIVE_BADGE: 'Aktif İzleniyor',
+
+  // 2. Canlı Bilanço & Kâr/Zarar
+  MENU_BALANCE_SHEET: 'Canlı Bilanço & Net Servet',
+  BALANCE_SHEET_TITLE: 'Kuyumcu Bilançosu & Net Özkaynak Analitiği',
+  BALANCE_SHEET_SUBTITLE: 'Anlık piyasa altın kuruna göre konsolide mağaza net serveti, varlık dağılımı ve kâr/zarar göstergeleri.',
+  BALANCE_NET_WEALTH_HAS: 'Net Servet (Saf Has Altın)',
+  BALANCE_NET_WEALTH_TL: 'Net Servet (TL Karşılığı)',
+  BALANCE_ASSETS: 'Toplam Varlıklar',
+  BALANCE_LIABILITIES: 'Toplam Borçlar & Yükümlülükler',
+
+  // 3. Pırlanta 4C & Sertifika
+  DIAMOND_TITLE: 'Pırlanta & Değerli Taş Yönetimi',
+  DIAMOND_CERTIFICATE_TITLE: 'Mücevher Garanti Sertifikası',
+  DIAMOND_CARAT: 'Karat (ct)',
+  DIAMOND_COLOR: 'Renk (Color)',
+  DIAMOND_CLARITY: 'Berraklık (Clarity)',
+  DIAMOND_CUT: 'Kesim (Cut)',
+  DIAMOND_CERTIFICATE_NO: 'Sertifika No',
+  DIAMOND_PRINT_CERTIFICATE: 'Garanti Sertifikası Yazdır',
+
+  // 4. Hızlı Vitrin Sayımı
+  MENU_STOCK_AUDIT: 'Hızlı Vitrin Sayımı',
+  AUDIT_TITLE: 'Hızlı Vitrin & Tepsi Sayımı ve Kayıp Tespiti',
+  AUDIT_SUBTITLE: 'Seri barkod okutma ile vitrindeki veya tablalardaki ürünlerin hızlı sayımı ve eksik/kayıp tespiti.',
+  AUDIT_START_SCAN: 'Sayımı Başlat',
+  AUDIT_SCOPE_ALL: 'Tüm Vitrin & Takılar',
+  AUDIT_SCOPE_CATEGORY: 'Kategori Bazlı Sayım',
+  AUDIT_COUNTED_ITEMS: 'Sayılan Ürünler',
+  AUDIT_MISSING_ITEMS: 'Vitrinde Olmayan / Eksik Ürünler (Kayıp Riski)',
+  AUDIT_SURPLUS_ITEMS: 'Sistemde Olmayan Fazla Ürünler',
+  AUDIT_WEIGHT_RECONCILIATION: 'Gramaj Mutabakatı',
+
+  // 5. Toplu Excel & Yedekleme
+  MENU_DATA_HUB: 'Toplu Excel & Yedekleme',
+  DATA_HUB_TITLE: 'Toplu Veri İçe/Dışa Aktarma & Sistem Yedekleme',
+  DATA_HUB_SUBTITLE: 'Toplu ürün ve müşteri yükleme, Excel veri indirme ve şifreli tam sistem veritabanı yedeği.',
+  DATA_HUB_EXPORT_EXCEL: 'Excel Olarak İndir',
+  DATA_HUB_IMPORT_EXCEL: 'Excel Dosyası Yükle (Toplu Import)',
+  DATA_HUB_BACKUP_FULL: 'Tam Sistem Yedeği Al (JSON)',
+  DATA_HUB_RESTORE_FULL: 'Yedekten Geri Yükle',
 } as const;
+
 
 

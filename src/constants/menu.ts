@@ -45,6 +45,30 @@ export const MENU_ITEMS = [
     icon: 'Building',
   },
   {
+    id: 'balance-sheet',
+    label: MESSAGES.MENU_BALANCE_SHEET,
+    href: ROUTES.BALANCE_SHEET,
+    icon: 'TrendingUp',
+  },
+  {
+    id: 'stock-audit',
+    label: MESSAGES.MENU_STOCK_AUDIT,
+    href: ROUTES.STOCK_AUDIT,
+    icon: 'ClipboardCheck',
+  },
+  {
+    id: 'data-hub',
+    label: MESSAGES.MENU_DATA_HUB,
+    href: ROUTES.DATA_HUB,
+    icon: 'FileSpreadsheet',
+  },
+  {
+    id: 'alerts',
+    label: MESSAGES.MENU_ALERTS,
+    href: ROUTES.ALERTS,
+    icon: 'BellRing',
+  },
+  {
     id: 'logs',
     label: MESSAGES.MENU_LOGS,
     href: ROUTES.LOGS,
@@ -63,3 +87,4 @@ export const MENU_ITEMS = [
     icon: 'Users',
   },
 ] as const;
+

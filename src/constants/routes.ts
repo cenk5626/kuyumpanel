@@ -12,6 +12,10 @@ export const ROUTES = {
   LOGS: '/logs',
   SHOWCASE: '/showcase',
   Z_REPORT: '/z-report',
+  BALANCE_SHEET: '/balance-sheet',
+  STOCK_AUDIT: '/stock-audit',
+  DATA_HUB: '/data-hub',
+  ALERTS: '/alerts',
   API_AUTH: '/api/auth',
   API_USERS: '/api/users',
   API_STOCKS: '/api/stocks',
@@ -29,5 +33,11 @@ export const ROUTES = {
   API_Z_REPORT_SESSION: '/api/z-report/session',
   API_Z_REPORT_SUMMARY: '/api/z-report/summary',
   API_Z_REPORT_PRINT: '/api/z-report/print',
+  API_ALERTS: '/api/alerts',
+  API_BALANCE_SHEET: '/api/analytics/balance-sheet',
+  API_STOCK_AUDIT: '/api/stocks/audit',
+  API_BACKUP_EXPORT: '/api/backup/export',
+  API_BACKUP_IMPORT: '/api/backup/import',
 } as const;
+
 

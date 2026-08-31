@@ -197,13 +197,23 @@ export async function POST(req: Request) {
         size: size || null,
         costMilyem: costMilyemNum,
         laborMilyem: laborMilyemNum,
-        sellingMilyem: body.sellingMilyem != null && body.sellingMilyem !== '' ? parseFloat(body.sellingMilyem) : (costMilyemNum + laborMilyemNum),
         profitMargin: parseFloat(profitMargin) || 0,
         costPrice: costPrice ? parseFloat(costPrice) : null,
         laborType: body.laborType || 'milyem',
         laborCost: laborMilyemNum,
         status: 'IN_STOCK',
         supplierName: supplierName || null,
+        
+        // Pırlanta (4C) Özellikleri
+        isDiamond: Boolean(body.isDiamond),
+        diamondCarat: body.diamondCarat ? parseFloat(body.diamondCarat) : null,
+        diamondColor: body.diamondColor || null,
+        diamondClarity: body.diamondClarity || null,
+        diamondCut: body.diamondCut || null,
+        certificateNo: body.certificateNo || null,
+        certificateOrg: body.certificateOrg || null,
+        diamondStoneCount: body.diamondStoneCount ? parseInt(body.diamondStoneCount, 10) : 1,
+        
         dealerId: currentUserDealerId
       },
       include: {
@@ -359,6 +369,14 @@ export async function PUT(req: Request) {
     if (costPrice !== undefined) updateData.costPrice = costPrice ? parseFloat(costPrice) : null;
     if (status !== undefined) updateData.status = status;
     if (supplierName !== undefined) updateData.supplierName = supplierName;
+    if (body.isDiamond !== undefined) updateData.isDiamond = Boolean(body.isDiamond);
+    if (body.diamondCarat !== undefined) updateData.diamondCarat = body.diamondCarat ? parseFloat(body.diamondCarat) : null;
+    if (body.diamondColor !== undefined) updateData.diamondColor = body.diamondColor || null;
+    if (body.diamondClarity !== undefined) updateData.diamondClarity = body.diamondClarity || null;
+    if (body.diamondCut !== undefined) updateData.diamondCut = body.diamondCut || null;
+    if (body.certificateNo !== undefined) updateData.certificateNo = body.certificateNo || null;
+    if (body.certificateOrg !== undefined) updateData.certificateOrg = body.certificateOrg || null;
+    if (body.diamondStoneCount !== undefined) updateData.diamondStoneCount = body.diamondStoneCount ? parseInt(body.diamondStoneCount, 10) : 1;
 
     const updated = await prisma.productItem.update({
       where: { id },

@@ -321,3 +321,11 @@ export function generateWhatsAppWholesaleOrderUrl(data: WhatsAppWholesaleOrderDa
 
   return buildWhatsAppLink(data.phone, lines.join('\n'));
 }
+
+/**
+ * Genel amaçlı WhatsApp paylaşım linki üretir.
+ */
+export function generateWhatsAppShareUrl(phone?: string | null, message: string = ''): string {
+  return buildWhatsAppLink(phone, message);
+}
+

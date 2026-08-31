@@ -27,7 +27,8 @@ import {
   Flame,
   Activity,
   Hourglass,
-  Filter
+  Filter,
+  Gem
 } from 'lucide-react';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
@@ -44,6 +45,8 @@ import BatchLabelPrintModal from '@/components/BatchLabelPrintModal';
 import CriticalStockBadge, { TurnoverBadge } from '@/components/CriticalStockBadge';
 import ReorderDraftModal from '@/components/ReorderDraftModal';
 import CameraScannerModal from '@/components/CameraScannerModal';
+import DiamondCertificateModal from '@/components/DiamondCertificateModal';
+import { DIAMOND_COLORS, DIAMOND_CLARITIES, DIAMOND_CUTS, CERTIFICATE_ORGS } from '@/constants/diamond';
 import type { StockTurnoverItem, TurnoverAnalyticsSummary } from '@/lib/stocks/analytics';
 
 // ─── Tipler ───────────────────────────────────────────────────────────────────
@@ -91,6 +94,14 @@ interface ProductItem {
   supplierName?: string | null;
   quantity?: number | null;
   dealerName?: string;
+  isDiamond?: boolean;
+  diamondCarat?: number | null;
+  diamondColor?: string | null;
+  diamondClarity?: string | null;
+  diamondCut?: string | null;
+  certificateNo?: string | null;
+  certificateOrg?: string | null;
+  diamondStoneCount?: number | null;
   createdAt: string;
 }
 
@@ -285,7 +296,19 @@ export default function StocksPage() {
     description: '',
     quantity: '1',
     inShowcase: false, // false: Mal vitrinde yok (Toptancı carisine Has borç işlenir), true: Vitrinde var (İşlenme)
+    isDiamond: false,
+    diamondCarat: '',
+    diamondColor: 'F',
+    diamondClarity: 'VS1',
+    diamondCut: 'EXCELLENT',
+    certificateNo: '',
+    certificateOrg: 'MAGAZA',
+    diamondStoneCount: '1',
   });
+
+  // Pırlanta Garanti Sertifikası Modalı State'leri
+  const [selectedDiamondProduct, setSelectedDiamondProduct] = useState<any | null>(null);
+  const [isDiamondCertModalOpen, setIsDiamondCertModalOpen] = useState(false);
 
   // Edit product item states
   const [editingProductItem, setEditingProductItem] = useState<ProductItem | null>(null);
@@ -308,7 +331,15 @@ export default function StocksPage() {
     supplierName: '',
     description: '',
     quantity: '1',
-    status: 'IN_STOCK'
+    status: 'IN_STOCK',
+    isDiamond: false,
+    diamondCarat: '',
+    diamondColor: 'F',
+    diamondClarity: 'VS1',
+    diamondCut: 'EXCELLENT',
+    certificateNo: '',
+    certificateOrg: 'MAGAZA',
+    diamondStoneCount: '1',
   });
 
   // Edit stock amount modal states
@@ -660,6 +691,14 @@ export default function StocksPage() {
           description: '',
           quantity: '1',
           inShowcase: false,
+          isDiamond: false,
+          diamondCarat: '',
+          diamondColor: 'F',
+          diamondClarity: 'VS1',
+          diamondCut: 'EXCELLENT',
+          certificateNo: '',
+          certificateOrg: 'MAGAZA',
+          diamondStoneCount: '1',
         });
         await fetchAll();
       } else {
@@ -711,7 +750,15 @@ export default function StocksPage() {
       supplierName: item.supplierName || '',
       description: item.description || '',
       quantity: String(item.quantity ?? 1),
-      status: item.status || 'IN_STOCK'
+      status: item.status || 'IN_STOCK',
+      isDiamond: Boolean(item.isDiamond),
+      diamondCarat: item.diamondCarat ? String(item.diamondCarat) : '',
+      diamondColor: item.diamondColor || 'F',
+      diamondClarity: item.diamondClarity || 'VS1',
+      diamondCut: item.diamondCut || 'EXCELLENT',
+      certificateNo: item.certificateNo || '',
+      certificateOrg: item.certificateOrg || 'MAGAZA',
+      diamondStoneCount: String(item.diamondStoneCount || 1),
     });
     setShowEditProductModal(true);
   };
@@ -1244,7 +1291,14 @@ export default function StocksPage() {
                               {item.barcode}
                             </td>
                             <td className="px-5 py-3 text-gray-300">
-                              <div className="text-xs font-bold text-white">{item.category || '—'}</div>
+                              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                                {item.category || '—'}
+                                {item.isDiamond && (
+                                  <span className="px-1.5 py-0.5 bg-blue-500/15 text-blue-400 border border-blue-500/30 rounded text-[9px] font-black flex items-center gap-0.5">
+                                    <Gem size={10} /> {item.diamondCarat ? `${item.diamondCarat}ct` : 'Pırlanta'} {item.diamondColor || ''}
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-[11px] text-gray-400 font-medium">{[item.subType, item.subSubType].filter(Boolean).join(' › ') || '—'}</div>
                               {item.description && (
                                 <div className="text-[10px] text-gray-500 line-clamp-1 mt-0.5">{item.description}</div>
@@ -1290,7 +1344,19 @@ export default function StocksPage() {
                               </span>
                             </td>
                             <td className="px-5 py-3 text-right">
-                              <div className="flex justify-end gap-2">
+                              <div className="flex justify-end gap-1.5">
+                                {item.isDiamond && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedDiamondProduct(item);
+                                      setIsDiamondCertModalOpen(true);
+                                    }}
+                                    className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
+                                    title="Pırlanta Garanti Belgesi Bas"
+                                  >
+                                    <Gem size={14} />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => openEditProductModal(item)}
                                   className="p-1.5 rounded-lg bg-gray-800 text-yellow-400 hover:bg-yellow-500/20 border border-gray-700 transition-colors"
@@ -2005,6 +2071,116 @@ export default function StocksPage() {
                   </div>
                 </div>
 
+                {/* PIRLANTA VE DEĞERLİ TAŞ (4C) BÖLÜMÜ */}
+                <div className="bg-gray-950/40 border border-blue-500/20 p-5 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={productFormData.isDiamond}
+                        onChange={e => setProductFormData({ ...productFormData, isDiamond: e.target.checked })}
+                        className="rounded bg-gray-850 border-gray-750 text-blue-500 focus:ring-0 cursor-pointer w-4 h-4"
+                      />
+                      <span className="text-xs font-black text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Gem size={14} /> Pırlanta / Değerli Taş Ürünü (4C ve Sertifika)
+                      </span>
+                    </label>
+                  </div>
+
+                  {productFormData.isDiamond && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-4 pt-3 border-t border-gray-800"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                        <div>
+                          <label className={THEME.LABEL}>Pırlanta Karat (ct)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="Örn: 0.35"
+                            value={productFormData.diamondCarat}
+                            onChange={e => setProductFormData({ ...productFormData, diamondCarat: e.target.value })}
+                            className={THEME.INPUT}
+                          />
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Renk (Color)</label>
+                          <select
+                            value={productFormData.diamondColor}
+                            onChange={e => setProductFormData({ ...productFormData, diamondColor: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {DIAMOND_COLORS.map(c => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Berraklık (Clarity)</label>
+                          <select
+                            value={productFormData.diamondClarity}
+                            onChange={e => setProductFormData({ ...productFormData, diamondClarity: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {DIAMOND_CLARITIES.map(c => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Kesim (Cut)</label>
+                          <select
+                            value={productFormData.diamondCut}
+                            onChange={e => setProductFormData({ ...productFormData, diamondCut: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {DIAMOND_CUTS.map(c => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className={THEME.LABEL}>Sertifika No</label>
+                          <input
+                            type="text"
+                            placeholder="Örn: GIA-248190"
+                            value={productFormData.certificateNo}
+                            onChange={e => setProductFormData({ ...productFormData, certificateNo: e.target.value })}
+                            className={THEME.INPUT}
+                          />
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Sertifika Kurumu</label>
+                          <select
+                            value={productFormData.certificateOrg}
+                            onChange={e => setProductFormData({ ...productFormData, certificateOrg: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {CERTIFICATE_ORGS.map(o => (
+                              <option key={o.code} value={o.code}>{o.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Taş Sayısı</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={productFormData.diamondStoneCount}
+                            onChange={e => setProductFormData({ ...productFormData, diamondStoneCount: e.target.value })}
+                            className={THEME.INPUT}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
                 {/* DETAY AÇIKLAMASI */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
@@ -2392,6 +2568,116 @@ export default function StocksPage() {
                   })()}
                 </div>
 
+                {/* PIRLANTA VE DEĞERLİ TAŞ (4C) BÖLÜMÜ */}
+                <div className="bg-gray-950/40 border border-blue-500/20 p-5 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={editProductFormData.isDiamond}
+                        onChange={e => setEditProductFormData({ ...editProductFormData, isDiamond: e.target.checked })}
+                        className="rounded bg-gray-850 border-gray-750 text-blue-500 focus:ring-0 cursor-pointer w-4 h-4"
+                      />
+                      <span className="text-xs font-black text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Gem size={14} /> Pırlanta / Değerli Taş Ürünü (4C ve Sertifika)
+                      </span>
+                    </label>
+                  </div>
+
+                  {editProductFormData.isDiamond && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-4 pt-3 border-t border-gray-800"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                        <div>
+                          <label className={THEME.LABEL}>Pırlanta Karat (ct)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="Örn: 0.35"
+                            value={editProductFormData.diamondCarat}
+                            onChange={e => setEditProductFormData({ ...editProductFormData, diamondCarat: e.target.value })}
+                            className={THEME.INPUT}
+                          />
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Renk (Color)</label>
+                          <select
+                            value={editProductFormData.diamondColor}
+                            onChange={e => setEditProductFormData({ ...editProductFormData, diamondColor: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {DIAMOND_COLORS.map(c => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Berraklık (Clarity)</label>
+                          <select
+                            value={editProductFormData.diamondClarity}
+                            onChange={e => setEditProductFormData({ ...editProductFormData, diamondClarity: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {DIAMOND_CLARITIES.map(c => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Kesim (Cut)</label>
+                          <select
+                            value={editProductFormData.diamondCut}
+                            onChange={e => setEditProductFormData({ ...editProductFormData, diamondCut: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {DIAMOND_CUTS.map(c => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className={THEME.LABEL}>Sertifika No</label>
+                          <input
+                            type="text"
+                            placeholder="Örn: GIA-248190"
+                            value={editProductFormData.certificateNo}
+                            onChange={e => setEditProductFormData({ ...editProductFormData, certificateNo: e.target.value })}
+                            className={THEME.INPUT}
+                          />
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Sertifika Kurumu</label>
+                          <select
+                            value={editProductFormData.certificateOrg}
+                            onChange={e => setEditProductFormData({ ...editProductFormData, certificateOrg: e.target.value })}
+                            className={THEME.SELECT}
+                          >
+                            {CERTIFICATE_ORGS.map(o => (
+                              <option key={o.code} value={o.code}>{o.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={THEME.LABEL}>Taş Sayısı</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={editProductFormData.diamondStoneCount}
+                            onChange={e => setEditProductFormData({ ...editProductFormData, diamondStoneCount: e.target.value })}
+                            className={THEME.INPUT}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
                 {/* DETAY AÇIKLAMASI, DURUM VE ADET */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -2675,6 +2961,13 @@ export default function StocksPage() {
           setSearchQuery(scannedBarcode);
           setActiveView('barcode');
         }}
+      />
+
+      {/* ─── PIRLANTA VE MÜCEVHER GARANTİ BELGESİ MODALI ─── */}
+      <DiamondCertificateModal
+        isOpen={isDiamondCertModalOpen}
+        onClose={() => setIsDiamondCertModalOpen(false)}
+        product={selectedDiamondProduct}
       />
     </>
   );

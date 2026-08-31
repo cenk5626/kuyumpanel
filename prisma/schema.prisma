@@ -36,6 +36,8 @@ model Dealer {
   auditLogs            AuditLog[]
   cashRegisterSessions CashRegisterSession[]
   cashMovements        CashMovement[]
+  priceAlerts          PriceAlert[]
+  stockAuditSessions   StockAuditSession[]
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
 }
@@ -240,6 +242,17 @@ model ProductItem {
   laborCost    Float    @default(0)
   status       String   @default("IN_STOCK") // "IN_STOCK" | "SOLD" | "RETURNED"
   supplierName String?  // Toptancı Adı
+  
+  // Pırlanta & Değerli Taş (4C) Özellikleri
+  isDiamond         Boolean  @default(false)
+  diamondCarat      Float?   // Karat (ct - örn: 0.35)
+  diamondColor      String?  // Renk (D, E, F, G, H, I, J, K...)
+  diamondClarity    String?  // Berraklık (FL, IF, VVS1, VVS2, VS1, VS2, SI1, SI2, I1)
+  diamondCut        String?  // Kesim (Excellent, Very Good, Good, Fair)
+  certificateNo     String?  // Sertifika No (GIA-123456, HRD-98765 vb.)
+  certificateOrg    String?  // GIA, HRD, IGI, MAĞAZA
+  diamondStoneCount Int?     @default(1) // Taş Adedi
+  
   dealerId     String
   dealer       Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
@@ -352,3 +365,47 @@ model CustomerTransaction {
   employeeName  String?  // İşlemi yapan personel
   createdAt     DateTime @default(now())
 }
+
+// Mağaza / Kuyumcu Fiyat Alarmı Modeli
+model PriceAlert {
+  id           String    @id @default(cuid())
+  dealerId     String
+  dealer       Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  productCode  String    // "HAS", "GAUTRY", "ECEYREKTL", "USDTRY", "EURTRY", "mil22Ayar"
+  productLabel String    // "Has Altın (Bozma/Alış)", "USD/TRY Satış"
+  targetPrice  Float     // Hedef tetiklenme fiyatı (TL)
+  priceType    String    @default("bid") // "bid" (Bozma / Alış) | "ask" (Satış)
+  condition    String    @default("GTE") // "GTE" (>= Eşit veya Üstü) | "LTE" (<= Eşit veya Altı)
+  phone        String?   // WhatsApp bildirim gönderilecek yetkili numarası
+  isActive     Boolean   @default(true)
+  isTriggered  Boolean   @default(false)
+  triggeredAt  DateTime?
+  lastCheckedPrice Float?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// Hızlı Vitrin & Tepsi Sayım Oturumu
+model StockAuditSession {
+  id              String    @id @default(cuid())
+  sessionNumber   String    // Örn: "SAYIM-2026-0001"
+  dealerId        String
+  dealer          Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  scope           String    @default("ALL") // "ALL" (Tüm Vitrin) | "CATEGORY" (Kategori Bazlı)
+  categoryFilter  String?   // Kategori adı (örn: "Küpe", "Yüzük")
+  status          String    @default("COMPLETED") // "IN_PROGRESS" | "COMPLETED"
+  totalExpected   Int       @default(0) // Sistemde olması gereken adet
+  totalCounted    Int       @default(0) // Fiilen sayılan adet
+  totalMissing    Int       @default(0) // Eksik / Bulunamayan adet
+  totalSurplus    Int       @default(0) // Fazla / Sistemde kayıtlı olmayan adet
+  expectedWeight  Float     @default(0) // Beklenen toplam gramaj
+  countedWeight   Float     @default(0) // Sayılan toplam gramaj
+  weightDiff      Float     @default(0) // Gram farkı
+  scannedBarcodes String    @default("[]") // JSON string array
+  missingItems    String    @default("[]") // JSON string array of missing objects
+  auditedBy       String    // Sayımı yapan personel
+  notes           String?
+  createdAt       DateTime  @default(now())
+}
+
