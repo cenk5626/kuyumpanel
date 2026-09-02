@@ -96,11 +96,14 @@ interface CustomersClientProps {
 
 // Varlık Kategori Tanımlamaları
 const ASSET_CATEGORIES = [
-  { id: 'TL', label: 'Türk Lirası (₺)', icon: '₺' },
-  { id: 'ALTIN_AYAR', label: 'Altın Ayar (Gram)', icon: '⚖️' },
-  { id: 'ZIYNET', label: 'Ziynet Altın (Adet)', icon: '🪙' },
-  { id: 'DOVIZ', label: 'Döviz ($ / €)', icon: '💵' },
+  { id: 'HAS', label: 'Has Altın (gr)', icon: '👑', desc: 'Saf 24K Has Altın' },
+  { id: 'TL', label: 'Türk Lirası (₺)', icon: '₺', desc: 'Nakit / Havale' },
+  { id: 'DOVIZ', label: 'Döviz ($ / €)', icon: '💵', desc: 'Dolar & Euro' },
+  { id: 'ZIYNET', label: 'Ziynet Altın', icon: '🪙', desc: 'Çeyrek, Ata vb.' },
+  { id: 'ALTIN_AYAR', label: 'Ayar / Bilezik', icon: '⚖️', desc: '22A, 14A, 18A' },
 ] as const;
+
+export type AssetCategory = 'HAS' | 'TL' | 'DOVIZ' | 'ZIYNET' | 'ALTIN_AYAR';
 
 // Altın Ayarları
 const GOLD_CARAT_OPTIONS = [
@@ -155,15 +158,19 @@ export default function CustomersClient({
     note: '',
     creditLimitTL: '',
     creditLimitHas: '',
+    initialHasDebt: '',
+    initialTlDebt: '',
+    initialUsdDebt: '',
+    initialEurDebt: '',
   });
 
   // Borç / Tahsilat İşlem Modalı State
   const [showTxModal, setShowTxModal] = useState(false);
   const [selectedCustomerForTx, setSelectedCustomerForTx] = useState<Customer | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<'TL' | 'ALTIN_AYAR' | 'ZIYNET' | 'DOVIZ'>('TL');
+  const [selectedCategory, setSelectedCategory] = useState<AssetCategory>('HAS');
   const [txFormData, setTxFormData] = useState({
     type: CUSTOMER_TRANSACTION_TYPES.BORC as 'BORC' | 'TAHSILAT',
-    assetType: ASSET_TYPES.TL as string,
+    assetType: ASSET_TYPES.HAS as string,
     amount: '',
     unitPrice: '',
     description: '',
@@ -228,6 +235,10 @@ export default function CustomersClient({
       note: '',
       creditLimitTL: '',
       creditLimitHas: '',
+      initialHasDebt: '',
+      initialTlDebt: '',
+      initialUsdDebt: '',
+      initialEurDebt: '',
     });
     setEditingCustomer(null);
     setError(null);
@@ -296,20 +307,41 @@ export default function CustomersClient({
       note: c.note || '',
       creditLimitTL: c.creditLimitTL ? String(c.creditLimitTL) : '',
       creditLimitHas: c.creditLimitHas ? String(c.creditLimitHas) : '',
+      initialHasDebt: '',
+      initialTlDebt: '',
+      initialUsdDebt: '',
+      initialEurDebt: '',
     });
     setError(null);
     setShowCustomerModal(true);
   };
 
   // Borç / Tahsilat İşlem Modalı Aç
-  const openTxModal = (c: Customer, defaultType: 'BORC' | 'TAHSILAT' = CUSTOMER_TRANSACTION_TYPES.BORC) => {
+  const openTxModal = (c: Customer, defaultType: 'BORC' | 'TAHSILAT' = CUSTOMER_TRANSACTION_TYPES.BORC, defaultCat: AssetCategory = 'HAS') => {
     setSelectedCustomerForTx(c);
-    setSelectedCategory('TL');
+    setSelectedCategory(defaultCat);
+    let defaultAsset = ASSET_TYPES.HAS as string;
+    let defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+
+    if (defaultCat === 'TL') {
+      defaultAsset = ASSET_TYPES.TL;
+      defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+    } else if (defaultCat === 'DOVIZ') {
+      defaultAsset = ASSET_TYPES.USD;
+      defaultPrice = usdPrice ? usdPrice.toFixed(2) : '38.50';
+    } else if (defaultCat === 'ZIYNET') {
+      defaultAsset = ASSET_TYPES.CEYREK;
+      defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+    } else if (defaultCat === 'ALTIN_AYAR') {
+      defaultAsset = ASSET_TYPES.K22;
+      defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+    }
+
     setTxFormData({
       type: defaultType,
-      assetType: ASSET_TYPES.TL,
+      assetType: defaultAsset,
       amount: '',
-      unitPrice: hasPrice ? hasPrice.toFixed(2) : '',
+      unitPrice: defaultPrice,
       description: '',
     });
     setError(null);
@@ -317,26 +349,41 @@ export default function CustomersClient({
   };
 
   // Kategori değiştiğinde varsayılan assetType ayarla
-  const handleCategoryChange = (cat: 'TL' | 'ALTIN_AYAR' | 'ZIYNET' | 'DOVIZ') => {
+  const handleCategoryChange = (cat: AssetCategory) => {
     setSelectedCategory(cat);
-    let defaultAsset: AssetType = ASSET_TYPES.TL;
-    if (cat === 'ALTIN_AYAR') defaultAsset = ASSET_TYPES.K22;
-    else if (cat === 'ZIYNET') defaultAsset = ASSET_TYPES.CEYREK;
-    else if (cat === 'DOVIZ') defaultAsset = ASSET_TYPES.USD;
+    let defaultAsset: string = ASSET_TYPES.HAS;
+    let defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+
+    if (cat === 'HAS') {
+      defaultAsset = ASSET_TYPES.HAS;
+      defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+    } else if (cat === 'TL') {
+      defaultAsset = ASSET_TYPES.TL;
+      defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+    } else if (cat === 'DOVIZ') {
+      defaultAsset = ASSET_TYPES.USD;
+      defaultPrice = usdPrice ? usdPrice.toFixed(2) : '38.50';
+    } else if (cat === 'ZIYNET') {
+      defaultAsset = ASSET_TYPES.CEYREK;
+      defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+    } else if (cat === 'ALTIN_AYAR') {
+      defaultAsset = ASSET_TYPES.K22;
+      defaultPrice = hasPrice ? hasPrice.toFixed(2) : '';
+    }
 
     setTxFormData((prev) => ({
       ...prev,
       assetType: defaultAsset,
-      unitPrice: cat === 'TL' ? (hasPrice ? hasPrice.toFixed(2) : '') : prev.unitPrice,
+      unitPrice: defaultPrice,
     }));
   };
 
   // Has Karşılığı Otomatik Hesaplama (Önizleme)
   const computedHasEquivalent = useMemo(() => {
     const amt = parseFloat(txFormData.amount) || 0;
-    const pr = parseFloat(txFormData.unitPrice) || hasPrice;
-    return calculateHasEquivalent(txFormData.assetType, amt, pr);
-  }, [txFormData.assetType, txFormData.amount, txFormData.unitPrice, hasPrice]);
+    const pr = parseFloat(txFormData.unitPrice) || (txFormData.assetType === 'USD' ? usdPrice : txFormData.assetType === 'EUR' ? eurPrice : hasPrice);
+    return calculateHasEquivalent(txFormData.assetType, amt, pr, hasPrice);
+  }, [txFormData.assetType, txFormData.amount, txFormData.unitPrice, hasPrice, usdPrice, eurPrice]);
 
   // Borç / Tahsilat İşlemi Kaydet
   const handleTxSubmit = async (e: React.FormEvent) => {
@@ -890,6 +937,73 @@ export default function CustomersClient({
                   />
                 </div>
 
+                {/* Açılış / Devir Borç Bakiyeleri Tanımlama (İsteğe Bağlı) */}
+                {!editingCustomer && (
+                  <div className="p-3.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl space-y-2.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-yellow-400">
+                      <Coins size={14} />
+                      Açılış / Devir Borç Bakiyeleri (İsteğe Bağlı)
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                      Müşterinizin önceki dönemden devreden borcu varsa buradan tek seferde girebilirsiniz. Otomatik veresiye ekstresi açılır.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-yellow-400 mb-1">
+                          👑 Açılış Has Borcu (gr)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={customerFormData.initialHasDebt}
+                          onChange={(e) => setCustomerFormData({ ...customerFormData, initialHasDebt: e.target.value })}
+                          placeholder="Örn: 25.40 gr"
+                          className={THEME.INPUT}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-emerald-400 mb-1">
+                          ₺ Açılış TL Borcu (₺)
+                        </label>
+                        <input
+                          type="number"
+                          step="10"
+                          value={customerFormData.initialTlDebt}
+                          onChange={(e) => setCustomerFormData({ ...customerFormData, initialTlDebt: e.target.value })}
+                          placeholder="Örn: 5000 ₺"
+                          className={THEME.INPUT}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-green-400 mb-1">
+                          💵 Açılış Dolar Borcu ($)
+                        </label>
+                        <input
+                          type="number"
+                          step="1"
+                          value={customerFormData.initialUsdDebt}
+                          onChange={(e) => setCustomerFormData({ ...customerFormData, initialUsdDebt: e.target.value })}
+                          placeholder="Örn: 500 $"
+                          className={THEME.INPUT}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-blue-400 mb-1">
+                          💶 Açılış Euro Borcu (€)
+                        </label>
+                        <input
+                          type="number"
+                          step="1"
+                          value={customerFormData.initialEurDebt}
+                          onChange={(e) => setCustomerFormData({ ...customerFormData, initialEurDebt: e.target.value })}
+                          placeholder="Örn: 300 €"
+                          className={THEME.INPUT}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Borç / Kredi Limiti Tanımlama */}
                 <div className="p-3.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl space-y-3">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-yellow-400">
@@ -1002,7 +1116,7 @@ export default function CustomersClient({
                 {/* Varlık Kategori Sekmeleri */}
                 <div>
                   <label className={THEME.LABEL}>Varlık Kategorisi</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {ASSET_CATEGORIES.map((cat) => (
                       <button
                         key={cat.id}
@@ -1015,13 +1129,25 @@ export default function CustomersClient({
                         }`}
                       >
                         <div className="text-base mb-0.5">{cat.icon}</div>
-                        {cat.label}
+                        <div>{cat.label}</div>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Seçilen Kategoriye Göre Varlık Türü */}
+                {selectedCategory === 'HAS' && (
+                  <div>
+                    <label className={THEME.LABEL}>Varlık Türü</label>
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-sm font-bold text-yellow-400 flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Sparkles size={16} /> 24 Ayar Saf Has Altın (1.000 Milyem)
+                      </span>
+                      <span className="text-xs text-yellow-300 font-mono">1 gr = 1.000 gr Has</span>
+                    </div>
+                  </div>
+                )}
+
                 {selectedCategory === 'TL' && (
                   <div>
                     <label className={THEME.LABEL}>Varlık Türü</label>
@@ -1032,20 +1158,32 @@ export default function CustomersClient({
                   </div>
                 )}
 
-                {selectedCategory === 'ALTIN_AYAR' && (
+                {selectedCategory === 'DOVIZ' && (
                   <div>
-                    <label className={THEME.LABEL}>Altın Ayar Seçimi *</label>
-                    <select
-                      value={txFormData.assetType}
-                      onChange={(e) => setTxFormData({ ...txFormData, assetType: e.target.value })}
-                      className={THEME.SELECT}
-                    >
-                      {GOLD_CARAT_OPTIONS.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.label} (Milyem: {g.milyem})
-                        </option>
+                    <label className={THEME.LABEL}>Döviz Para Birimi *</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {FX_OPTIONS.map((f) => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => {
+                            setTxFormData({
+                              ...txFormData,
+                              assetType: f.id,
+                              unitPrice: f.id === 'USD' ? usdPrice.toFixed(2) : eurPrice.toFixed(2),
+                            });
+                          }}
+                          className={`p-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
+                            txFormData.assetType === f.id
+                              ? 'bg-green-500/20 text-green-400 border-green-500/50 shadow-sm'
+                              : 'bg-gray-950 border-gray-800 text-gray-400 hover:bg-gray-900'
+                          }`}
+                        >
+                          <span className="text-sm">{f.symbol}</span>
+                          <span>{f.label}</span>
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
                 )}
 
@@ -1066,33 +1204,35 @@ export default function CustomersClient({
                   </div>
                 )}
 
-                {selectedCategory === 'DOVIZ' && (
+                {selectedCategory === 'ALTIN_AYAR' && (
                   <div>
-                    <label className={THEME.LABEL}>Döviz Para Birimi *</label>
+                    <label className={THEME.LABEL}>Altın Ayar Seçimi *</label>
                     <select
                       value={txFormData.assetType}
                       onChange={(e) => setTxFormData({ ...txFormData, assetType: e.target.value })}
                       className={THEME.SELECT}
                     >
-                      {FX_OPTIONS.map((f) => (
-                        <option key={f.id} value={f.id}>
-                          {f.label}
+                      {GOLD_CARAT_OPTIONS.filter((g) => g.id !== ASSET_TYPES.HAS).map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.label} (Milyem: {g.milyem})
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
 
-                {/* Miktar & Birim Fiyat (Has Fiyatı) */}
+                {/* Miktar & Birim Fiyat (Has Fiyatı / Döviz Kuru) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className={THEME.LABEL}>
-                      {selectedCategory === 'ZIYNET'
-                        ? 'Adet *'
+                      {selectedCategory === 'HAS'
+                        ? 'Has Altın Gramajı (gr) *'
+                        : selectedCategory === 'ZIYNET'
+                        ? 'Ziynet Adedi (Adet) *'
                         : selectedCategory === 'ALTIN_AYAR'
                         ? 'Gramaj (gr) *'
                         : selectedCategory === 'DOVIZ'
-                        ? 'Tutar ($/€) *'
+                        ? txFormData.assetType === 'USD' ? 'Dolar Tutarı ($) *' : 'Euro Tutarı (€) *'
                         : 'TL Tutar (₺) *'}
                     </label>
                     <input
@@ -1101,19 +1241,37 @@ export default function CustomersClient({
                       required
                       value={txFormData.amount}
                       onChange={(e) => setTxFormData({ ...txFormData, amount: e.target.value })}
-                      placeholder={selectedCategory === 'ZIYNET' ? 'Örn: 2 Adet' : 'Örn: 10000'}
+                      placeholder={
+                        selectedCategory === 'HAS'
+                          ? 'Örn: 15.5 gr'
+                          : selectedCategory === 'ZIYNET'
+                          ? 'Örn: 2 Adet'
+                          : selectedCategory === 'DOVIZ'
+                          ? 'Örn: 500'
+                          : selectedCategory === 'ALTIN_AYAR'
+                          ? 'Örn: 25.0 gr'
+                          : 'Örn: 10000 ₺'
+                      }
                       className={THEME.INPUT}
                     />
                   </div>
 
                   <div>
-                    <label className={THEME.LABEL}>İşlem Anındaki Has Fiyatı (TL/gr)</label>
+                    <label className={THEME.LABEL}>
+                      {selectedCategory === 'DOVIZ'
+                        ? txFormData.assetType === 'USD' ? 'Döviz Kuru (USD/TRY)' : 'Döviz Kuru (EUR/TRY)'
+                        : 'İşlem Anındaki Has Fiyatı (TL/gr)'}
+                    </label>
                     <input
                       type="number"
                       step="any"
                       value={txFormData.unitPrice}
                       onChange={(e) => setTxFormData({ ...txFormData, unitPrice: e.target.value })}
-                      placeholder={`₺${hasPrice.toFixed(0)}/gr`}
+                      placeholder={
+                        selectedCategory === 'DOVIZ'
+                          ? txFormData.assetType === 'USD' ? `₺${usdPrice.toFixed(2)}` : `₺${eurPrice.toFixed(2)}`
+                          : `₺${hasPrice.toFixed(0)}/gr`
+                      }
                       className={THEME.INPUT}
                     />
                   </div>
@@ -1137,18 +1295,25 @@ export default function CustomersClient({
                       <span className="font-mono font-semibold text-white">
                         {selectedCategory === 'TL'
                           ? formatCurrency(parseFloat(txFormData.amount) || 0, 'TL')
-                          : formatCurrency(computedHasEquivalent * (parseFloat(txFormData.unitPrice) || hasPrice), 'TL')}
+                          : selectedCategory === 'DOVIZ'
+                          ? formatCurrency(
+                              (parseFloat(txFormData.amount) || 0) * (parseFloat(txFormData.unitPrice) || (txFormData.assetType === 'USD' ? usdPrice : eurPrice)),
+                              'TL'
+                            )
+                          : formatCurrency(computedHasEquivalent * hasPrice, 'TL')}
                       </span>
                     </div>
 
                     <p className="text-gray-400 text-[11px] mt-1">
-                      {selectedCategory === 'TL'
+                      {selectedCategory === 'HAS'
+                        ? `${txFormData.amount} gr Has Altın, doğrudan saf 24K Has Altın borç hesabına yazılacaktır.`
+                        : selectedCategory === 'TL'
                         ? `${txFormData.amount} TL işlem, ₺${txFormData.unitPrice || hasPrice}/gr kuruyla Has karşılığına bağlandı.`
                         : selectedCategory === 'ZIYNET'
                         ? `${txFormData.amount} adet ${txFormData.assetType} için standart gramaj üzerinden Has karşılığı hesaplandı.`
                         : selectedCategory === 'ALTIN_AYAR'
                         ? `${txFormData.amount} gr ${txFormData.assetType} ayar milyemi üzerinden saf Has Altın'a dönüştürüldü.`
-                        : 'Döviz işlemi cariye kaydedilecektir.'}
+                        : `${txFormData.amount} ${txFormData.assetType} döviz borcu olarak cariye işlenecek, güncel kurla TL eşdeğeri izlenecektir.`}
                     </p>
                   </div>
                 )}
@@ -1218,6 +1383,28 @@ export default function CustomersClient({
 
                 {/* Yazdır, WhatsApp ve Kapat Düğmeleri */}
                 <div className="flex items-center gap-2 print:hidden">
+                  <button
+                    onClick={() => {
+                      if (statementCustomer) {
+                        openTxModal(statementCustomer, CUSTOMER_TRANSACTION_TYPES.BORC);
+                      }
+                    }}
+                    className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                  >
+                    <ArrowUpRight size={14} />
+                    + Borç Yaz
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (statementCustomer) {
+                        openTxModal(statementCustomer, CUSTOMER_TRANSACTION_TYPES.TAHSILAT);
+                      }
+                    }}
+                    className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                  >
+                    <ArrowDownLeft size={14} />
+                    + Tahsilat Al
+                  </button>
                   <a
                     href={whatsappUrl}
                     target="_blank"
@@ -1225,13 +1412,13 @@ export default function CustomersClient({
                     className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-900/20 transition-all"
                   >
                     <Share2 size={14} />
-                    WhatsApp Ekstre
+                    WhatsApp
                   </a>
                   <button
                     onClick={handlePrintStatement}
                     className={`${THEME.BTN_SECONDARY} gap-1.5 text-xs py-2`}
                   >
-                    <Printer size={14} /> Yazdır / PDF
+                    <Printer size={14} /> Yazdır
                   </button>
                   <button onClick={() => setShowStatementModal(false)} className={THEME.BTN_ICON}>
                     <X size={20} />

@@ -103,7 +103,8 @@ export const ZIYNET_HAS_WEIGHTS = {
 export function calculateHasEquivalent(
   assetType: string,
   amount: number,
-  unitPrice?: number | null
+  unitPrice?: number | null,
+  goldSpotPrice?: number | null
 ): number {
   if (!amount || amount <= 0) return 0;
 
@@ -130,8 +131,15 @@ export function calculateHasEquivalent(
   }
 
   // 5. USD / EUR Cinsi (FX Tutar * FX Kuru / Gram Has Fiyatı)
-  if ((normalizedAsset === ASSET_TYPES.USD || normalizedAsset === ASSET_TYPES.EUR) && unitPrice && unitPrice > 0) {
-    return Number((amount / unitPrice).toFixed(4));
+  if (normalizedAsset === ASSET_TYPES.USD || normalizedAsset === ASSET_TYPES.EUR) {
+    const fxRate = unitPrice && unitPrice > 0 ? unitPrice : 1;
+    const goldRate = goldSpotPrice && goldSpotPrice > 0 ? goldSpotPrice : 6000;
+    if (fxRate < 500) {
+      // unitPrice döviz kuru olarak girilmiş (örn: 38.50 ₺)
+      return Number(((amount * fxRate) / goldRate).toFixed(4));
+    }
+    // unitPrice doğrudan has fiyatı olarak girilmiş
+    return Number((amount / fxRate).toFixed(4));
   }
 
   return 0;

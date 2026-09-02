@@ -77,7 +77,9 @@ export async function GET(
         unitPrice: tx.unitPrice,
         description: tx.description,
         employeeName: tx.employeeName,
-        createdAt: tx.createdAt.toISOString(),
+        createdAt: tx.createdAt
+          ? (tx.createdAt instanceof Date ? tx.createdAt.toISOString() : new Date(tx.createdAt).toISOString())
+          : new Date().toISOString(),
       })),
       currentSpotRate
     );
@@ -119,7 +121,9 @@ export async function GET(
         address: customer.address,
         note: customer.note,
         dealerId: customer.dealerId,
-        createdAt: customer.createdAt.toISOString(),
+        createdAt: customer.createdAt
+          ? (customer.createdAt instanceof Date ? customer.createdAt.toISOString() : new Date(customer.createdAt).toISOString())
+          : new Date().toISOString(),
       },
       summary: {
         ...summary,
