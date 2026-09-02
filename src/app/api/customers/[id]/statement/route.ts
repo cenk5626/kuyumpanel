@@ -90,6 +90,8 @@ export async function GET(
     let filteredRows = allRows;
     let openingBalanceTL = 0;
     let openingBalanceHas = 0;
+    let openingBalanceUSD = 0;
+    let openingBalanceEUR = 0;
 
     if (startDateParam || endDateParam) {
       const startTime = startDateParam ? new Date(startDateParam).getTime() : 0;
@@ -105,6 +107,8 @@ export async function GET(
         const lastPrior = priorRows[priorRows.length - 1];
         openingBalanceTL = lastPrior.runningBalanceTL;
         openingBalanceHas = lastPrior.runningBalanceHas;
+        openingBalanceUSD = lastPrior.runningBalanceUSD;
+        openingBalanceEUR = lastPrior.runningBalanceEUR;
       }
 
       filteredRows = allRows.filter((r) => {
@@ -135,6 +139,8 @@ export async function GET(
       openingBalance: {
         tl: openingBalanceTL,
         has: openingBalanceHas,
+        usd: openingBalanceUSD,
+        eur: openingBalanceEUR,
       },
       rows: filteredRows,
       spotRate: currentSpotRate,

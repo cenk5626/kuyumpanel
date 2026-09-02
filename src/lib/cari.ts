@@ -35,6 +35,12 @@ export interface CustomerStatementRow extends CustomerTransactionInput {
   hasEquivalent: number;
   runningBalanceTL: number;
   runningBalanceHas: number;
+  runningBalanceUSD: number;
+  runningBalanceEUR: number;
+  runningConsolidatedTL: number;
+  runningConsolidatedHas: number;
+  runningConsolidatedUSD: number;
+  runningConsolidatedEUR: number;
 }
 
 export interface CustomerBalanceSummary {
@@ -156,11 +162,27 @@ export function computeCustomerStatement(
       if (isCredit) totalCreditHas += hasEq;
     }
 
+    const rowConsolidated = computeConsolidatedCustomerDebt(
+      runningHas,
+      runningTL,
+      runningUSD,
+      runningEUR,
+      currentSpotRate,
+      usdRate,
+      eurRate
+    );
+
     return {
       ...tx,
       hasEquivalent: Number(hasEq.toFixed(4)),
       runningBalanceTL: Number(runningTL.toFixed(2)),
       runningBalanceHas: Number(runningHas.toFixed(4)),
+      runningBalanceUSD: Number(runningUSD.toFixed(2)),
+      runningBalanceEUR: Number(runningEUR.toFixed(2)),
+      runningConsolidatedTL: rowConsolidated.totalTL,
+      runningConsolidatedHas: rowConsolidated.totalHas,
+      runningConsolidatedUSD: rowConsolidated.totalUSD,
+      runningConsolidatedEUR: rowConsolidated.totalEUR,
     };
   });
 

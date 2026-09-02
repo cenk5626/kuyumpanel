@@ -85,6 +85,8 @@ interface StatementApiResponse {
   openingBalance: {
     tl: number;
     has: number;
+    usd?: number;
+    eur?: number;
   };
   rows: CustomerStatementRow[];
   spotRate: number;
@@ -189,6 +191,8 @@ export default function CustomersClient({
   const [quickDateFilter, setQuickDateFilter] = useState<'ALL' | 'TODAY' | 'WEEK' | 'MONTH'>('ALL');
   // Tablo ve Genel Borç Görünüm Modu ('DETAILED' | 'TL' | 'HAS' | 'USD' | 'EUR')
   const [tableCurrencyView, setTableCurrencyView] = useState<'DETAILED' | 'TL' | 'HAS' | 'USD' | 'EUR'>('DETAILED');
+  // Müşteri Ekstresi & Yürüyen Bakiye Para Birimi Görünüm Modu ('DETAILED' | 'TL' | 'HAS' | 'USD' | 'EUR')
+  const [statementCurrencyView, setStatementCurrencyView] = useState<'DETAILED' | 'TL' | 'HAS' | 'USD' | 'EUR'>('DETAILED');
 
   // Canlı fiyatları periyodik yenile
   const fetchLivePrices = useCallback(async () => {
@@ -1655,14 +1659,18 @@ export default function CustomersClient({
 
               {/* ─── KONSOLİDE TOPLAM BORÇ KARTI (4 PARA BİRİMİNDE SEÇİLEBİLİR VE GÖRÜNTÜLENEBİLİR) ─── */}
               {statementData && (() => {
+                const effectiveSpotRate = statementData.spotRate || hasPrice || 3000;
+                const effectiveUsdRate = statementData.summary.usdRate || usdPrice || 38.5;
+                const effectiveEurRate = statementData.summary.eurRate || eurPrice || 41.5;
+
                 const cDebt = computeConsolidatedCustomerDebt(
                   statementData.summary.hasBalance,
                   statementData.summary.tlBalance,
                   statementData.summary.usdBalance,
                   statementData.summary.eurBalance,
-                  statementData.spotRate || hasPrice,
-                  usdPrice,
-                  eurPrice
+                  effectiveSpotRate,
+                  effectiveUsdRate,
+                  effectiveEurRate
                 );
                 return (
                   <div className="bg-gradient-to-r from-yellow-500/10 via-emerald-500/10 to-blue-500/10 border border-yellow-500/30 rounded-2xl p-4 mb-5 print:border-gray-300 print:bg-gray-100">
@@ -1670,49 +1678,110 @@ export default function CustomersClient({
                       <div className="flex items-center gap-2">
                         <Sparkles className="text-yellow-400 print:text-black" size={18} />
                         <span className="text-sm font-bold text-white print:text-black">
-                          Konsolide Toplam Müşteri Borcu (4 Para Birimi Seçeneği)
+                          Konsolide Toplam Borç & Yürüyen Bakiye Para Birimi
                         </span>
                       </div>
-                      <span className="text-[11px] text-gray-400 print:text-gray-600 font-mono">
-                        Müşteri borcunu bu 4 seçenekten herhangi biriyle tek seferde kapatabilir.
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-gray-400 print:text-gray-600 font-mono">
+                          Tabloyu dönüştürmek için bir para birimine tıklayın:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setStatementCurrencyView('DETAILED')}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                            statementCurrencyView === 'DETAILED'
+                              ? 'bg-yellow-500 text-black font-bold'
+                              : 'bg-gray-900 text-gray-400 hover:text-white border border-gray-800'
+                          }`}
+                        >
+                          📋 Ayrıntılı / Tümü
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {/* Tamamen TL */}
-                      <div className="p-3 bg-gray-950/90 print:bg-white rounded-xl border border-emerald-500/30 print:border-gray-300">
-                        <span className="text-[10px] uppercase font-bold text-emerald-400 print:text-emerald-700 block">₺ Tamamen TL İle</span>
-                        <div className="text-lg font-bold font-mono text-emerald-300 print:text-black mt-0.5">
+                      <div
+                        onClick={() => setStatementCurrencyView('TL')}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          statementCurrencyView === 'TL'
+                            ? 'bg-emerald-500/20 border-emerald-400 ring-2 ring-emerald-400/40 shadow-lg shadow-emerald-950/40'
+                            : 'bg-gray-950/90 print:bg-white border-emerald-500/30 hover:border-emerald-400/80 hover:bg-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase font-bold text-emerald-400 print:text-emerald-700">₺ Tamamen TL İle</span>
+                          {statementCurrencyView === 'TL' && (
+                            <span className="text-[9px] px-1.5 py-0.2 bg-emerald-500 text-black font-bold rounded">Aktif</span>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold font-mono text-emerald-300 print:text-black mt-1">
                           {formatCurrency(cDebt.totalTL, 'TL')}
                         </div>
-                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">Nakit / Havale ile</span>
+                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">Yürüyen bakiye TL cinsinde</span>
                       </div>
 
                       {/* Tamamen Has Altın */}
-                      <div className="p-3 bg-gray-950/90 print:bg-white rounded-xl border border-yellow-500/30 print:border-gray-300">
-                        <span className="text-[10px] uppercase font-bold text-yellow-400 print:text-yellow-700 block">👑 Tamamen Has İle</span>
-                        <div className="text-lg font-bold font-mono text-yellow-300 print:text-black mt-0.5">
+                      <div
+                        onClick={() => setStatementCurrencyView('HAS')}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          statementCurrencyView === 'HAS'
+                            ? 'bg-yellow-500/20 border-yellow-400 ring-2 ring-yellow-400/40 shadow-lg shadow-yellow-950/40'
+                            : 'bg-gray-950/90 print:bg-white border-yellow-500/30 hover:border-yellow-400/80 hover:bg-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase font-bold text-yellow-400 print:text-yellow-700">👑 Tamamen Has İle</span>
+                          {statementCurrencyView === 'HAS' && (
+                            <span className="text-[9px] px-1.5 py-0.2 bg-yellow-500 text-black font-bold rounded">Aktif</span>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold font-mono text-yellow-300 print:text-black mt-1">
                           {formatGoldGram(cDebt.totalHas)}
                         </div>
-                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">24K Saf Külçe Has</span>
+                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">Yürüyen bakiye Has (gr) cinsinde</span>
                       </div>
 
                       {/* Tamamen Dolar */}
-                      <div className="p-3 bg-gray-950/90 print:bg-white rounded-xl border border-green-500/30 print:border-gray-300">
-                        <span className="text-[10px] uppercase font-bold text-green-400 print:text-green-700 block">💵 Tamamen Dolar İle</span>
-                        <div className="text-lg font-bold font-mono text-green-300 print:text-black mt-0.5">
+                      <div
+                        onClick={() => setStatementCurrencyView('USD')}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          statementCurrencyView === 'USD'
+                            ? 'bg-green-500/20 border-green-400 ring-2 ring-green-400/40 shadow-lg shadow-green-950/40'
+                            : 'bg-gray-950/90 print:bg-white border-green-500/30 hover:border-green-400/80 hover:bg-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase font-bold text-green-400 print:text-green-700">💵 Tamamen Dolar İle</span>
+                          {statementCurrencyView === 'USD' && (
+                            <span className="text-[9px] px-1.5 py-0.2 bg-green-500 text-black font-bold rounded">Aktif</span>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold font-mono text-green-300 print:text-black mt-1">
                           {formatCurrency(cDebt.totalUSD, 'USD')}
                         </div>
-                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">₺{usdPrice.toFixed(2)} kuru ile</span>
+                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">₺{effectiveUsdRate.toFixed(2)} USD kuruyla</span>
                       </div>
 
                       {/* Tamamen Euro */}
-                      <div className="p-3 bg-gray-950/90 print:bg-white rounded-xl border border-blue-500/30 print:border-gray-300">
-                        <span className="text-[10px] uppercase font-bold text-blue-400 print:text-blue-700 block">💶 Tamamen Euro İle</span>
-                        <div className="text-lg font-bold font-mono text-blue-300 print:text-black mt-0.5">
+                      <div
+                        onClick={() => setStatementCurrencyView('EUR')}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          statementCurrencyView === 'EUR'
+                            ? 'bg-blue-500/20 border-blue-400 ring-2 ring-blue-400/40 shadow-lg shadow-blue-950/40'
+                            : 'bg-gray-950/90 print:bg-white border-blue-500/30 hover:border-blue-400/80 hover:bg-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase font-bold text-blue-400 print:text-blue-700">💶 Tamamen Euro İle</span>
+                          {statementCurrencyView === 'EUR' && (
+                            <span className="text-[9px] px-1.5 py-0.2 bg-blue-500 text-black font-bold rounded">Aktif</span>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold font-mono text-blue-300 print:text-black mt-1">
                           {formatCurrency(cDebt.totalEUR, 'EUR')}
                         </div>
-                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">₺{eurPrice.toFixed(2)} kuru ile</span>
+                        <span className="text-[10px] text-gray-400 print:text-gray-600 block mt-1">₺{effectiveEurRate.toFixed(2)} EUR kuruyla</span>
                       </div>
                     </div>
                   </div>
@@ -1730,7 +1799,7 @@ export default function CustomersClient({
                       {formatGoldGram(statementData.summary.hasBalance)}
                     </span>
                     <span className="text-[10px] text-yellow-300/70 print:text-gray-600 block">
-                      ~{formatCurrency(statementData.summary.hasBalance * statementData.spotRate, 'TL')}
+                      ~{formatCurrency(statementData.summary.hasBalance * (statementData.spotRate || hasPrice), 'TL')}
                     </span>
                   </div>
 
@@ -1773,38 +1842,115 @@ export default function CustomersClient({
               )}
 
               {/* Açılış Devir Bilgisi (Eğer filtre uygulandıysa) */}
-              {statementData && (statementData.openingBalance.tl !== 0 || statementData.openingBalance.has !== 0) && (
-                <div className="p-2.5 mb-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300 flex justify-between items-center">
-                  <span>Dönem Başı Açılış Bakiyesi:</span>
+              {statementData && (statementData.openingBalance.tl !== 0 || statementData.openingBalance.has !== 0 || statementData.openingBalance.usd || statementData.openingBalance.eur) && (
+                <div className="p-2.5 mb-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300 flex flex-wrap justify-between items-center gap-2">
+                  <span className="font-semibold">Dönem Başı Açılış Bakiyesi:</span>
                   <span className="font-mono font-bold">
                     TL: {formatCurrency(statementData.openingBalance.tl, 'TL')} | Has: {formatGoldGram(statementData.openingBalance.has)}
+                    {statementData.openingBalance.usd ? ` | USD: ${formatCurrency(statementData.openingBalance.usd, 'USD')}` : ''}
+                    {statementData.openingBalance.eur ? ` | EUR: ${formatCurrency(statementData.openingBalance.eur, 'EUR')}` : ''}
                   </span>
                 </div>
               )}
+
+              {/* Yürüyen Bakiye Modu Bilgilendirme Çubuğu */}
+              <div className="flex items-center justify-between px-3 py-2 bg-gray-950/80 rounded-xl border border-gray-800 text-xs mb-3 print:hidden">
+                <div className="flex items-center gap-2">
+                  <Eye size={14} className="text-yellow-400" />
+                  <span className="text-gray-300 font-medium">
+                    {statementCurrencyView === 'DETAILED' && '📋 Ayrıntılı Görünüm: Tüm varlıklar ayrık ve konsolide yürüyen bakiye ile gösteriliyor.'}
+                    {statementCurrencyView === 'TL' && '₺ Türk Lirası Modu: Tüm işlemler ve yürüyen bakiye tamamen TL cinsine konsolide edildi.'}
+                    {statementCurrencyView === 'HAS' && '👑 Has Altın Modu: Tüm işlemler ve yürüyen bakiye saf 24K Gram Has cinsine konsolide edildi.'}
+                    {statementCurrencyView === 'USD' && `💵 Dolar ($) Modu: Tüm işlemler ve yürüyen bakiye USD cinsine konsolide edildi (Kur: ₺${(statementData?.summary.usdRate || usdPrice).toFixed(2)}).`}
+                    {statementCurrencyView === 'EUR' && `💶 Euro (€) Modu: Tüm işlemler ve yürüyen bakiye EUR cinsine konsolide edildi (Kur: ₺${(statementData?.summary.eurRate || eurPrice).toFixed(2)}).`}
+                  </span>
+                </div>
+                <span className="text-[11px] text-gray-500 font-mono">
+                  {statementData?.rows.length || 0} hareket
+                </span>
+              </div>
 
               {/* İşlem Hareketleri ve Yürüyen Bakiye Tablosu */}
               <div className="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-gray-800 print:border-gray-300 mb-4">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-gray-900 print:bg-gray-200 text-gray-400 print:text-black font-semibold sticky top-0">
-                    <tr>
-                      <th className="p-3">Tarih</th>
-                      <th className="p-3">Tür</th>
-                      <th className="p-3">Varlık</th>
-                      <th className="p-3">Miktar</th>
-                      <th className="p-3">Has Karşılığı</th>
-                      <th className="p-3 bg-yellow-500/10 print:bg-transparent font-bold text-yellow-400 print:text-black">
-                        Yürüyen Has (gr)
-                      </th>
-                      <th className="p-3 bg-emerald-500/10 print:bg-transparent font-bold text-emerald-400 print:text-black">
-                        Yürüyen TL (₺)
-                      </th>
-                      <th className="p-3">Açıklama</th>
-                    </tr>
+                    {statementCurrencyView === 'DETAILED' ? (
+                      <tr>
+                        <th className="p-3">Tarih</th>
+                        <th className="p-3">Tür</th>
+                        <th className="p-3">İşlem Tutarı</th>
+                        <th className="p-3">Has Eşdeğeri</th>
+                        <th className="p-3 bg-yellow-500/10 print:bg-transparent font-bold text-yellow-400 print:text-black">
+                          Yürüyen Has (gr)
+                        </th>
+                        <th className="p-3 bg-emerald-500/10 print:bg-transparent font-bold text-emerald-400 print:text-black">
+                          Yürüyen TL (₺)
+                        </th>
+                        <th className="p-3 bg-green-500/10 print:bg-transparent font-bold text-green-400 print:text-black">
+                          Yürüyen USD ($)
+                        </th>
+                        <th className="p-3 bg-blue-500/10 print:bg-transparent font-bold text-blue-400 print:text-black">
+                          Yürüyen EUR (€)
+                        </th>
+                        <th className="p-3 bg-yellow-500/15 print:bg-transparent font-bold text-yellow-300 print:text-black">
+                          Konsolide Yürüyen Borç
+                        </th>
+                        <th className="p-3">Açıklama</th>
+                      </tr>
+                    ) : statementCurrencyView === 'TL' ? (
+                      <tr>
+                        <th className="p-3">Tarih</th>
+                        <th className="p-3">Tür</th>
+                        <th className="p-3">İşlem</th>
+                        <th className="p-3">İşlem TL Karşılığı</th>
+                        <th className="p-3">Ayrık Bakiye Dökümü</th>
+                        <th className="p-3 bg-emerald-500/15 print:bg-transparent font-bold text-emerald-400 print:text-black">
+                          Yürüyen Toplam Borç (₺ TL)
+                        </th>
+                        <th className="p-3">Açıklama</th>
+                      </tr>
+                    ) : statementCurrencyView === 'HAS' ? (
+                      <tr>
+                        <th className="p-3">Tarih</th>
+                        <th className="p-3">Tür</th>
+                        <th className="p-3">İşlem</th>
+                        <th className="p-3">Has Eşdeğeri</th>
+                        <th className="p-3">Ayrık Bakiye Dökümü</th>
+                        <th className="p-3 bg-yellow-500/15 print:bg-transparent font-bold text-yellow-400 print:text-black">
+                          Yürüyen Toplam Borç (👑 Has gr)
+                        </th>
+                        <th className="p-3">Açıklama</th>
+                      </tr>
+                    ) : statementCurrencyView === 'USD' ? (
+                      <tr>
+                        <th className="p-3">Tarih</th>
+                        <th className="p-3">Tür</th>
+                        <th className="p-3">İşlem</th>
+                        <th className="p-3">Dolar ($) Değeri</th>
+                        <th className="p-3">Ayrık Bakiye Dökümü</th>
+                        <th className="p-3 bg-green-500/15 print:bg-transparent font-bold text-green-400 print:text-black">
+                          Yürüyen Toplam Borç (💵 USD $)
+                        </th>
+                        <th className="p-3">Açıklama</th>
+                      </tr>
+                    ) : (
+                      <tr>
+                        <th className="p-3">Tarih</th>
+                        <th className="p-3">Tür</th>
+                        <th className="p-3">İşlem</th>
+                        <th className="p-3">Euro (€) Değeri</th>
+                        <th className="p-3">Ayrık Bakiye Dökümü</th>
+                        <th className="p-3 bg-blue-500/15 print:bg-transparent font-bold text-blue-400 print:text-black">
+                          Yürüyen Toplam Borç (💶 EUR €)
+                        </th>
+                        <th className="p-3">Açıklama</th>
+                      </tr>
+                    )}
                   </thead>
                   <tbody className="divide-y divide-gray-800 print:divide-gray-300 text-gray-300 print:text-black">
                     {loadingStatement ? (
                       <tr>
-                        <td colSpan={8} className="p-8 text-center text-gray-500">
+                        <td colSpan={10} className="p-8 text-center text-gray-500">
                           Ekstre ve yürüyen bakiyeler hesaplanıyor...
                         </td>
                       </tr>
@@ -1813,6 +1959,17 @@ export default function CustomersClient({
                         const isDebt =
                           tx.type === CUSTOMER_TRANSACTION_TYPES.BORC ||
                           tx.type === CUSTOMER_TRANSACTION_TYPES.ODEME;
+                        const effectiveSpot = statementData.spotRate || hasPrice || 3000;
+                        const effectiveUsd = statementData.summary.usdRate || usdPrice || 38.5;
+                        const effectiveEur = statementData.summary.eurRate || eurPrice || 41.5;
+
+                        // Satır içi varlığın seçili para birimindeki karşılığı
+                        let rowItemValTL = 0;
+                        if (tx.assetType === 'TL') rowItemValTL = tx.amount;
+                        else if (tx.assetType === 'USD') rowItemValTL = tx.amount * effectiveUsd;
+                        else if (tx.assetType === 'EUR') rowItemValTL = tx.amount * effectiveEur;
+                        else rowItemValTL = (tx.hasEquivalent || 0) * effectiveSpot;
+
                         return (
                           <tr key={tx.id || Math.random().toString()} className="hover:bg-gray-900/50">
                             <td className="p-3 font-mono text-gray-400 print:text-gray-700">
@@ -1829,19 +1986,107 @@ export default function CustomersClient({
                                 {isDebt ? 'BORÇ' : 'TAHSİLAT'}
                               </span>
                             </td>
-                            <td className="p-3 font-bold text-white print:text-black">{tx.assetType}</td>
-                            <td className="p-3 font-mono font-bold">
-                              {tx.amount} {tx.assetType}
-                            </td>
-                            <td className="p-3 font-mono text-yellow-400 print:text-black font-semibold">
-                              {tx.hasEquivalent > 0 ? formatGoldGram(tx.hasEquivalent) : '—'}
-                            </td>
-                            <td className="p-3 font-mono font-bold text-yellow-300 print:text-black bg-yellow-500/5 print:bg-transparent">
-                              {formatGoldGram(tx.runningBalanceHas)}
-                            </td>
-                            <td className="p-3 font-mono font-bold text-emerald-400 print:text-black bg-emerald-500/5 print:bg-transparent">
-                              {formatCurrency(tx.runningBalanceTL, 'TL')}
-                            </td>
+
+                            {statementCurrencyView === 'DETAILED' ? (
+                              <>
+                                <td className="p-3 font-mono font-bold text-white print:text-black">
+                                  {tx.amount} {tx.assetType}
+                                </td>
+                                <td className="p-3 font-mono text-yellow-400 print:text-black font-semibold">
+                                  {tx.hasEquivalent > 0 ? formatGoldGram(tx.hasEquivalent) : '—'}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-yellow-300 print:text-black bg-yellow-500/5 print:bg-transparent">
+                                  {formatGoldGram(tx.runningBalanceHas)}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-emerald-400 print:text-black bg-emerald-500/5 print:bg-transparent">
+                                  {formatCurrency(tx.runningBalanceTL, 'TL')}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-green-400 print:text-black bg-green-500/5 print:bg-transparent">
+                                  {tx.runningBalanceUSD !== 0 ? formatCurrency(tx.runningBalanceUSD, 'USD') : '—'}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-blue-400 print:text-black bg-blue-500/5 print:bg-transparent">
+                                  {tx.runningBalanceEUR !== 0 ? formatCurrency(tx.runningBalanceEUR, 'EUR') : '—'}
+                                </td>
+                                <td className="p-3 bg-yellow-500/10 print:bg-transparent">
+                                  <div className="font-mono font-bold text-sm text-yellow-300 print:text-black">
+                                    {formatCurrency(tx.runningConsolidatedTL, 'TL')}
+                                  </div>
+                                  <div className="text-[10px] text-gray-400 print:text-gray-600 font-mono mt-0.5">
+                                    👑 {formatGoldGram(tx.runningConsolidatedHas)} | ${formatCurrency(tx.runningConsolidatedUSD, 'USD')} | €{formatCurrency(tx.runningConsolidatedEUR, 'EUR')}
+                                  </div>
+                                </td>
+                              </>
+                            ) : statementCurrencyView === 'TL' ? (
+                              <>
+                                <td className="p-3 font-mono font-bold text-white print:text-black">
+                                  {tx.amount} {tx.assetType}
+                                </td>
+                                <td className="p-3 font-mono text-emerald-400 font-semibold">
+                                  {formatCurrency(rowItemValTL, 'TL')}
+                                </td>
+                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                  Has: {formatGoldGram(tx.runningBalanceHas)} | USD: ${tx.runningBalanceUSD} | EUR: €{tx.runningBalanceEUR}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-base text-emerald-400 bg-emerald-500/10 print:bg-transparent">
+                                  {formatCurrency(tx.runningConsolidatedTL, 'TL')}
+                                </td>
+                              </>
+                            ) : statementCurrencyView === 'HAS' ? (
+                              <>
+                                <td className="p-3 font-mono font-bold text-white print:text-black">
+                                  {tx.amount} {tx.assetType}
+                                </td>
+                                <td className="p-3 font-mono text-yellow-400 font-semibold">
+                                  {formatGoldGram(effectiveSpot > 0 ? rowItemValTL / effectiveSpot : 0)}
+                                </td>
+                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                  TL: ₺{tx.runningBalanceTL} | USD: ${tx.runningBalanceUSD} | EUR: €{tx.runningBalanceEUR}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-base text-yellow-300 bg-yellow-500/10 print:bg-transparent">
+                                  {formatGoldGram(tx.runningConsolidatedHas)}
+                                  <span className="block text-[10px] text-gray-400 font-normal">
+                                    ~{formatCurrency(tx.runningConsolidatedTL, 'TL')}
+                                  </span>
+                                </td>
+                              </>
+                            ) : statementCurrencyView === 'USD' ? (
+                              <>
+                                <td className="p-3 font-mono font-bold text-white print:text-black">
+                                  {tx.amount} {tx.assetType}
+                                </td>
+                                <td className="p-3 font-mono text-green-400 font-semibold">
+                                  {formatCurrency(effectiveUsd > 0 ? rowItemValTL / effectiveUsd : 0, 'USD')}
+                                </td>
+                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                  Has: {formatGoldGram(tx.runningBalanceHas)} | TL: ₺{tx.runningBalanceTL} | EUR: €{tx.runningBalanceEUR}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-base text-green-400 bg-green-500/10 print:bg-transparent">
+                                  {formatCurrency(tx.runningConsolidatedUSD, 'USD')}
+                                  <span className="block text-[10px] text-gray-400 font-normal">
+                                    ~{formatCurrency(tx.runningConsolidatedTL, 'TL')}
+                                  </span>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="p-3 font-mono font-bold text-white print:text-black">
+                                  {tx.amount} {tx.assetType}
+                                </td>
+                                <td className="p-3 font-mono text-blue-400 font-semibold">
+                                  {formatCurrency(effectiveEur > 0 ? rowItemValTL / effectiveEur : 0, 'EUR')}
+                                </td>
+                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                  Has: {formatGoldGram(tx.runningBalanceHas)} | TL: ₺{tx.runningBalanceTL} | USD: ${tx.runningBalanceUSD}
+                                </td>
+                                <td className="p-3 font-mono font-bold text-base text-blue-400 bg-blue-500/10 print:bg-transparent">
+                                  {formatCurrency(tx.runningConsolidatedEUR, 'EUR')}
+                                  <span className="block text-[10px] text-gray-400 font-normal">
+                                    ~{formatCurrency(tx.runningConsolidatedTL, 'TL')}
+                                  </span>
+                                </td>
+                              </>
+                            )}
+
                             <td className="p-3 text-gray-400 print:text-gray-700 max-w-xs truncate">
                               {tx.description || '—'}
                             </td>
@@ -1850,12 +2095,56 @@ export default function CustomersClient({
                       })
                     ) : (
                       <tr>
-                        <td colSpan={8} className="p-8 text-center text-gray-500">
+                        <td colSpan={10} className="p-8 text-center text-gray-500">
                           Seçilen tarih aralığında işlem hareketi bulunamadı.
                         </td>
                       </tr>
                     )}
                   </tbody>
+
+                  {/* Tablo Alt Toplamı (Dönem Sonu Kapanış Borcu) */}
+                  {statementData && statementData.rows.length > 0 && (() => {
+                    const lastRow = statementData.rows[statementData.rows.length - 1];
+                    return (
+                      <tfoot className="bg-gray-900/90 print:bg-gray-200 border-t-2 border-yellow-500/30 text-white print:text-black font-bold">
+                        <tr>
+                          <td colSpan={3} className="p-3 text-right uppercase tracking-wider text-xs text-yellow-400 print:text-black">
+                            Dönem Sonu Konsolide Kapanış Borcu:
+                          </td>
+                          <td colSpan={7} className="p-3">
+                            {statementCurrencyView === 'DETAILED' && (
+                              <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
+                                <span className="text-emerald-400">₺{formatCurrency(lastRow.runningConsolidatedTL, 'TL')}</span>
+                                <span className="text-yellow-400">👑 {formatGoldGram(lastRow.runningConsolidatedHas)}</span>
+                                <span className="text-green-400">💵 {formatCurrency(lastRow.runningConsolidatedUSD, 'USD')}</span>
+                                <span className="text-blue-400">💶 {formatCurrency(lastRow.runningConsolidatedEUR, 'EUR')}</span>
+                              </div>
+                            )}
+                            {statementCurrencyView === 'TL' && (
+                              <div className="font-mono text-base text-emerald-400">
+                                {formatCurrency(lastRow.runningConsolidatedTL, 'TL')}
+                              </div>
+                            )}
+                            {statementCurrencyView === 'HAS' && (
+                              <div className="font-mono text-base text-yellow-400">
+                                {formatGoldGram(lastRow.runningConsolidatedHas)}
+                              </div>
+                            )}
+                            {statementCurrencyView === 'USD' && (
+                              <div className="font-mono text-base text-green-400">
+                                {formatCurrency(lastRow.runningConsolidatedUSD, 'USD')}
+                              </div>
+                            )}
+                            {statementCurrencyView === 'EUR' && (
+                              <div className="font-mono text-base text-blue-400">
+                                {formatCurrency(lastRow.runningConsolidatedEUR, 'EUR')}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    );
+                  })()}
                 </table>
               </div>
 
