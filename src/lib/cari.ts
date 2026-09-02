@@ -47,6 +47,10 @@ export interface CustomerBalanceSummary {
   totalDebtHas: number;
   totalCreditHas: number;
   estimatedTotalTL: number;
+  totalConsolidatedTL: number;
+  totalConsolidatedHas: number;
+  totalConsolidatedUSD: number;
+  totalConsolidatedEUR: number;
   currentSpotRate: number;
   transactionCount: number;
 }
@@ -93,10 +97,14 @@ export function calculateZiynetHas(ziynetType: string, pieceCount: number): numb
  * Müşteri Ekstresi ve Kronolojik Yürüyen Bakiye (Running Balance) Hesaplama
  * @param transactions Müşteriye ait işlem listesi
  * @param currentSpotRate Anlık Gram Has Altın Fiyatı (TL/gr)
+ * @param usdRate Anlık USD/TRY Kuru
+ * @param eurRate Anlık EUR/TRY Kuru
  */
 export function computeCustomerStatement(
   transactions: CustomerTransactionInput[],
-  currentSpotRate: number = 3000
+  currentSpotRate: number = 3000,
+  usdRate: number = 38.5,
+  eurRate: number = 41.5
 ): { rows: CustomerStatementRow[]; summary: CustomerBalanceSummary } {
   let runningTL = 0;
   let runningHas = 0;
@@ -138,7 +146,6 @@ export function computeCustomerStatement(
       if (isCredit) totalCreditTL += tx.amount;
     } else if (normalizedAsset === ASSET_TYPES.USD) {
       runningUSD += tx.amount * multiplier;
-      // Döviz için de Has eşdeğeri varsa veya girilmişse has hesabına da etki edebilir
     } else if (normalizedAsset === ASSET_TYPES.EUR) {
       runningEUR += tx.amount * multiplier;
     } else {
@@ -162,6 +169,17 @@ export function computeCustomerStatement(
   const roundedUSD = Number(runningUSD.toFixed(2));
   const roundedEUR = Number(runningEUR.toFixed(2));
 
+  // 4 Para Biriminde Konsolide Toplam Borç Hesaplama
+  const consolidated = computeConsolidatedCustomerDebt(
+    roundedHas,
+    roundedTL,
+    roundedUSD,
+    roundedEUR,
+    currentSpotRate,
+    usdRate,
+    eurRate
+  );
+
   const summary: CustomerBalanceSummary = {
     tlBalance: roundedTL,
     hasBalance: roundedHas,
@@ -171,12 +189,77 @@ export function computeCustomerStatement(
     totalCreditTL: Number(totalCreditTL.toFixed(2)),
     totalDebtHas: Number(totalDebtHas.toFixed(4)),
     totalCreditHas: Number(totalCreditHas.toFixed(4)),
-    estimatedTotalTL: Number((roundedTL + roundedHas * currentSpotRate).toFixed(2)),
+    estimatedTotalTL: consolidated.totalTL,
+    totalConsolidatedTL: consolidated.totalTL,
+    totalConsolidatedHas: consolidated.totalHas,
+    totalConsolidatedUSD: consolidated.totalUSD,
+    totalConsolidatedEUR: consolidated.totalEUR,
     currentSpotRate,
     transactionCount: rows.length,
   };
 
   return { rows, summary };
+}
+
+// ---------------------- CONSOLIDATED MULTI-CURRENCY ENGINE ----------------------
+
+export interface ConsolidatedDebtSummary {
+  totalTL: number;
+  totalHas: number;
+  totalUSD: number;
+  totalEUR: number;
+  breakdown: {
+    hasGrams: number;
+    hasValueTL: number;
+    tlAmount: number;
+    usdAmount: number;
+    usdValueTL: number;
+    eurAmount: number;
+    eurValueTL: number;
+  };
+}
+
+/**
+ * Bir müşterinin Has, TL, USD ve EUR borçlarını 4 temel para birimine konsolide eder
+ */
+export function computeConsolidatedCustomerDebt(
+  hasBalance: number = 0,
+  tlBalance: number = 0,
+  usdBalance: number = 0,
+  eurBalance: number = 0,
+  hasPrice: number = 6000,
+  usdPrice: number = 38.5,
+  eurPrice: number = 41.5
+): ConsolidatedDebtSummary {
+  const safeHasPrice = hasPrice > 0 ? hasPrice : 6000;
+  const safeUsdPrice = usdPrice > 0 ? usdPrice : 38.5;
+  const safeEurPrice = eurPrice > 0 ? eurPrice : 41.5;
+
+  const hasValueTL = (hasBalance || 0) * safeHasPrice;
+  const tlValueTL = tlBalance || 0;
+  const usdValueTL = (usdBalance || 0) * safeUsdPrice;
+  const eurValueTL = (eurBalance || 0) * safeEurPrice;
+
+  const totalTL = hasValueTL + tlValueTL + usdValueTL + eurValueTL;
+  const totalHas = safeHasPrice > 0 ? totalTL / safeHasPrice : 0;
+  const totalUSD = safeUsdPrice > 0 ? totalTL / safeUsdPrice : 0;
+  const totalEUR = safeEurPrice > 0 ? totalTL / safeEurPrice : 0;
+
+  return {
+    totalTL: Number(totalTL.toFixed(2)),
+    totalHas: Number(totalHas.toFixed(4)),
+    totalUSD: Number(totalUSD.toFixed(2)),
+    totalEUR: Number(totalEUR.toFixed(2)),
+    breakdown: {
+      hasGrams: Number((hasBalance || 0).toFixed(4)),
+      hasValueTL: Number(hasValueTL.toFixed(2)),
+      tlAmount: Number((tlBalance || 0).toFixed(2)),
+      usdAmount: Number((usdBalance || 0).toFixed(2)),
+      usdValueTL: Number(usdValueTL.toFixed(2)),
+      eurAmount: Number((eurBalance || 0).toFixed(2)),
+      eurValueTL: Number(eurValueTL.toFixed(2)),
+    },
+  };
 }
 
 // ---------------------- PORTFOLIO VALUATION & FORMATTERS ----------------------
@@ -337,11 +420,21 @@ export function buildWhatsAppStatementUrl(
     lines.push(`• Euro Bakiyesi: *${formatCurrency(summary.eurBalance, 'EUR')}*`);
   }
 
+  const totTL = summary.totalConsolidatedTL || summary.estimatedTotalTL;
+  const totHas = summary.totalConsolidatedHas || (summary.currentSpotRate > 0 ? totTL / summary.currentSpotRate : 0);
   lines.push(
-    `• Anlık Has Kuru: *${formatCurrency(summary.currentSpotRate, 'TL')}/gr*`,
-    `• Toplam Tahmini Değer: *${formatCurrency(summary.estimatedTotalTL, 'TL')}*`,
-    `--------------------------------`
+    `--------------------------------`,
+    `💰 *KONSOLİDE TOPLAM BORÇ SEÇENEKLERİ:*`,
+    `• ₺ Tamamen TL İle: *${formatCurrency(totTL, 'TL')}*`,
+    `• 👑 Tamamen Has Altın İle: *${formatGoldGram(totHas)}*`
   );
+  if (summary.totalConsolidatedUSD) {
+    lines.push(`• 💵 Tamamen Dolar ($) İle: *${formatCurrency(summary.totalConsolidatedUSD, 'USD')}*`);
+  }
+  if (summary.totalConsolidatedEUR) {
+    lines.push(`• 💶 Tamamen Euro (€) İle: *${formatCurrency(summary.totalConsolidatedEUR, 'EUR')}*`);
+  }
+  lines.push(`--------------------------------`);
 
   if (recentRows.length > 0) {
     lines.push(`📝 *SON İŞLEM HAREKETLERİ:*`);

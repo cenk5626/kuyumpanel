@@ -81,7 +81,9 @@ export async function GET(
           ? (tx.createdAt instanceof Date ? tx.createdAt.toISOString() : new Date(tx.createdAt).toISOString())
           : new Date().toISOString(),
       })),
-      currentSpotRate
+      currentSpotRate,
+      usdRate,
+      eurRate
     );
 
     // Tarih aralığı filtresi varsa uygula
