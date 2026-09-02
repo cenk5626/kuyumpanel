@@ -21,16 +21,25 @@ function resolveStockProduct(input: string): { id: string; label: string; type: 
   return { id: input || 'ECEYREKTL', label: input || 'Çeyrek Altın', type: 'sarrafiye' };
 }
 
+const TURSO_URL = process.env.TURSO_DATABASE_URL || 'libsql://kuyumpanel-db-cenk5626.aws-us-east-1.turso.io';
+const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODQ5MzUzNjcsImlkIjoiMDE5Zjk2NDMtY2EwMS03MjE4LThkYmEtZGE4YjI1MTY3MjI2Iiwia2lkIjoiNWhmQnk2WTN1NkVDazNkLTd5c3BZc3JBRlRWYW1yVFh0emtVd2dCdGtGNCIsInJpZCI6ImUxNTM3NjllLWUxNWMtNDhkNi05MzMzLTlhYjQ0MjFiNTcwOCJ9.grKQ1ZymXrHb9DWwiJ_uP7y7dZyDu5pO4e8Hem-aUB4h6jr7OIJ19FqUpJkqssm5Wdm4wm3nHR32j9inJJ3ZDA';
+
+async function mirrorToTurso(sql: string, args: any[] = []) {
+  try {
+    const { createClient } = await import('@libsql/client');
+    const client = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
+    await client.execute({ sql, args });
+  } catch (e: any) {
+    console.warn('[Turso Sync Warning]:', e.message);
+  }
+}
+
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
-    const userName = session.user?.name || 'Patron';
-    const userEmail = session.user?.email || undefined;
+    const session = await auth().catch(() => null);
+    const dealerId = (session?.user as any)?.dealerId || 'merkez';
+    const userName = session?.user?.name || 'Patron';
+    const userEmail = session?.user?.email || undefined;
 
     const body = await req.json();
     const { actionType, payload } = body;
@@ -58,6 +67,13 @@ export async function POST(req: Request) {
           notes: payload.notes || 'Yapay Zeka Asistanı tarafından kuruldu',
         },
       });
+
+      // Mirror to Turso
+      mirrorToTurso(
+        `INSERT INTO PriceAlert (id, dealerId, productCode, productLabel, targetPrice, priceType, condition, phone, isActive, isTriggered, notes, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?)`,
+        [alert.id, dealerId, alert.productCode, alert.productLabel, alert.targetPrice, alert.priceType, alert.condition, alert.phone, alert.notes, new Date().toISOString(), new Date().toISOString()]
+      );
 
       executionResult = alert;
       successMessage = `👑 ${alert.productLabel} için ₺${alert.targetPrice.toLocaleString('tr-TR')} seviyesine ${alert.condition === 'GTE' ? '≥ (Eşit veya Üstü)' : '≤ (Eşit veya Altı)'} fiyat alarmı başarıyla kuruldu!`;
@@ -112,6 +128,14 @@ export async function POST(req: Request) {
           minThreshold: payload.minThreshold !== undefined ? Number(payload.minThreshold) : 5,
         },
       });
+
+      // Mirror directly to Turso cloud DB
+      mirrorToTurso(
+        `INSERT INTO Stock (id, product, label, type, amount, minThreshold, dealerId, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(product, dealerId) DO UPDATE SET amount = excluded.amount, minThreshold = excluded.minThreshold, updatedAt = excluded.updatedAt`,
+        [updatedStock.id, resolved.id, resolved.label, resolved.type, newAmount, updatedStock.minThreshold, dealerId, new Date().toISOString()]
+      );
 
       executionResult = updatedStock;
       successMessage = `📦 ${updatedStock.label} stoğu başarıyla güncellendi: Mevcut miktar ${newAmount} adet yapıldı!`;

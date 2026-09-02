@@ -322,7 +322,7 @@ export default function AiSettingsClient() {
                   <select
                     value={
                       aiProvider === 'GEMINI'
-                        ? ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-flash-latest', 'gemini-pro-latest'].includes(aiModel)
+                        ? ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-flash-latest', 'gemini-pro-latest'].includes(aiModel)
                           ? aiModel
                           : 'CUSTOM'
                         : ['gpt-4o', 'gpt-4o-mini', 'o3-mini', 'o1', 'gpt-4.5-preview'].includes(aiModel)
@@ -340,12 +340,13 @@ export default function AiSettingsClient() {
                   >
                     {aiProvider === 'GEMINI' ? (
                       <>
-                        <option value="gemini-3.5-flash">⚡ Gemini 3.5 Flash (En Hızlı & Önerilen - 2026)</option>
+                        <option value="gemini-3.8-flash">🔥 Gemini 3.8 Flash (Ultra Hızlı & En Yeni Nesil - 2026)</option>
+                        <option value="gemini-3.5-flash">⚡ Gemini 3.5 Flash (Dengeli & Güvenilir)</option>
                         <option value="gemini-3.1-flash-lite">🚀 Gemini 3.1 Flash Lite (Ultra Düşük Gecikme)</option>
                         <option value="gemini-3.6-flash">🏆 Gemini 3.6 Flash (Gelişmiş Finans & Akıl Yürütme)</option>
                         <option value="gemini-3.7-flash">🧠 Gemini 3.7 Flash (Düşünme / Thinking Modu)</option>
                         <option value="gemini-flash-latest">✨ Gemini Flash Latest</option>
-                        <option value="CUSTOM">✍️ Özel Model ID Yaz (Örn: gemini-3.8, gemini-exp...)</option>
+                        <option value="CUSTOM">✍️ Özel Model ID Yaz (Örn: gemini-exp...)</option>
                       </>
                     ) : (
                       <>
@@ -374,6 +375,7 @@ export default function AiSettingsClient() {
 
               {/* Özel / Serbest Model İsmi Yazma Alanı */}
               {(![
+                'gemini-3.8-flash',
                 'gemini-3.5-flash',
                 'gemini-3.1-flash-lite',
                 'gemini-3.6-flash',

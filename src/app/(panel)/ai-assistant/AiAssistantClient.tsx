@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -60,21 +60,32 @@ const PROMPT_SUGGESTIONS = [
 ];
 
 /**
- * Mesaj içeriğindeki :::ACTION_PROPOSAL ... ::: bloğunu ayrıştırır.
+ * Mesaj içeriğindeki :::ACTION_PROPOSAL ... ::: bloğunu güvenli ve dayanıklı şekilde ayrıştırır.
+ * Markdown kod blokları (```json), boşluklar veya eksik kapanış etiketlerini otomatik tolere eder.
  */
 function parseActionProposal(rawContent: string): { cleanContent: string; actionProposal: ActionProposal | null } {
-  const match = rawContent.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)\s*:::/);
+  const match = rawContent.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)(?::::|$)/);
   if (!match) {
     return { cleanContent: rawContent, actionProposal: null };
   }
 
   try {
-    const jsonStr = match[1].trim();
-    const actionProposal = JSON.parse(jsonStr) as ActionProposal;
-    const cleanContent = rawContent.replace(/:::ACTION_PROPOSAL[\s\S]*?:::/, '').trim();
+    let rawJson = match[1].trim();
+    // Kod bloğu tırnaklarını temizle
+    rawJson = rawJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+
+    // En dıştaki { ve } arasındaki JSON objesini bul
+    const firstBrace = rawJson.indexOf('{');
+    const lastBrace = rawJson.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      rawJson = rawJson.substring(firstBrace, lastBrace + 1);
+    }
+
+    const actionProposal = JSON.parse(rawJson) as ActionProposal;
+    const cleanContent = rawContent.replace(/:::ACTION_PROPOSAL[\s\S]*?(?::::|$)/, '').trim();
     return { cleanContent, actionProposal };
   } catch (err) {
-    console.error('Action proposal JSON parse error:', err);
+    console.warn('Action proposal JSON parse notice:', err);
     return { cleanContent: rawContent, actionProposal: null };
   }
 }
@@ -88,7 +99,7 @@ export default function AiAssistantClient() {
 
 Mağazanızın anlık **vitrin stoklarını, kasa nakitlerini, müşteri borç/alacaklarını ve canlı altın kurlarını** sürekli takip ediyorum.
 
-Artık talimat verdiğinizde mağazanız için **Fiyat Alarmı Kurabilir**, **Müşteri Veresiyesi Yazabilir**, **Tahsilat Alabilir** ve **Kasa Hareketlerini** 2 aşamalı onayınızla doğrudan veritabanına işleyebilirim!
+Artık talimat verdiğinizde mağazanız için **Fiyat Alarmı Kurabilir**, **Müşteri Veresiyesi Yazabilir**, **Tahsilat Alabilir**, **Stok Miktarı Güncelleyebilir** ve **Kasa Hareketlerini** 2 aşamalı onayınızla (ister yeşil butona basarak, ister sohbetten "Evet/Onaylıyorum" diyerek) doğrudan veritabanına işleyebilirim!
 
 Size nasıl yardımcı olabilirim?`,
       timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
@@ -130,10 +141,55 @@ Size nasıl yardımcı olabilirim?`,
     const textToSend = queryText || inputQuery;
     if (!textToSend.trim() || loading) return;
 
+    const trimmedText = textToSend.trim();
+    const normalizedInput = trimmedText.toLowerCase();
+
+    // ─── 2. AŞAMA DOĞRUDAN SOHBET/SESLE ONAY YAKALAMA ───
+    // Eğer bekleyen (PENDING) bir işlem kartı varsa ve kullanıcı "onayla", "evet", "yap", "güncelle" yazdıysa:
+    const pendingMsg = [...messages].reverse().find(m => m.role === 'assistant' && m.actionProposal && m.actionStatus === 'PENDING');
+
+    const isAffirmative = [
+      'onayla', 'onaylıyorum', 'onay', 'evet', 'tamam', 'yap', 'uygula', 'güncelle', 'kaydet', 'yes', 'ok', 'olur', 'tabi', 'tabii'
+    ].includes(normalizedInput);
+
+    const isNegative = [
+      'iptal', 'iptal et', 'vazgeç', 'hayır', 'istemiyorum', 'kalsın', 'no'
+    ].includes(normalizedInput);
+
+    if (pendingMsg && pendingMsg.actionProposal && isAffirmative) {
+      if (!queryText) setInputQuery('');
+      // Kullanıcı onay mesajı ekle
+      const userMsg: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: `✅ Onaylıyorum, işlemi gerçekleştir: ${pendingMsg.actionProposal.title}`,
+        timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages(prev => [...prev, userMsg]);
+
+      // Eylemi doğrudan çalıştır
+      await handleExecuteAction(pendingMsg.id, pendingMsg.actionProposal);
+      return;
+    }
+
+    if (pendingMsg && isNegative) {
+      if (!queryText) setInputQuery('');
+      const userMsg: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: `❌ İptal edildi: ${pendingMsg.actionProposal?.title || 'İşlem'}`,
+        timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      handleCancelAction(pendingMsg.id);
+      return;
+    }
+
+    // Normal AI Mesajı Gönderimi
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: textToSend.trim(),
+      content: trimmedText,
       timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -424,7 +480,7 @@ Size nasıl yardımcı olabilirim?`,
                         )}
 
                         {msg.actionStatus === 'SUCCESS' && (
-                          <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold space-y-1">
+                          <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold space-y-2">
                             <div className="flex items-center gap-1.5">
                               <CheckCircle2 size={16} />
                               <span>2. Aşama Tamamlandı: İşlem Başarıyla Veritabanına Kaydedildi!</span>
@@ -434,6 +490,23 @@ Size nasıl yardımcı olabilirim?`,
                                 {msg.actionResultMessage}
                               </p>
                             )}
+                            <div className="pt-1 pl-5">
+                              <Link
+                                href={
+                                  msg.actionProposal?.actionType?.includes('STOCK')
+                                    ? ROUTES.STOCKS
+                                    : msg.actionProposal?.actionType?.includes('ALERT')
+                                    ? ROUTES.ALERTS
+                                    : msg.actionProposal?.actionType?.includes('CUSTOMER')
+                                    ? ROUTES.CUSTOMERS
+                                    : ROUTES.TRANSACTIONS
+                                }
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 rounded-lg text-[10px] font-bold transition-all"
+                              >
+                                <span>İlgili Sayfada Görüntüle</span>
+                                <ExternalLink size={10} />
+                              </Link>
+                            </div>
                           </div>
                         )}
 
