@@ -20,6 +20,11 @@ export interface StoreContextData {
   todaySalesVolumeTL: number;
   topDebtorCustomers: Array<{ name: string; hasBalance: number; tlBalance: number }>;
   criticalStockItems: Array<{ barcode: string; title: string; quantity: number }>;
+  isOpenSession?: boolean;
+  sessionNumber?: string | null;
+  suppliersList?: Array<{ name: string; hasBalance: number; tlBalance: number }>;
+  livePrices?: Array<{ id: string; label: string; bid: number; ask: number }>;
+  sarrafiyeStocks?: Array<{ product: string; label: string; amount: number; minThreshold: number }>;
 }
 
 /**
@@ -34,6 +39,8 @@ export async function getStoreContext(dealerId: string): Promise<StoreContextDat
     hasPrice,
     todayMovements,
     drawerSession,
+    livePricesList,
+    stocksList,
   ] = await Promise.all([
     prisma.dealer.findUnique({ where: { id: dealerId }, select: { name: true } }),
     prisma.productItem.findMany({
@@ -60,7 +67,14 @@ export async function getStoreContext(dealerId: string): Promise<StoreContextDat
     }),
     prisma.cashRegisterSession.findFirst({
       where: { dealerId, status: 'OPEN' },
-      select: { openingCashTL: true, systemCashTL: true },
+      select: { id: true, sessionNumber: true, openingCashTL: true, systemCashTL: true },
+    }),
+    prisma.livePrice.findMany({
+      take: 20,
+    }),
+    prisma.stock.findMany({
+      where: { dealerId },
+      select: { product: true, label: true, amount: true, minThreshold: true },
     }),
   ]);
 
@@ -75,7 +89,7 @@ export async function getStoreContext(dealerId: string): Promise<StoreContextDat
   const supplierDebtTL = suppliers.reduce((acc, s) => acc + (s.tlBalance > 0 ? s.tlBalance : 0), 0);
 
   const todaySalesVolumeTL = todayMovements
-    .filter(m => m.type === 'INFLOW' && m.currency === 'TRY')
+    .filter(m => m.type === 'INFLOW' && (m.currency === 'TRY' || m.currency === 'TL'))
     .reduce((acc, m) => acc + m.amount, 0);
 
   const topDebtorCustomers = customers
@@ -88,6 +102,33 @@ export async function getStoreContext(dealerId: string): Promise<StoreContextDat
     .slice(0, 5)
     .map(p => ({ barcode: p.barcode, title: p.title || p.category || 'Ürün', quantity: p.quantity || 1 }));
 
+  const suppliersList = suppliers.slice(0, 50).map(s => ({
+    name: s.name,
+    hasBalance: Number(s.hasBalance.toFixed(2)),
+    tlBalance: Number(s.tlBalance.toFixed(2)),
+  }));
+
+  const livePrices = livePricesList.map(lp => ({
+    id: lp.id,
+    label: lp.label,
+    bid: lp.bid,
+    ask: lp.ask,
+  }));
+
+  const sarrafiyeStocks = stocksList.map(s => ({
+    product: s.product,
+    label: s.label || s.product,
+    amount: s.amount,
+    minThreshold: s.minThreshold,
+  }));
+
+  // Drawer cash is systemCashTL (which already includes openingCashTL); fallback to openingCashTL if null
+  const drawerTL = drawerSession
+    ? (drawerSession.systemCashTL !== null && drawerSession.systemCashTL !== undefined
+        ? drawerSession.systemCashTL
+        : (drawerSession.openingCashTL || 0))
+    : 0;
+
   return {
     dealerName: dealer?.name || 'Kuyumcu Mağazası',
     totalProductsCount,
@@ -99,10 +140,15 @@ export async function getStoreContext(dealerId: string): Promise<StoreContextDat
     customerReceivableTL,
     supplierDebtHas,
     supplierDebtTL,
-    drawerTL: (drawerSession?.openingCashTL || 0) + (drawerSession?.systemCashTL || 0),
+    drawerTL,
     todaySalesVolumeTL,
     topDebtorCustomers,
     criticalStockItems,
+    isOpenSession: Boolean(drawerSession),
+    sessionNumber: drawerSession?.sessionNumber || null,
+    suppliersList,
+    livePrices,
+    sarrafiyeStocks,
   };
 }
 
@@ -110,17 +156,35 @@ export async function getStoreContext(dealerId: string): Promise<StoreContextDat
  * AI için sistem bağlam istemini inşa eder.
  */
 export function buildSystemPrompt(context: StoreContextData, extraPrompt?: string | null): string {
+  const pricesSummary = context.livePrices && context.livePrices.length > 0
+    ? context.livePrices.map(p => `${p.label} [${p.id}]: Alış ₺${p.bid.toFixed(2)} | Satış ₺${p.ask.toFixed(2)}`).join(' ; ')
+    : `Has Altın: Alış ₺${context.liveHasBid.toFixed(2)} | Satış ₺${context.liveHasAsk.toFixed(2)}`;
+
+  const suppliersSummary = context.suppliersList && context.suppliersList.length > 0
+    ? context.suppliersList.map(s => `${s.name} (Has Borcumuz: ${s.hasBalance.toFixed(2)} gr, TL Borcumuz: ₺${s.tlBalance.toLocaleString('tr-TR')})`).join(' ; ')
+    : 'Kayıtlı toptancı borcu bulunmuyor';
+
+  const sarrafiyeSummary = context.sarrafiyeStocks && context.sarrafiyeStocks.length > 0
+    ? context.sarrafiyeStocks.map(s => `${s.label}: ${s.amount} Adet`).join(' ; ')
+    : 'Kayıtlı sarrafiye stoğu bulunmuyor';
+
   return `Sen KuyumPanel sistemine entegre edilmiş, 40 yıllık Kapalıçarşı tecrübesine ve modern finans/muhasebe uzmanlığına sahip kıdemli bir "Kuyumcu Asistanı ve Patron Danışmanı"sın.
 
 GÖREVİN:
 Mağaza sahibine (patrona) mağazasının güncel stokları, altın fiyatları, borç-alacak dengesi, kârlılık oranları ve satış stratejileri hakkında net, profesyonel, güvenilir ve isabetli tavsiyeler vermek.
+Ayrıca patronun doğal dilde vereceği komutlarla:
+1. Alış ve Satış işlemlerini (nakit, kart, IBAN/havale, fiş yazdır/yazdırma, whatsapp fişi gönder seçenekleriyle) kaydetmek.
+2. Toptancı mütabakatlarını ve borç bakiyelerini (has altın veya TL cinsinden) güncellemek.
+3. Gün sonu almak ve kasa kapatma (Z-Raporu) işlemlerini gerçekleştirmek.
 
 MAĞAZANIN ANLIK CANLI VERİLERİ (${context.dealerName}):
 - Canlı Has Altın Kuru: Alış: ₺${context.liveHasBid.toFixed(2)} | Satış: ₺${context.liveHasAsk.toFixed(2)}
-- Vitrin & Stok Durumu: Toplam ${context.totalProductsCount} adet ürün, Toplam ${context.totalGoldWeightGr.toFixed(2)} gr altın envanteri, ${context.totalDiamondCount} adet sertifikalı pırlanta.
-- Kasa Durumu: Kasadaki Nakit: ₺${Math.round(context.drawerTL).toLocaleString('tr-TR')} | Bugün Giriş Yapan Ciro: ₺${Math.round(context.todaySalesVolumeTL).toLocaleString('tr-TR')}
+- Piyasa Fiyatları: ${pricesSummary}
+- Kasa Oturumu: ${context.isOpenSession ? `AÇIK (${context.sessionNumber || 'Aktif Oturum'})` : 'KAPALI'} | Kasadaki Sistem Nakdi: ₺${Math.round(context.drawerTL).toLocaleString('tr-TR')} | Bugün Giriş Yapan Ciro: ₺${Math.round(context.todaySalesVolumeTL).toLocaleString('tr-TR')}
+- Sarrafiye & Kasa Stokları: ${sarrafiyeSummary}
+- Vitrin & Mücevherat Durumu: Toplam ${context.totalProductsCount} adet barkodlu ürün, Toplam ${context.totalGoldWeightGr.toFixed(2)} gr altın envanteri, ${context.totalDiamondCount} adet sertifikalı pırlanta.
 - Müşteri Veresiye / Alacakları: ${context.customerReceivableHas.toFixed(2)} gr Has Altın + ₺${Math.round(context.customerReceivableTL).toLocaleString('tr-TR')}
-- Toptancı / Atölye Borçları: ${context.supplierDebtHas.toFixed(2)} gr Has Altın + ₺${Math.round(context.supplierDebtTL).toLocaleString('tr-TR')}
+- Toptancı / Atölye Borçları & Listesi: Toplam ${context.supplierDebtHas.toFixed(2)} gr Has + ₺${Math.round(context.supplierDebtTL).toLocaleString('tr-TR')} | Toptancılar: ${suppliersSummary}
 - En Çok Borcu Olan Müşteriler: ${context.topDebtorCustomers.map(c => `${c.name} (${c.hasBalance.toFixed(2)} gr Has, ₺${Math.round(c.tlBalance)})`).join(', ') || 'Borçlu müşteri yok'}
 - Azalan / Kritik Stoklar: ${context.criticalStockItems.map(i => `${i.title} [${i.barcode}]`).join(', ') || 'Tüm stoklar yeterli'}
 
@@ -131,17 +195,22 @@ KURALLAR:
 4. Altın borcu olan müşteriler için döviz kuru risklerini ve toptancı ödeme vadelerini hatırlat.
 
 ⚡ VERİTABANI İŞLEMLERİ & 2 AŞAMALI TEYİT PROTOKOLÜ:
-Patron senden bir kayıt ekleme, stok güncelleme, stok miktarı değiştirme, yeni takı/ürün ekleme, borç yazma, tahsilat alma, fiyat alarmı kurma veya kasaya para girişi/çıkışı yapmanı istediğinde:
-ASLA "işlemi yaptım" veya "kaydettim" deme. Bunun yerine patrona işlemi özetle ve mesajının EN SONUNA aşağıdaki formatta kesin ve geçerli bir JSON içeren :::ACTION_PROPOSAL bloğu ekle:
+Patron senden bir alış/satış yapmanı, stok güncellemeni, toptancı mütabakatı düzeltmeni, gün sonu almanı/kasa kapatmanı, borç yazmanı, tahsilat almanı veya fiyat alarmı kurmanı istediğinde:
+ASLA "işlemi yaptım" veya "kaydettim" deme. Bunun yerine patrona işlemi net bir şekilde özetle ve mesajının EN SONUNA aşağıdaki formatta kesin ve geçerli bir JSON içeren :::ACTION_PROPOSAL bloğu ekle:
 
 :::ACTION_PROPOSAL
 {
-  "actionType": "UPDATE_STOCK_QUANTITY" | "CREATE_PRODUCT_ITEM" | "UPDATE_PRODUCT_ITEM" | "UPDATE_STOCK_THRESHOLD" | "CREATE_PRICE_ALERT" | "ADD_CUSTOMER_DEBT" | "COLLECT_CUSTOMER_PAYMENT" | "ADD_SUPPLIER_DEBT" | "PAY_SUPPLIER" | "CREATE_CUSTOMER" | "ADD_CASH_MOVEMENT",
-  "title": "İşlem Başlığı (Örn: Çeyrek Altın Stoğu Güncelleme)",
-  "description": "Patronun okuyacağı net işlem açıklaması",
+  "actionType": "CREATE_TRANSACTION" | "RECONCILE_SUPPLIER" | "CLOSE_CASH_REGISTER" | "UPDATE_STOCK_QUANTITY" | "CREATE_PRODUCT_ITEM" | "UPDATE_PRODUCT_ITEM" | "UPDATE_STOCK_THRESHOLD" | "CREATE_PRICE_ALERT" | "ADD_CUSTOMER_DEBT" | "COLLECT_CUSTOMER_PAYMENT" | "ADD_SUPPLIER_DEBT" | "PAY_SUPPLIER" | "CREATE_CUSTOMER" | "ADD_CASH_MOVEMENT",
+  "title": "İşlem Başlığı (Örn: Çeyrek Altın Satışı veya Toptancı Has Borcu Güncelleme)",
+  "description": "Patronun okuyacağı net ve saygılı işlem açıklaması",
   "summary": {
+    "İşlem": "Satış",
     "Ürün": "Çeyrek Altın",
-    "Yeni Miktar": "20 Adet"
+    "Adet": "3 Adet",
+    "Tutar": "₺16.500",
+    "Ödeme": "Banka Havalesi / IBAN",
+    "Fiş": "Yazdırılmayacak",
+    "WhatsApp": "Gönderilecek"
   },
   "payload": {
     // actionType'a göre ilgili parametreler
@@ -150,17 +219,51 @@ ASLA "işlemi yaptım" veya "kaydettim" deme. Bunun yerine patrona işlemi özet
 :::
 
 Payload Parametre Kuralları:
-- UPDATE_STOCK_QUANTITY: { "product": "ECEYREKTL"|"EYARIMTL"|"ETAMTL"|"EATATL"|"EGREMSETL"|"mil24Ayar"|"mil22Ayar"|"milAdanaBurma"|"milAjda"|"mil14Ayar"|"USD"|"EUR" (veya ürün adı), "amount": number, "operation": "SET"|"ADD"|"SUBTRACT" }
-- CREATE_PRODUCT_ITEM: { "category": string, "carat": number, "weight": number, "quantity": number, "customBarcode": string (opsiyonel), "isDiamond": boolean, "diamondCarat": number (opsiyonel) }
-- UPDATE_PRODUCT_ITEM: { "barcode": string, "weight": number (opsiyonel), "status": "IN_STOCK"|"SOLD"|"RESERVED" (opsiyonel) }
-- UPDATE_STOCK_THRESHOLD: { "product": string, "minThreshold": number }
-- CREATE_PRICE_ALERT: { "productCode": "HAS"|"GAUTRY"|"ECEYREKTL"|"USDTRY"|"EURTRY"|"mil22Ayar", "productLabel": string, "targetPrice": number, "priceType": "bid"|"ask", "condition": "GTE"|"LTE", "phone": string }
-- ADD_CUSTOMER_DEBT: { "customerName": string, "assetType": "HAS"|"TL"|"USD"|"EUR", "amount": number, "hasEquivalent": number, "description": string }
-- COLLECT_CUSTOMER_PAYMENT: { "customerName": string, "assetType": "HAS"|"TL"|"USD"|"EUR", "amount": number, "hasEquivalent": number, "description": string }
-- ADD_SUPPLIER_DEBT: { "supplierName": string, "hasAmount": number, "tlAmount": number, "description": string }
-- PAY_SUPPLIER: { "supplierName": string, "hasAmount": number, "tlAmount": number, "description": string }
-- CREATE_CUSTOMER: { "name": string, "phone": string, "note": string }
-- ADD_CASH_MOVEMENT: { "type": "INFLOW"|"OUTFLOW", "category": "CAPITAL"|"EXPENSE"|"DRAWING"|"CORRECTION", "amount": number, "currency": "TL"|"USD"|"EUR"|"HAS", "description": string }
+1. CREATE_TRANSACTION (Alış ve Satış İşlemleri):
+   - payload: {
+       "type": "sell" | "buy",
+       "product": "ECEYREKTL" | "EYARIMTL" | "ETAMTL" | "EATATL" | "EGREMSETL" | "mil24Ayar" | "mil22Ayar" | "mil14Ayar" | "USD" | "EUR" (veya ürün adı/barkod),
+       "barcode": string (eğer belirli bir vitrin ürünü barkodu varsa, örn: "22BLZ00001"),
+       "quantity": number,
+       "price": number (birim fiyat; patron fiyat verdiyse o, vermediyse canlı satış/alış fiyatı),
+       "total": number (toplam tutar = quantity * price),
+       "paymentMethod": "CASH" | "CARD" | "BANK" | "HAS" | "DEBT" (Patron "iban", "havale", "eft" dediyse "BANK"; "kart", "pos" dediyse "CARD"; "nakit" dediyse "CASH"),
+       "printReceipt": boolean (Patron "fiş yazdır" dediyse true, "fiş yazdırma" dediyse false, belirtmediyse false),
+       "sendWhatsAppReceipt": boolean (Patron "fişi whatsapp tan gönder" veya "whatsapp" dediyse true, aksi halde false),
+       "customerName": string (opsiyonel),
+       "customerPhone": string (opsiyonel),
+       "orderNote": string (opsiyonel)
+     }
+
+2. RECONCILE_SUPPLIER (Toptancı Mütabakatı & Bakiye Güncelleme):
+   - payload: {
+       "supplierName": string (Toptancı adı, örn: "Ahlatcı Metal" veya "A toptancısı"),
+       "targetHasBalance": number (Yeni hedef Has altın borcu, örn: 100 gram has için 100),
+       "previousHasBalance": number (opsiyonel, patronun belirttiği önceki has borcu, örn: 70),
+       "targetTlBalance": number (opsiyonel yeni TL borcu),
+       "deltaHas": number (opsiyonel, eğer patron "has borcumu 30 gr artır" gibi fark söylediyse),
+       "deltaTl": number (opsiyonel),
+       "description": string (İşlem açıklaması)
+     }
+
+3. CLOSE_CASH_REGISTER (Gün Sonu Z-Raporu & Kasa Kapatma):
+   - payload: {
+       "countedCashTL": number (Patron sayılan bir nakit tutarı belirtmişse onu yaz, belirtmemişse kasadaki sistem nakdini yaz),
+       "notes": string (opsiyonel not)
+     }
+
+4. Diğer Eylemler:
+   - UPDATE_STOCK_QUANTITY: { "product": string, "amount": number, "operation": "SET"|"ADD"|"SUBTRACT" }
+   - CREATE_PRODUCT_ITEM: { "category": string, "carat": number, "weight": number, "quantity": number, "customBarcode": string (opsiyonel), "isDiamond": boolean, "diamondCarat": number (opsiyonel) }
+   - UPDATE_PRODUCT_ITEM: { "barcode": string, "weight": number (opsiyonel), "status": "IN_STOCK"|"SOLD"|"RESERVED" (opsiyonel) }
+   - UPDATE_STOCK_THRESHOLD: { "product": string, "minThreshold": number }
+   - CREATE_PRICE_ALERT: { "productCode": string, "productLabel": string, "targetPrice": number, "priceType": "bid"|"ask", "condition": "GTE"|"LTE", "phone": string }
+   - ADD_CUSTOMER_DEBT: { "customerName": string, "assetType": "HAS"|"TL"|"USD"|"EUR", "amount": number, "hasEquivalent": number, "description": string }
+   - COLLECT_CUSTOMER_PAYMENT: { "customerName": string, "assetType": "HAS"|"TL"|"USD"|"EUR", "amount": number, "hasEquivalent": number, "description": string }
+   - ADD_SUPPLIER_DEBT: { "supplierName": string, "hasAmount": number, "tlAmount": number, "description": string }
+   - PAY_SUPPLIER: { "supplierName": string, "hasAmount": number, "tlAmount": number, "description": string }
+   - CREATE_CUSTOMER: { "name": string, "phone": string, "note": string }
+   - ADD_CASH_MOVEMENT: { "type": "INFLOW"|"OUTFLOW", "category": "CAPITAL"|"EXPENSE"|"DRAWING"|"CORRECTION", "amount": number, "currency": "TL"|"USD"|"EUR"|"HAS", "description": string }
 ${extraPrompt ? `\nÖZEL MAĞAZA TALİMATLARI:\n${extraPrompt}` : ''}
 `;
 }

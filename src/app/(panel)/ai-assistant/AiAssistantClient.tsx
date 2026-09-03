@@ -28,10 +28,12 @@ import {
   CreditCard,
   Coins,
   Users,
+  Printer,
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
+import { isAffirmativeConfirmation, isNegativeCancellation } from '@/constants/ai';
 import HeaderActions from '@/components/HeaderActions';
 
 interface ActionProposal {
@@ -50,13 +52,16 @@ interface ChatMessage {
   actionProposal?: ActionProposal | null;
   actionStatus?: 'PENDING' | 'EXECUTING' | 'SUCCESS' | 'CANCELLED';
   actionResultMessage?: string;
+  actionResultData?: any;
 }
 
 const PROMPT_SUGGESTIONS = [
+  { icon: CreditCard, label: '3 Çeyrek Satış (IBAN & WhatsApp)', text: '3 çeyrek sattım 16500 TL ibandan oldu, fiş yazdırma fişi whatsapp tan gönder.' },
+  { icon: Users, label: 'Toptancı Has Borcu Güncelle', text: 'Ahlatcı toptancısına olan has borcum 70 onu 100 gram has a yükselt.' },
+  { icon: Coins, label: 'Gün Sonu Al & Kasa Kapat', text: 'Gün sonu al ve kasa kapatma yap.' },
   { icon: BellRing, label: 'Fiyat Alarmı Kur', text: 'Has altın bozma fiyatı 6600 TL olduğunda beni WhatsApptan uyaracak alarm kur.' },
   { icon: TrendingUp, label: 'Kârlılık & Ciro', text: 'Bu ayki tahmini ciro, kârlılık oranları ve nakit akışımı özetle.' },
   { icon: UserCheck, label: 'Müşteri Borçları', text: 'Has altın ve TL borcu en yüksek olan müşterileri ve tahsilat risklerini değerlendir.' },
-  { icon: AlertTriangle, label: 'Kritik Stoklar', text: 'Stoğu azalan veya tükenmek üzere olan takıları ve sipariş önerilerini listele.' },
 ];
 
 /**
@@ -90,6 +95,46 @@ function parseActionProposal(rawContent: string): { cleanContent: string; action
   }
 }
 
+function printThermalSlip(text: string, title: string = 'Fiş Yazdır') {
+  const win = window.open('', '_blank', 'width=450,height=650');
+  if (!win) {
+    alert('Yazdırma penceresi açılamadı. Lütfen tarayıcı açılır pencere (pop-up) engelleyicisini kontrol ediniz.');
+    return;
+  }
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <style>
+          @page { margin: 5mm; }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px;
+            margin: 0;
+            white-space: pre-wrap;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+          }
+        </style>
+      </head>
+      <body>
+        <pre>${text}</pre>
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+    </html>
+  `);
+  win.document.close();
+}
+
 export default function AiAssistantClient() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -97,9 +142,15 @@ export default function AiAssistantClient() {
       role: 'assistant',
       content: `Selamlar Patron! 👑 Ben sizin **Kuyumcu Asistanı ve Finans Danışmanınızım**.
 
-Mağazanızın anlık **vitrin stoklarını, kasa nakitlerini, müşteri borç/alacaklarını ve canlı altın kurlarını** sürekli takip ediyorum.
+Mağazanızın anlık **vitrin stoklarını, kasa nakitlerini, müşteri borç/alacaklarını, toptancı hesaplarını ve canlı altın kurlarını** sürekli takip ediyorum.
 
-Artık talimat verdiğinizde mağazanız için **Fiyat Alarmı Kurabilir**, **Müşteri Veresiyesi Yazabilir**, **Tahsilat Alabilir**, **Stok Miktarı Güncelleyebilir** ve **Kasa Hareketlerini** 2 aşamalı onayınızla (ister yeşil butona basarak, ister sohbetten "Evet/Onaylıyorum" diyerek) doğrudan veritabanına işleyebilirim!
+Artık komutlarınızla:
+• **Alış & Satış İşlemleri**: (Örn: *"3 çeyrek sattım 16.500 TL ibandan oldu, fiş yazdırma fişi whatsapp tan gönder"* veya *"2 çeyrek aldım nakit"*)
+• **Toptancı Mütabakatları**: (Örn: *"A toptancısına olan has borcum 70 onu 100 gram has a yükselt"* veya *"Ahlatcı borcumuzu 85 gr has olarak güncelle"*)
+• **Gün Sonu & Kasa Kapatma**: (Örn: *"Gün sonu al ve kasayı kapat"* veya *"Gün sonu al kasada 45.000 TL saydım"*)
+• **Fiyat Alarmları, Müşteri Borçları & Stok Yönetimi**
+
+işlemlerini 2 aşamalı onayınızla (ister butona basarak, ister sohbetten "Evet/Onaylıyorum" diyerek) doğrudan sisteme tam entegre uygulayabilirim!
 
 Size nasıl yardımcı olabilirim?`,
       timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
@@ -145,18 +196,10 @@ Size nasıl yardımcı olabilirim?`,
     const normalizedInput = trimmedText.toLowerCase();
 
     // ─── 2. AŞAMA DOĞRUDAN SOHBET/SESLE ONAY YAKALAMA ───
-    // Eğer bekleyen (PENDING) bir işlem kartı varsa ve kullanıcı "onayla", "evet", "yap", "güncelle" yazdıysa:
+    // Eğer bekleyen (PENDING) bir işlem kartı varsa ve kullanıcı "onayla", "evet", "tamamdır", "sat", "yap", "güncelle" vb. yazdıysa:
     const pendingMsg = [...messages].reverse().find(m => m.role === 'assistant' && m.actionProposal && m.actionStatus === 'PENDING');
 
-    const isAffirmative = [
-      'onayla', 'onaylıyorum', 'onay', 'evet', 'tamam', 'yap', 'uygula', 'güncelle', 'kaydet', 'yes', 'ok', 'olur', 'tabi', 'tabii'
-    ].includes(normalizedInput);
-
-    const isNegative = [
-      'iptal', 'iptal et', 'vazgeç', 'hayır', 'istemiyorum', 'kalsın', 'no'
-    ].includes(normalizedInput);
-
-    if (pendingMsg && pendingMsg.actionProposal && isAffirmative) {
+    if (pendingMsg && pendingMsg.actionProposal && isAffirmativeConfirmation(trimmedText)) {
       if (!queryText) setInputQuery('');
       // Kullanıcı onay mesajı ekle
       const userMsg: ChatMessage = {
@@ -172,7 +215,7 @@ Size nasıl yardımcı olabilirim?`,
       return;
     }
 
-    if (pendingMsg && isNegative) {
+    if (pendingMsg && isNegativeCancellation(trimmedText)) {
       if (!queryText) setInputQuery('');
       const userMsg: ChatMessage = {
         id: Date.now().toString(),
@@ -271,10 +314,17 @@ Size nasıl yardımcı olabilirim?`,
                   ...m,
                   actionStatus: 'SUCCESS',
                   actionResultMessage: data.message,
+                  actionResultData: data.result,
                 }
               : m
           )
         );
+
+        // Patron fiş yazdır komutu verdiyse otomatik yazdırma penceresini tetikle
+        if (data.result?.printReceipt && data.result?.receiptSlip) {
+          const title = proposal.actionType?.includes('REGISTER') ? 'Gün Sonu Z-Raporu' : 'Satış Bilgi Fişi';
+          printThermalSlip(data.result.receiptSlip, title);
+        }
       } else {
         alert('İşlem gerçekleştirilemedi: ' + (data.error || 'Bilinmeyen hata'));
         setMessages(prev =>
@@ -490,7 +540,7 @@ Size nasıl yardımcı olabilirim?`,
                                 {msg.actionResultMessage}
                               </p>
                             )}
-                            <div className="pt-1 pl-5">
+                            <div className="pt-1 pl-5 flex flex-wrap items-center gap-2">
                               <Link
                                 href={
                                   msg.actionProposal?.actionType?.includes('STOCK')
@@ -499,6 +549,10 @@ Size nasıl yardımcı olabilirim?`,
                                     ? ROUTES.ALERTS
                                     : msg.actionProposal?.actionType?.includes('CUSTOMER')
                                     ? ROUTES.CUSTOMERS
+                                    : msg.actionProposal?.actionType?.includes('SUPPLIER')
+                                    ? ROUTES.SUPPLIERS
+                                    : msg.actionProposal?.actionType?.includes('REGISTER') || msg.actionProposal?.actionType?.includes('Z_REPORT')
+                                    ? ROUTES.Z_REPORT
                                     : ROUTES.TRANSACTIONS
                                 }
                                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 rounded-lg text-[10px] font-bold transition-all"
@@ -506,6 +560,39 @@ Size nasıl yardımcı olabilirim?`,
                                 <span>İlgili Sayfada Görüntüle</span>
                                 <ExternalLink size={10} />
                               </Link>
+
+                              {msg.actionResultData?.receiptSlip && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    printThermalSlip(
+                                      msg.actionResultData.receiptSlip,
+                                      msg.actionProposal?.actionType?.includes('REGISTER')
+                                        ? 'Gün Sonu Z-Raporu'
+                                        : 'Satış Bilgi Fişi'
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 rounded-lg text-[10px] font-bold transition-all"
+                                >
+                                  <Printer size={11} />
+                                  <span>
+                                    {msg.actionProposal?.actionType?.includes('REGISTER')
+                                      ? 'Z-Raporunu Yazdır'
+                                      : 'Fişi Yazdır'}
+                                  </span>
+                                </button>
+                              )}
+
+                              {msg.actionResultData?.whatsAppUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(msg.actionResultData.whatsAppUrl, '_blank')}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-[10px] font-bold transition-all"
+                                >
+                                  <Share2 size={11} />
+                                  <span>WhatsApp Fişi Aç</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}

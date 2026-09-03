@@ -151,5 +151,192 @@ export function registerF22AiAssistantTests(): void {
       expect(parsed.payload.product).toBe('ECEYREKTL');
       expect(parsed.payload.amount).toBe(25);
     });
+
+    test('22.9 AI Sales transaction proposal (3 Çeyrek, IBAN payment, WhatsApp receipt, no print)', () => {
+      const sampleSalesResponse = `Patron, 3 adet çeyrek altın satış işlemini hazırladım:
+:::ACTION_PROPOSAL
+{
+  "actionType": "CREATE_TRANSACTION",
+  "title": "Çeyrek Altın Satış İşlemi",
+  "description": "3 adet Çeyrek Altın satışı, toplam ₺16.500, Banka Havalesi (IBAN) ile tahsil edilecek. Fiş yazdırılmayacak, WhatsApp fişi oluşturulacak.",
+  "summary": {
+    "İşlem Türü": "Satış",
+    "Ürün": "Çeyrek Altın",
+    "Adet": "3 Adet",
+    "Birim Fiyat": "₺5.500,00",
+    "Toplam Tutar": "₺16.500,00",
+    "Ödeme Yöntemi": "Banka Havalesi / IBAN",
+    "Fiş": "Yazdırılmayacak",
+    "WhatsApp": "Gönderilecek"
+  },
+  "payload": {
+    "type": "sell",
+    "product": "ECEYREKTL",
+    "quantity": 3,
+    "price": 5500,
+    "total": 16500,
+    "paymentMethod": "BANK",
+    "printReceipt": false,
+    "sendWhatsAppReceipt": true,
+    "customerName": "Ahmet Yılmaz",
+    "customerPhone": "05321234567"
+  }
+}
+:::`;
+
+      const match = sampleSalesResponse.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)\s*:::/);
+      expect(Boolean(match)).toBe(true);
+
+      const parsed = JSON.parse(match![1].trim());
+      expect(parsed.actionType).toBe('CREATE_TRANSACTION');
+      expect(parsed.payload.type).toBe('sell');
+      expect(parsed.payload.product).toBe('ECEYREKTL');
+      expect(parsed.payload.quantity).toBe(3);
+      expect(parsed.payload.price).toBe(5500);
+      expect(parsed.payload.total).toBe(16500);
+      expect(parsed.payload.paymentMethod).toBe('BANK');
+      expect(parsed.payload.printReceipt).toBe(false);
+      expect(parsed.payload.sendWhatsAppReceipt).toBe(true);
+
+      // Test WhatsApp Receipt URL generation for this proposal
+      const { generateWhatsAppReceiptUrl } = require('../../src/lib/whatsapp');
+      const waUrl = generateWhatsAppReceiptUrl({
+        phone: parsed.payload.customerPhone,
+        customerName: parsed.payload.customerName,
+        items: [{ title: 'Çeyrek Altın', quantity: parsed.payload.quantity, priceTL: parsed.payload.total }],
+        totalTL: parsed.payload.total,
+        paymentMethod: 'Banka Havalesi / IBAN',
+      });
+      expect(waUrl.includes('905321234567')).toBe(true);
+      expect(waUrl.includes('16.500')).toBe(true);
+    });
+
+    test('22.10 AI Scrap/Hurda buy transaction proposal (2 Çeyrek Alımı, Nakit, Fiş Yazdır)', () => {
+      const sampleBuyResponse = `Patron, 2 adet çeyrek alım işlemini hazırladım:
+:::ACTION_PROPOSAL
+{
+  "actionType": "CREATE_TRANSACTION",
+  "title": "Çeyrek Altın Alış / Hurda İşlemi",
+  "description": "2 adet Çeyrek Altın alışı, toplam ₺10.800 Nakit ödenecektir. Fiş yazdırılacak.",
+  "summary": {
+    "İşlem Türü": "Alış (Biz Alıyoruz)",
+    "Ürün": "Çeyrek Altın",
+    "Adet": "2 Adet",
+    "Toplam Tutar": "₺10.800,00",
+    "Ödeme Yöntemi": "Nakit",
+    "Fiş": "Yazdırılacak"
+  },
+  "payload": {
+    "type": "buy",
+    "product": "ECEYREKTL",
+    "quantity": 2,
+    "price": 5400,
+    "total": 10800,
+    "paymentMethod": "CASH",
+    "printReceipt": true,
+    "sendWhatsAppReceipt": false
+  }
+}
+:::`;
+
+      const match = sampleBuyResponse.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)\s*:::/);
+      expect(Boolean(match)).toBe(true);
+
+      const parsed = JSON.parse(match![1].trim());
+      expect(parsed.actionType).toBe('CREATE_TRANSACTION');
+      expect(parsed.payload.type).toBe('buy');
+      expect(parsed.payload.quantity).toBe(2);
+      expect(parsed.payload.total).toBe(10800);
+      expect(parsed.payload.paymentMethod).toBe('CASH');
+      expect(parsed.payload.printReceipt).toBe(true);
+      expect(parsed.payload.sendWhatsAppReceipt).toBe(false);
+    });
+
+    test('22.11 AI Supplier reconciliation proposal (A toptancısına olan has borcum 70 onu 100 gram has a yükselt)', () => {
+      const sampleReconcileResponse = `Patron, A Toptancısı için mutabakat taslağını hazırladım:
+:::ACTION_PROPOSAL
+{
+  "actionType": "RECONCILE_SUPPLIER",
+  "title": "A Toptancısı Mutabakat Güncellemesi",
+  "description": "A Toptancısına olan Has altın borcu 70.00 gr'dan 100.00 gr Has'a yükseltilecektir (Fark: +30.00 gr Has).",
+  "summary": {
+    "Toptancı": "A Toptancısı",
+    "Mevcut Has Borcu": "70.00 gr Has",
+    "Yeni Has Borcu": "100.00 gr Has",
+    "Mutabakat Farkı": "+30.00 gr Has"
+  },
+  "payload": {
+    "supplierName": "A Toptancısı",
+    "targetHasBalance": 100,
+    "description": "Patron talimatı ile toptancı has borcu 70 gr'dan 100 gram has'a yükseltildi"
+  }
+}
+:::`;
+
+      const match = sampleReconcileResponse.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)\s*:::/);
+      expect(Boolean(match)).toBe(true);
+
+      const parsed = JSON.parse(match![1].trim());
+      expect(parsed.actionType).toBe('RECONCILE_SUPPLIER');
+      expect(parsed.payload.supplierName).toBe('A Toptancısı');
+      expect(parsed.payload.targetHasBalance).toBe(100);
+
+      const prevHas = 70;
+      const newHas = parsed.payload.targetHasBalance;
+      const diffHas = newHas - prevHas;
+      expect(diffHas).toBe(30);
+    });
+
+    test('22.12 AI Cash closing and Z-Report proposal (gün sonu al / kasa kapatma yap)', () => {
+      const sampleCloseResponse = `Patron, gün sonu kasa kapatma ve Z-Raporu taslağını hazırladım:
+:::ACTION_PROPOSAL
+{
+  "actionType": "CLOSE_CASH_REGISTER",
+  "title": "Gün Sonu Z-Raporu ve Kasa Kapatma",
+  "description": "Bugünkü kasa oturumu kapatılacak, Z-Raporu ve kasa mutabakat fişi oluşturulacaktır.",
+  "summary": {
+    "Oturum": "Z-2026-0001",
+    "Sistem Beklenen Nakit": "₺45.200,00",
+    "Sayılan Fiili Nakit": "₺45.200,00",
+    "Kasa Mutabakatı": "Tam Dengeli"
+  },
+  "payload": {
+    "countedCashTL": 45200,
+    "notes": "AI Asistan aracılığıyla gün sonu kasa kapatıldı"
+  }
+}
+:::`;
+
+      const match = sampleCloseResponse.match(/:::ACTION_PROPOSAL\s*([\s\S]*?)\s*:::/);
+      expect(Boolean(match)).toBe(true);
+
+      const parsed = JSON.parse(match![1].trim());
+      expect(parsed.actionType).toBe('CLOSE_CASH_REGISTER');
+      expect(parsed.payload.countedCashTL).toBe(45200);
+    });
+
+    test('22.13 AI Action confirmation keywords detection (kapat, sat, al, onayla, evet)', () => {
+      const { AI_CONFIRMATION_KEYWORDS } = require('../../src/constants/ai');
+      const aff = AI_CONFIRMATION_KEYWORDS.AFFIRMATIVE;
+
+      expect(aff.includes('onayla')).toBe(true);
+      expect(aff.includes('evet')).toBe(true);
+      expect(aff.includes('kapat')).toBe(true);
+      expect(aff.includes('sat')).toBe(true);
+      expect(aff.includes('al')).toBe(true);
+
+      const neg = AI_CONFIRMATION_KEYWORDS.NEGATIVE;
+      expect(neg.includes('iptal')).toBe(true);
+      expect(neg.includes('vazgeç')).toBe(true);
+    });
+
+    test('22.14 AI Action Types enum integrity and centralized constants', () => {
+      const { AI_ACTION_TYPES } = require('../../src/constants/ai');
+
+      expect(AI_ACTION_TYPES.CREATE_TRANSACTION).toBe('CREATE_TRANSACTION');
+      expect(AI_ACTION_TYPES.RECONCILE_SUPPLIER).toBe('RECONCILE_SUPPLIER');
+      expect(AI_ACTION_TYPES.CLOSE_CASH_REGISTER).toBe('CLOSE_CASH_REGISTER');
+      expect(AI_ACTION_TYPES.UPDATE_STOCK_QUANTITY).toBe('UPDATE_STOCK_QUANTITY');
+    });
   });
 }
