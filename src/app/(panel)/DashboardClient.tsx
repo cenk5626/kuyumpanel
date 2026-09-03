@@ -90,7 +90,8 @@ export default function DashboardClient({
       desc: 'Perakende & Sarrafiye İşlemi Yap',
       icon: ArrowLeftRight,
       href: ROUTES.TRANSACTIONS,
-      color: 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-yellow-500/20',
+      color: 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black shadow-md shadow-amber-500/20',
+      iconBg: 'bg-black/15 text-slate-950',
     },
     {
       id: 'quick-camera',
@@ -98,7 +99,8 @@ export default function DashboardClient({
       desc: 'Cihaz Kamerasıyla Ürün Taraması',
       icon: Camera,
       href: ROUTES.TRANSACTIONS,
-      color: 'bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20',
+      color: 'bg-amber-50/80 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/20',
+      iconBg: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
     },
     {
       id: 'quick-stocks',
@@ -106,7 +108,8 @@ export default function DashboardClient({
       desc: 'Yeni Takı Ürünü Tanımla',
       icon: Package,
       href: ROUTES.STOCKS,
-      color: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20',
+      color: 'bg-emerald-50/80 dark:bg-emerald-500/10 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20',
+      iconBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
     },
     {
       id: 'quick-suppliers',
@@ -114,7 +117,8 @@ export default function DashboardClient({
       desc: 'Mal Alımı ve Has/TL Borç Takibi',
       icon: Truck,
       href: ROUTES.SUPPLIERS,
-      color: 'bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500/20',
+      color: 'bg-purple-50/80 dark:bg-purple-500/10 text-purple-900 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 hover:bg-purple-100 dark:hover:bg-purple-500/20',
+      iconBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-400',
     },
   ];
 
@@ -142,31 +146,31 @@ export default function DashboardClient({
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-72 h-72 bg-yellow-500/10 rounded-full blur-3xl group-hover:bg-yellow-500/15 transition-all duration-700 pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full text-yellow-400 text-xs font-bold mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full text-amber-700 dark:text-yellow-400 text-xs font-bold mb-3">
                 <Sparkles size={14} /> KuyumPanel Yönetim Sistemi v1.0
               </div>
-              <h2 className="text-2xl sm:text-3xl font-light text-white">
+              <h2 className="text-2xl sm:text-3xl font-light text-slate-900 dark:text-white">
                 {MESSAGES.DASHBOARD_WELCOME},{' '}
-                <span className="bg-gradient-to-r from-yellow-300 to-amber-500 bg-clip-text text-transparent font-bold">
+                <span className="bg-gradient-to-r from-amber-600 to-yellow-600 dark:from-yellow-300 dark:to-amber-500 bg-clip-text text-transparent font-bold">
                   {userName}
                 </span>
               </h2>
-              <p className="text-gray-400 text-xs sm:text-sm mt-1">
+              <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-1 font-medium">
                 Güncel piyasa fiyatları, stok durumu, toptancı cari bakiyeleri ve kasa takibi genel özeti.
               </p>
             </div>
 
             {/* ANLIK HAS ALTIN FİYAT TİCKER */}
             {hasPrice && (
-              <div className="bg-gray-950/70 border border-yellow-500/30 p-4 rounded-2xl flex items-center gap-4 shrink-0 shadow-lg">
-                <div className="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-yellow-400">
+              <div className="bg-white/95 dark:bg-gray-950/70 border border-amber-300/60 dark:border-yellow-500/30 p-4 rounded-2xl flex items-center gap-4 shrink-0 shadow-md shadow-amber-500/5 dark:shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-yellow-400">
                   <Coins size={24} className="animate-pulse" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Canlı Has Altın (TL/gr)</span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider block">Canlı Has Altın (TL/gr)</span>
                   <div className="flex items-center gap-3 font-mono mt-0.5">
-                    <span className="text-xs text-gray-400">Alış: <strong className="text-white">₺{hasPrice.bid.toFixed(2)}</strong></span>
-                    <span className="text-xs text-yellow-400 font-bold">Satış: ₺{hasPrice.ask.toFixed(2)}</span>
+                    <span className="text-xs text-slate-600 dark:text-gray-400">Alış: <strong className="text-slate-900 dark:text-white">₺{hasPrice.bid.toFixed(2)}</strong></span>
+                    <span className="text-xs text-amber-700 dark:text-yellow-400 font-bold">Satış: ₺{hasPrice.ask.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -176,8 +180,8 @@ export default function DashboardClient({
 
         {/* HIZLI ERİŞİM KISAYOLLARI */}
         <div>
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Activity size={16} className="text-yellow-500" /> Hızlı Erişim Kısayolları
+          <h3 className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Activity size={16} className="text-amber-500" /> Hızlı Erişim Kısayolları
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -190,15 +194,15 @@ export default function DashboardClient({
               >
                 <Link
                   href={action.href}
-                  className={`p-4 rounded-2xl flex items-center justify-between transition-all duration-200 shadow-md group ${action.color}`}
+                  className={`p-4 rounded-2xl flex items-center justify-between transition-all duration-200 shadow-sm hover:shadow-md group ${action.color}`}
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="p-2.5 bg-black/20 rounded-xl">
+                    <div className={`p-2.5 rounded-xl ${action.iconBg}`}>
                       <action.icon size={22} />
                     </div>
                     <div>
                       <h4 className="font-bold text-sm leading-tight">{action.title}</h4>
-                      <p className="text-[11px] opacity-80 mt-0.5">{action.desc}</p>
+                      <p className="text-[11px] opacity-80 mt-0.5 font-medium">{action.desc}</p>
                     </div>
                   </div>
                   <ChevronRight size={18} className="opacity-60 group-hover:translate-x-1 transition-transform" />
@@ -213,20 +217,20 @@ export default function DashboardClient({
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-5 rounded-2xl bg-gradient-to-r from-red-950/80 via-red-900/40 to-amber-950/40 border border-red-500/40 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            className="p-5 rounded-2xl bg-gradient-to-r from-rose-50 via-red-50 to-amber-50/50 dark:from-red-950/80 dark:via-red-900/40 dark:to-amber-950/40 border border-rose-200 dark:border-red-500/40 shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <div className="flex items-center gap-3.5">
-              <div className="p-3 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30 shrink-0 animate-pulse">
+              <div className="p-3 bg-rose-500/15 text-rose-600 dark:text-red-400 rounded-xl border border-rose-500/30 shrink-0 animate-pulse">
                 <AlertTriangle size={24} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black text-white">{MESSAGES.STOCK_CRITICAL_ALERT}</h3>
-                  <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-bold text-xs rounded-full">
+                  <h3 className="text-base font-black text-rose-950 dark:text-white">{MESSAGES.STOCK_CRITICAL_ALERT}</h3>
+                  <span className="px-2 py-0.5 bg-rose-600 text-white font-mono font-bold text-xs rounded-full">
                     {criticalStockCount} Ürün
                   </span>
                 </div>
-                <p className="text-xs text-gray-300 mt-0.5">
+                <p className="text-xs text-rose-800/80 dark:text-gray-300 mt-0.5 font-medium">
                   Minimum emniyet seviyesinin altına düşen sarrafiye veya altın ürünleri için toptancı ikmal siparişi oluşturulmalıdır.
                 </p>
               </div>
@@ -235,13 +239,13 @@ export default function DashboardClient({
             <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
               <button
                 onClick={() => setShowReorderModal(true)}
-                className="flex-1 sm:flex-none px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-yellow-500/10"
+                className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-500/20"
               >
                 <Truck size={15} /> Sipariş Taslağı Oluştur
               </button>
               <Link
                 href={ROUTES.STOCKS}
-                className="flex-1 sm:flex-none px-3.5 py-2.5 bg-gray-900/80 hover:bg-gray-800 text-gray-300 hover:text-white font-bold text-xs rounded-xl border border-gray-700 text-center transition-colors"
+                className="flex-1 sm:flex-none px-3.5 py-2.5 bg-white dark:bg-gray-900/80 hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold text-xs rounded-xl border border-slate-300 dark:border-gray-700 text-center transition-colors shadow-xs"
               >
                 Stokları İncele
               </Link>

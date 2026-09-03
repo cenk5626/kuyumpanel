@@ -78,30 +78,30 @@ export default function Sidebar({
 
       {/* Ana Kenar Çubuğu (Desktop & Mobile Drawer) */}
       <aside
-        className={`fixed left-0 top-0 h-screen bg-slate-900/95 backdrop-blur-2xl border-r border-amber-500/15 flex flex-col z-50 transition-all duration-300 ${
+        className={`fixed left-0 top-0 h-screen bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-r border-slate-200 dark:border-amber-500/15 flex flex-col z-50 transition-all duration-300 shadow-sm dark:shadow-2xl dark:shadow-black/80 ${
           isMobileOpen
-            ? 'translate-x-0 w-64 shadow-2xl shadow-black/80'
+            ? 'translate-x-0 w-64 shadow-2xl shadow-slate-900/20 dark:shadow-black/80'
             : '-translate-x-full md:translate-x-0 ' + (isCollapsed ? 'md:w-16' : 'md:w-64')
         }`}
       >
         {/* Brand */}
-        <div className="px-5 py-4 sm:py-5 text-lg sm:text-xl font-extrabold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-clip-text text-transparent border-b border-amber-500/15 flex items-center justify-between">
+        <div className="px-5 py-4 sm:py-5 text-lg sm:text-xl font-extrabold bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 dark:from-amber-400 dark:via-yellow-400 dark:to-amber-500 bg-clip-text text-transparent border-b border-slate-200 dark:border-amber-500/15 flex items-center justify-between">
           <span className="truncate tracking-tight">{MESSAGES.APP_NAME}</span>
           
           <div className="flex items-center gap-1">
             {/* Desktop Kolay Daraltma Butonu */}
             <button
               onClick={onToggle}
-              className="hidden md:flex p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-amber-400 transition-colors"
+              className="hidden md:flex p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
               title={isCollapsed ? 'Genişlet' : 'Daralt'}
             >
-              {isCollapsed ? <Menu size={18} className="text-amber-400" /> : <ChevronLeft size={16} />}
+              {isCollapsed ? <Menu size={18} className="text-amber-600 dark:text-amber-400" /> : <ChevronLeft size={16} />}
             </button>
 
             {/* Mobil Drawer Kapatma Butonu */}
             <button
               onClick={onCloseMobile}
-              className="flex md:hidden p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-rose-400 transition-colors"
+              className="flex md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
               title="Menüyü Kapat"
             >
               <ChevronLeft size={20} />

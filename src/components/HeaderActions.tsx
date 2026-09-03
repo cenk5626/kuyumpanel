@@ -82,7 +82,7 @@ export default function HeaderActions() {
         onClick={() => signOut({ callbackUrl: '/login' })}
         type="button"
         title="Oturumu Kapat"
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20 transition-all shadow-xs"
       >
         <LogOut size={15} />
         <span className="hidden sm:inline select-none">Çıkış Yap</span>

@@ -104,12 +104,12 @@ function PriceCell({ value, dir, type = 'TL' }: { value: number | undefined; dir
   const formatted = type === 'TL' ? fmtTL(value) : fmtDoviz(value);
   
   const bgClass =
-    dir === 'up' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-extrabold' :
-    dir === 'down' ? 'bg-red-500/10 border-red-500/30 text-red-400 font-extrabold' :
-    'bg-gray-950/60 border-gray-800/60 text-white font-bold';
+    dir === 'up' ? 'bg-emerald-50/70 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400 font-extrabold' :
+    dir === 'down' ? 'bg-rose-50/70 dark:bg-red-500/10 border-rose-300 dark:border-red-500/30 text-rose-800 dark:text-red-400 font-extrabold' :
+    'bg-slate-50/80 dark:bg-gray-950/60 border-slate-200 dark:border-gray-800/60 text-slate-900 dark:text-white font-bold';
     
   return (
-    <span className={`w-36 text-center font-mono text-xl md:text-2xl px-2.5 py-2 rounded-xl border transition-all duration-300 ${bgClass}`}>
+    <span className={`w-36 text-center font-mono text-xl md:text-2xl px-2.5 py-2 rounded-xl border transition-all duration-300 shadow-xs ${bgClass}`}>
       {formatted}
     </span>
   );
@@ -125,27 +125,30 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
 
 function ConnBadge({ label, status }: { label: string; status: ConnectionStatus }) {
   const color =
-    status === 'connected' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-    status === 'connecting' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-    'bg-red-500/10 text-red-400 border-red-500/20';
+    status === 'connected' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' :
+    status === 'connecting' ? 'bg-amber-50 dark:bg-yellow-500/10 text-amber-800 dark:text-yellow-400 border-amber-200 dark:border-yellow-500/20' :
+    'bg-rose-50 dark:bg-red-500/10 text-rose-800 dark:text-red-400 border-rose-200 dark:border-red-500/20';
   const txt =
     status === 'connected'  ? MESSAGES.PRICES_CONNECTED :
     status === 'connecting' ? MESSAGES.PRICES_CONNECTING :
     MESSAGES.PRICES_ERROR;
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${color}`}>
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border shadow-xs ${color}`}>
       <StatusDot status={status} />
       <span className="font-semibold">{label}</span>
-      <span className="opacity-70">{txt}</span>
+      <span className="opacity-80">{txt}</span>
     </div>
   );
 }
 
 function CardHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <div className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-yellow-900/20 py-3 px-5 flex justify-between items-center">
-      <h3 className="text-yellow-500 font-semibold tracking-wider text-xs uppercase">{title}</h3>
+    <div className="bg-slate-100/90 dark:bg-gradient-to-r dark:from-gray-900 dark:to-gray-800 border-b border-slate-200 dark:border-yellow-900/20 py-3 px-5 flex justify-between items-center transition-colors">
+      <h3 className="text-slate-800 dark:text-yellow-500 font-bold tracking-wider text-xs uppercase flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+        {title}
+      </h3>
       {right && <div>{right}</div>}
     </div>
   );
@@ -779,11 +782,11 @@ export default function PricesPage() {
               {activeHas ? (
                 <div className="flex items-center justify-between gap-3 sm:gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 mb-1 font-semibold">{MESSAGES.PRICES_ALIS}</p>
-                    <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate ${
-                      activeHas.dir === 'up' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                      activeHas.dir === 'down' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-                      'bg-gray-950/60 border-gray-800/60 text-white'
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-1 font-bold">{MESSAGES.PRICES_ALIS}</p>
+                    <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate shadow-xs ${
+                      activeHas.dir === 'up' ? 'bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400' :
+                      activeHas.dir === 'down' ? 'bg-rose-50/80 dark:bg-red-500/10 border-rose-300 dark:border-red-500/30 text-rose-800 dark:text-red-400' :
+                      'bg-slate-50/80 dark:bg-gray-950/60 border-slate-200 dark:border-gray-800/60 text-slate-900 dark:text-white'
                     }`}>
                       {fmtTL(activeHas.bid)}
                     </div>
@@ -792,71 +795,71 @@ export default function PricesPage() {
                     <DirIcon dir={activeHas.dir} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 mb-1 font-semibold text-right">{MESSAGES.PRICES_SATIS}</p>
-                    <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate ${
-                      activeHas.dir === 'up' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                      activeHas.dir === 'down' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-                      'bg-gray-950/60 border-gray-800/60 text-white'
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-1 font-bold text-right">{MESSAGES.PRICES_SATIS}</p>
+                    <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate shadow-xs ${
+                      activeHas.dir === 'up' ? 'bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400' :
+                      activeHas.dir === 'down' ? 'bg-rose-50/80 dark:bg-red-500/10 border-rose-300 dark:border-red-500/30 text-rose-800 dark:text-red-400' :
+                      'bg-slate-50/80 dark:bg-gray-950/60 border-slate-200 dark:border-gray-800/60 text-slate-900 dark:text-white'
                     }`}>
                       {fmtTL(activeHas.ask)}
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm font-semibold">Bekleniyor...</p>
+                <p className="text-slate-400 dark:text-gray-500 text-sm font-semibold">Bekleniyor...</p>
               )}
             </div>
 
             {/* İkincil kaynak — küçük */}
-            <div className="px-6 py-4 border-b border-gray-800/50 flex-1 flex flex-col justify-center">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-gray-800/50 flex-1 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-widest">
                   {SOURCE_LABELS[secondarySrcKey]} · {MESSAGES.PRICES_SECONDARY_SOURCE} (HAS)
                 </span>
                 <StatusDot status={statusMap[secondarySrcKey]} />
               </div>
               {secondaryData[HAS_CODE] ? (
                 <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-gray-950/40 border border-gray-800/60">
-                    <span className="text-xs text-gray-500">{MESSAGES.PRICES_ALIS}</span>
-                    <span className="font-bold font-mono text-base text-gray-400">
+                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/80 dark:bg-gray-950/40 border border-slate-200 dark:border-gray-800/60">
+                    <span className="text-xs text-slate-500 dark:text-gray-400 font-semibold">{MESSAGES.PRICES_ALIS}</span>
+                    <span className="font-bold font-mono text-base text-slate-800 dark:text-gray-300">
                       {fmtTL(secondaryData[HAS_CODE]?.bid)}
                     </span>
                   </div>
-                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-gray-950/40 border border-gray-800/60">
-                    <span className="text-xs text-gray-500">{MESSAGES.PRICES_SATIS}</span>
-                    <span className="font-bold font-mono text-base text-gray-400">
+                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/80 dark:bg-gray-950/40 border border-slate-200 dark:border-gray-800/60">
+                    <span className="text-xs text-slate-500 dark:text-gray-400 font-semibold">{MESSAGES.PRICES_SATIS}</span>
+                    <span className="font-bold font-mono text-base text-slate-800 dark:text-gray-300">
                       {fmtTL(secondaryData[HAS_CODE]?.ask)}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-655 text-sm">Veri yok</p>
+                <p className="text-slate-400 dark:text-gray-600 text-sm">Veri yok</p>
               )}
             </div>
 
             {/* DÖVİZ — Harem'den */}
             <div className="flex-[2] flex flex-col justify-between">
               {/* Döviz sütun başlıkları */}
-              <div className="flex justify-between items-center px-6 py-2 bg-gray-900/40 border-b border-gray-800/30">
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider flex-1">DÖVİZ</span>
+              <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-gray-900/40 border-b border-slate-200 dark:border-gray-800/30">
+                <span className="text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider flex-1">DÖVİZ</span>
                 <div className="flex items-center gap-4 pr-5">
-                  <span className="w-36 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
-                  <span className="w-36 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
+                  <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
+                  <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-800/30 flex-1 flex flex-col justify-between">
+              <div className="divide-y divide-slate-100 dark:divide-gray-800/30 flex-1 flex flex-col justify-between">
                 {[
                   { label: 'USD/TRY', data: dovizUSD },
                   { label: 'EUR/TRY', data: dovizEUR },
                 ].map(({ label, data }) => (
-                  <div key={label} className="flex-1 flex items-center justify-between py-4 px-6 hover:bg-yellow-500/5 transition-colors">
-                    <span className="text-gray-200 font-bold text-base">{label}</span>
+                  <div key={label} className="flex-1 flex items-center justify-between py-4 px-6 hover:bg-amber-500/5 transition-colors">
+                    <span className="text-slate-900 dark:text-gray-200 font-bold text-base">{label}</span>
                     <div className="flex items-center gap-4">
                       <PriceCell value={data?.bid} dir={data?.dir ?? 'none'} type="Doviz" />
                       <PriceCell value={data?.ask} dir={data?.dir ?? 'none'} type="Doviz" />
-                      <div className="w-5 flex justify-end">{data ? <DirIcon dir={data.dir} /> : <Minus size={16} className="text-gray-700" />}</div>
+                      <div className="w-5 flex justify-end">{data ? <DirIcon dir={data.dir} /> : <Minus size={16} className="text-gray-400 dark:text-gray-700" />}</div>
                     </div>
                   </div>
                 ))}
@@ -871,27 +874,27 @@ export default function PricesPage() {
             className={`${THEME.GLASS_CARD} overflow-hidden flex flex-col h-full`}
           >
             <CardHeader title={MESSAGES.PRICES_ZIYNET_TL_TITLE} />
-            <div className="flex justify-between items-center px-6 py-3 bg-gray-900/40 border-b border-gray-800/30">
-              <span className="text-xs text-gray-500 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
+            <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-gray-900/40 border-b border-slate-200 dark:border-gray-800/30">
+              <span className="text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
               <div className="flex items-center gap-4 pr-5">
-                <span className="w-36 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
-                <span className="w-36 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
               </div>
             </div>
-            <div className="divide-y divide-gray-800/50 flex-1 flex flex-col justify-between">
+            <div className="divide-y divide-slate-100 dark:divide-gray-800/50 flex-1 flex flex-col justify-between">
               {ZIYNET_TL_OLD_CODES.map(code => {
                 const isManuel = settings.priceOffsets?.isManuel === true;
                 const { bid, ask, dir } = calcZiynet(code, isManuel, activeHas);
 
                 return (
-                  <div key={code} className="flex-1 flex items-center justify-between py-3 px-6 hover:bg-yellow-500/5 transition-colors">
+                  <div key={code} className="flex-1 flex items-center justify-between py-3 px-6 hover:bg-amber-500/5 transition-colors">
                     <div className="flex-1 min-w-0 mr-3 flex items-center">
-                      <p className="text-gray-200 font-bold text-base truncate">{ZIYNET_TL_LABELS[code]}</p>
+                      <p className="text-slate-900 dark:text-gray-200 font-bold text-base truncate">{ZIYNET_TL_LABELS[code]}</p>
                     </div>
                     <div className="flex items-center gap-4">
                       <PriceCell value={bid} dir={dir} type="TL" />
                       <PriceCell value={ask} dir={dir} type="TL" />
-                      <div className="w-5 flex justify-end">{bid != null ? <DirIcon dir={dir} /> : <Minus size={16} className="text-gray-700" />}</div>
+                      <div className="w-5 flex justify-end">{bid != null ? <DirIcon dir={dir} /> : <Minus size={16} className="text-gray-400 dark:text-gray-700" />}</div>
                     </div>
                   </div>
                 );
@@ -907,14 +910,14 @@ export default function PricesPage() {
           >
             <CardHeader
               title={MESSAGES.PRICES_PRODUCTS_TITLE}
-              right={<span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Has × Milyem</span>}
+              right={<span className="text-xs text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Has × Milyem</span>}
             />
-            <div className="flex justify-between items-center px-6 py-3 bg-gray-900/40 border-b border-gray-800/30">
-              <span className="text-xs text-gray-500 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
+            <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-gray-900/40 border-b border-slate-200 dark:border-gray-800/30">
+              <span className="text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
               <div className="flex items-center gap-4 pr-5">
-                <span className="w-8 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">MİL</span>
-                <span className="w-36 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
-                <span className="w-36 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
+                <span className="w-8 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">MİL</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
               </div>
             </div>
 
