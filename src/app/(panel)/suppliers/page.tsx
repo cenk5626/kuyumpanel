@@ -509,11 +509,11 @@ export default function SuppliersPage() {
       {/* BAŞLIK & HEADER ACTIONS */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
-            <Truck className="text-yellow-400" size={26} />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Truck className="text-amber-500 dark:text-yellow-400" size={26} />
             Toptancı & Mutabakat Yönetimi
           </h1>
-          <p className="text-gray-400 text-xs mt-1">
+          <p className="text-slate-500 dark:text-gray-400 text-xs mt-1">
             Toptancı mal alımları, Has/TL borç bakiyeleri, cari hesap ekstresi ve toptan mutabakat takibi.
           </p>
         </div>
@@ -521,13 +521,13 @@ export default function SuppliersPage() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={() => setShowVirmanModal(true)}
-            className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 font-bold border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-purple-500/10 min-h-[40px]"
+            className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-bold border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 transition-all shadow-xs min-h-[40px]"
           >
             <ArrowRightLeft size={16} /> Virman Transferi
           </button>
           <button
             onClick={() => setShowAddSupplierModal(true)}
-            className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl text-xs flex items-center gap-2 transition-colors shadow-lg shadow-yellow-500/10 min-h-[40px]"
+            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2 transition-colors shadow-md shadow-amber-500/20 min-h-[40px]"
           >
             <Plus size={16} /> Yeni Toptancı
           </button>
@@ -536,13 +536,13 @@ export default function SuppliersPage() {
       </div>
 
       {/* İKİLİ TAB SEÇİCİ */}
-      <div className="flex flex-col sm:flex-row bg-gray-900/80 p-1.5 rounded-2xl border border-gray-800/80 max-w-xl backdrop-blur-md gap-1">
+      <div className="flex flex-col sm:flex-row bg-slate-100 dark:bg-gray-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-gray-800/80 max-w-xl backdrop-blur-md gap-1 shadow-xs">
         <button
           onClick={() => setActiveTab('reconciliation')}
           className={`flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'reconciliation'
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-800/40'
           }`}
         >
           <Scale size={16} /> 1. Toptan Mutabakat & Cari Hesaplar
@@ -551,8 +551,8 @@ export default function SuppliersPage() {
           onClick={() => setActiveTab('purchasing')}
           className={`flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'purchasing'
-              ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-800/40'
           }`}
         >
           <Receipt size={16} /> 2. Toptancı Mal Alımı Kaydı
@@ -563,48 +563,48 @@ export default function SuppliersPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
           <div>
-            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Toplam Has Borcumuz</p>
-            <p className="text-xl font-extrabold text-amber-400 font-mono mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Toplam Has Borcumuz</p>
+            <p className="text-xl font-extrabold text-amber-700 dark:text-amber-400 font-mono mt-1">
               {totalHasBalance.toFixed(3)} gr Has
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
             <Coins size={20} />
           </div>
         </div>
 
         <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
           <div>
-            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Toplam TL Borcumuz</p>
-            <p className="text-xl font-extrabold text-emerald-400 font-mono mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Toplam TL Borcumuz</p>
+            <p className="text-xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono mt-1">
               ₺{Math.round(totalTlBalance).toLocaleString('tr-TR')}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <CreditCard size={20} />
           </div>
         </div>
 
         <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
           <div>
-            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Borçlu Toptancı Sayısı</p>
-            <p className="text-xl font-extrabold text-purple-400 font-mono mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Borçlu Toptancı Sayısı</p>
+            <p className="text-xl font-extrabold text-purple-700 dark:text-purple-400 font-mono mt-1">
               {totalOwedSuppliersCount} Toptancı
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
             <Building2 size={20} />
           </div>
         </div>
 
         <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
           <div>
-            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Anlık Has Satış Fiyatı</p>
-            <p className="text-xl font-extrabold text-yellow-400 font-mono mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Anlık Has Satış Fiyatı</p>
+            <p className="text-xl font-extrabold text-amber-700 dark:text-yellow-400 font-mono mt-1">
               {hasPrice?.ask ? `₺${hasPrice.ask.toFixed(2)}` : '—'}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-yellow-400">
             <TrendingUp size={20} />
           </div>
         </div>
@@ -616,7 +616,7 @@ export default function SuppliersPage() {
           {/* SOL PANEL: TOPTANCI LİSTESİ */}
           <div className="lg:col-span-4 space-y-4">
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-gray-500">
                 <Search size={16} />
               </span>
               <input
@@ -624,17 +624,17 @@ export default function SuppliersPage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Toptancı ara..."
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-900/90 border border-gray-800 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-900/90 border border-slate-300 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-amber-500 shadow-xs"
               />
             </div>
 
-            <div className={`${THEME.GLASS_CARD} p-3 max-h-[600px] overflow-y-auto space-y-2 border border-gray-800/60`}>
+            <div className={`${THEME.GLASS_CARD} p-3 max-h-[600px] overflow-y-auto space-y-2 border border-slate-200 dark:border-gray-800/60`}>
               {loading ? (
-                <div className="text-center py-10 text-gray-500 text-xs">
+                <div className="text-center py-10 text-slate-400 dark:text-gray-500 text-xs">
                   <RefreshCw size={18} className="animate-spin inline mr-2" /> Yükleniyor...
                 </div>
               ) : filteredSuppliers.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-xs">Toptancı bulunamadı.</div>
+                <div className="text-center py-10 text-slate-400 dark:text-gray-500 text-xs">Toptancı bulunamadı.</div>
               ) : (
                 filteredSuppliers.map(s => {
                   const isSelected = s.id === selectedSupplierId;
@@ -646,8 +646,8 @@ export default function SuppliersPage() {
                       onClick={() => setSelectedSupplierId(s.id)}
                       className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
                         isSelected
-                          ? 'bg-yellow-500/10 border-yellow-500/40 text-white shadow-md'
-                          : 'bg-gray-950/40 border-gray-800/80 hover:bg-gray-900/60 text-gray-300'
+                          ? 'bg-amber-100/90 dark:bg-yellow-500/10 border-amber-400 dark:border-yellow-500/40 text-slate-900 dark:text-white shadow-xs'
+                          : 'bg-white dark:bg-gray-950/40 border-slate-200 dark:border-gray-800/80 hover:bg-slate-50 dark:hover:bg-gray-900/60 text-slate-700 dark:text-gray-300'
                       }`}
                     >
                       <div className="flex items-center justify-between">

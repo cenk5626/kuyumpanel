@@ -926,8 +926,8 @@ export default function TransactionsPage() {
       <header className={`${THEME.HEADER} flex justify-between items-center w-full flex-wrap gap-4 py-4 px-6`}>
         <div className="flex items-center gap-3 flex-wrap">
           {/* Başlık */}
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Coins className="text-yellow-500 animate-pulse" size={24} />
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Coins className="text-amber-500 animate-pulse" size={24} />
             Ürün Listesi
           </h1>
           {/* Klavye Kilidi Düğmesi (Tıklanabilir) */}
@@ -935,15 +935,15 @@ export default function TransactionsPage() {
             onClick={() => setIsKeyboardLocked(!isKeyboardLocked)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all ${
               isKeyboardLocked
-                ? 'bg-amber-500 text-black hover:bg-amber-400'
-                : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700/60'
+                ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 shadow-xs'
+                : 'bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-gray-700/60'
             }`}
           >
             <Keyboard size={14} />
             Klavye Kilidi: {isKeyboardLocked ? 'Açık' : 'Kapalı'}
           </button>
           {/* Kasiyer / Personel Seçici Dropdown */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-xs">
             <UserIcon size={14} />
             <select
               value={activePersonnel}
@@ -951,7 +951,7 @@ export default function TransactionsPage() {
               className="bg-transparent text-white font-bold focus:outline-none cursor-pointer border-none p-0 text-xs"
             >
               {personnels.map(u => (
-                <option key={u.id} value={u.name} className="bg-gray-900 text-white">
+                <option key={u.id} value={u.name} className="bg-slate-900 text-white">
                   {u.name}
                 </option>
               ))}
@@ -966,18 +966,18 @@ export default function TransactionsPage() {
         <div className="flex items-center gap-3">
           {/* Tutar Arama Girişi */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500" size={14} />
             <input
               type="text"
               placeholder="Tutar..."
-              className="w-36 pl-8 pr-3 py-2 bg-gray-800/80 border border-gray-700/60 rounded-xl text-white text-xs focus:outline-none focus:border-yellow-500/50 transition-all font-mono text-right"
+              className="w-36 pl-8 pr-3 py-2 bg-white dark:bg-gray-800/80 border border-slate-300 dark:border-gray-700/60 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all font-mono text-right shadow-xs"
             />
           </div>
 
           {/* Kasa Butonu */}
           <Link
             href={ROUTES.Z_REPORT}
-            className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="px-4 py-2 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
           >
             <Building size={14} />
             Kasa
@@ -986,7 +986,7 @@ export default function TransactionsPage() {
           {/* Yeni Satır Ekle Butonu */}
           <button
             onClick={handleAddRow}
-            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-black flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-500/10"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-colors shadow-md shadow-emerald-600/20"
           >
             <Plus size={14} />
             Ürün Ekle
@@ -998,14 +998,14 @@ export default function TransactionsPage() {
 
       {/* 2'Lİ ANA TAB SEÇİCİ BANNER */}
       <div className="px-6 pt-4 pb-0 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex bg-slate-900/90 p-1.5 rounded-2xl border border-amber-500/20 shadow-xl backdrop-blur-md w-full sm:w-auto">
+        <div className="flex bg-slate-100 dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs dark:shadow-xl backdrop-blur-md w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveMainTab('pos')}
             className={`flex-1 sm:flex-initial py-2.5 px-6 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all ${
               activeMainTab === 'pos'
-                ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/20 scale-[1.01]'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-800/50'
             }`}
           >
             <Coins size={16} /> 1. Hızlı POS Satış Masası
@@ -1015,8 +1015,8 @@ export default function TransactionsPage() {
             onClick={() => setActiveMainTab('history')}
             className={`flex-1 sm:flex-initial py-2.5 px-6 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all ${
               activeMainTab === 'history'
-                ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/20 scale-[1.01]'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-800/50'
             }`}
           >
             <ArrowLeftRight size={16} /> 2. Geçmiş İşlemler & Kâr/Zarar ({transactions.length})
@@ -1025,7 +1025,7 @@ export default function TransactionsPage() {
 
         {activeMainTab === 'history' && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-amber-400/90 font-bold hidden md:inline-flex items-center gap-1">
+            <span className="text-xs text-amber-700 dark:text-amber-400/90 font-bold hidden md:inline-flex items-center gap-1">
               <CheckCircle size={14} /> Otomatik Kâr/Zarar ve Stok Senkronizasyonu Aktif
             </span>
           </div>
@@ -1039,7 +1039,7 @@ export default function TransactionsPage() {
         <div className={`${THEME.GLASS_CARD} p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 flex-wrap sm:flex-nowrap`}>
           <div className="relative flex-1 min-w-[200px] w-full">
             <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Barcode className="text-yellow-500" size={18} />
+              <Barcode className="text-amber-500" size={18} />
             </span>
             <input
               type="text"
@@ -1047,7 +1047,7 @@ export default function TransactionsPage() {
               onChange={e => setBarcodeQuery(e.target.value)}
               onKeyDown={handleBarcodeKeyDown}
               placeholder="Barkod okutun veya yazın..."
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-gray-950/60 border border-gray-800 rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 transition-colors font-mono"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-gray-950/60 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all font-mono shadow-xs"
             />
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">

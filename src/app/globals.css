@@ -1,8 +1,40 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ─────────────────────────────────────────────────────────────
    KuyumPanel UI/UX Pro Max — High-End Luxury Design System
+   Swiss Haute Horlogerie & Private Wealth Design Tokens
    ───────────────────────────────────────────────────────────── */
+
+:root,
+html.light {
+  --bg-app: #f8fafc;        /* Slate-50: Crisp, clean base background */
+  --bg-card: #ffffff;       /* Pure White: Premium card surface */
+  --bg-subtle: #f1f5f9;     /* Slate-100: Inner subtle box */
+  --bg-input: #ffffff;      /* Pure white inputs */
+  --border-card: #e2e8f0;   /* Slate-200: Hairline border */
+  --border-subtle: #e2e8f0;
+  --border-input: #cbd5e1;  /* Slate-300 */
+  --text-main: #0f172a;     /* Slate-900: High-contrast primary text */
+  --text-muted: #475569;    /* Slate-600 */
+  --text-subtle: #64748b;   /* Slate-500 */
+  --gold-accent: #b45309;   /* Warm Luxury Gold / Amber-700 */
+}
+
+html.dark {
+  --bg-app: #080c14;        /* Deep Obsidian base */
+  --bg-card: #0f172a;       /* Slate-900: Obsidian luxury card */
+  --bg-subtle: rgba(2, 6, 23, 0.6);
+  --bg-input: rgba(2, 6, 23, 0.7);
+  --border-card: rgba(245, 158, 11, 0.15);
+  --border-subtle: #1e293b;
+  --border-input: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --gold-accent: #f59e0b;
+}
 
 /* Swiss Luxury Jewelry Glow & Typography Defaults */
 @layer utilities {
@@ -24,12 +56,12 @@
 
 html,
 body {
-  background-color: #080c14;
-  color: #f8fafc;
+  background-color: var(--bg-app);
+  color: var(--text-main);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* Custom Luxury Dark Scrollbar */
+/* Custom Luxury Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -76,86 +108,109 @@ html.light ::-webkit-scrollbar-thumb:hover {
 /* ─── 1. Backgrounds & Surfaces (Aydınlık Mod) ─── */
 html.light .bg-slate-950,
 html.light .bg-gray-950,
-html.light main,
-html.light [class*="LAYOUT_WRAPPER"] {
+html.light .bg-black,
+html.light main {
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
 
 /* Ana Kartlar ve Yüzeyler */
 html.light .bg-slate-900,
-html.light [class*="bg-slate-900"],
-html.light .bg-gray-900,
-html.light [class*="bg-gray-900"],
-html.light [class*="GLASS_CARD"],
-html.light [class*="STAT_CARD"] {
+html.light .bg-gray-900 {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03), 0 8px 24px -4px rgba(15, 23, 42, 0.04) !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03) !important;
 }
 
-/* İç Kutular, Tickerlar ve İkincil Paneller */
-html.light [class*="bg-slate-950/"],
-html.light [class*="bg-gray-950/"],
-html.light [class*="bg-gray-950\\/"],
-html.light .bg-gray-950\/70,
-html.light .bg-gray-950\/90,
-html.light .bg-gray-950\/80,
-html.light .bg-gray-950\/60,
-html.light .bg-gray-950\/50,
+/* İç Kutular, Tickerlar, Paneller ve Şeritler */
+html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/80,
+html.light .bg-slate-950\/90,
+html.light .bg-gray-950\/30,
 html.light .bg-gray-950\/40,
-html.light .bg-gray-950\/30 {
+html.light .bg-gray-950\/50,
+html.light .bg-gray-950\/60,
+html.light .bg-gray-950\/70,
+html.light .bg-gray-950\/80,
+html.light .bg-gray-950\/90,
+html.light .bg-gray-900\/30,
+html.light .bg-gray-900\/40,
+html.light .bg-gray-900\/50,
+html.light .bg-gray-900\/60,
+html.light .bg-gray-900\/70,
+html.light .bg-gray-900\/80,
+html.light .bg-gray-900\/90,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/70,
+html.light .bg-slate-900\/75,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/85,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-900\/95,
+html.light .bg-slate-800,
+html.light .bg-slate-800\/40,
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/80,
+html.light .bg-gray-800,
+html.light .bg-gray-800\/40,
+html.light .bg-gray-800\/60,
+html.light .bg-gray-800\/80 {
   background-color: #f8fafc !important;
   color: #0f172a !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
 }
 
 /* Koyu Renk Degrade Başlıkların Açık Temaya Dönüştürülmesi */
-html.light [class*="from-gray-900"][class*="to-gray-800"],
-html.light [class*="from-gray-900"][class*="to-gray-700"],
-html.light [class*="from-slate-900"][class*="to-slate-800"] {
+html.light .from-gray-900.to-gray-800,
+html.light .from-gray-900.to-gray-700,
+html.light .from-slate-900.to-slate-800 {
   background-image: linear-gradient(to right, #f8fafc, #f1f5f9) !important;
   color: #0f172a !important;
   border-color: #e2e8f0 !important;
 }
 
 /* Kritik Stok Uyarı Bandı Açık Tema Görünümü */
-html.light [class*="from-red-950"] {
+html.light .from-red-950 {
   background-image: linear-gradient(to right, #fff1f2, #fef2f2, #fffbeb) !important;
   color: #991b1b !important;
   border-color: #fecdd3 !important;
   box-shadow: 0 2px 12px -2px rgba(239, 68, 68, 0.08) !important;
 }
 
-html.light .bg-slate-800,
-html.light [class*="bg-slate-800"],
-html.light .bg-gray-800,
-html.light [class*="bg-gray-800"] {
-  background-color: #f1f5f9 !important;
-  color: #1e293b !important;
-  border-color: #cbd5e1 !important;
-}
-
 /* ─── 2. Borders (Aydınlık Mod) ─── */
-html.light [class*="border-slate-800"],
-html.light [class*="border-slate-700"],
-html.light [class*="border-gray-800"],
-html.light [class*="border-gray-700"] {
+html.light .border-slate-800,
+html.light .border-slate-700,
+html.light .border-gray-800,
+html.light .border-gray-700 {
   border-color: #e2e8f0 !important;
 }
 
-html.light [class*="border-amber-500/"],
-html.light [class*="border-yellow-500/"],
-html.light [class*="border-yellow-900/"] {
+html.light .border-amber-500\/15,
+html.light .border-amber-500\/20,
+html.light .border-amber-500\/30,
+html.light .border-yellow-500\/15,
+html.light .border-yellow-500\/20,
+html.light .border-yellow-500\/30,
+html.light .border-yellow-900\/20 {
   border-color: rgba(217, 119, 6, 0.25) !important;
 }
 
 /* ─── 3. Typography & Text Colors (Aydınlık Mod) ─── */
 
-/* Ana Metinler */
-html.light .text-white {
+/* Başlıklar */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #0f172a !important;
+}
+
+/* Kart ve Sayfa İçi Beyaz Metinler (Butonlar ve Renkli Rozetler Hariç) */
+html.light :not(button):not(button *):not([class*="bg-emerald-"]):not([class*="bg-rose-"]):not([class*="bg-blue-"]):not([class*="bg-purple-"]):not([class*="bg-red-"]):not([class*="bg-amber-6"]):not([class*="bg-indigo-"]).text-white {
   color: #0f172a !important;
 }
 

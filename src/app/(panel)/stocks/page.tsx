@@ -143,12 +143,12 @@ function StatCard({ title, value, icon: Icon, color }: {
 }) {
   return (
     <div className={`${THEME.GLASS_CARD} p-5 flex items-center gap-4`}>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
-        <Icon size={22} className="text-white" />
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} shadow-xs`}>
+        <Icon size={22} className="text-slate-800 dark:text-white" />
       </div>
       <div>
-        <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider">{title}</p>
-        <p className="text-white text-xl font-bold font-mono mt-0.5">{value}</p>
+        <p className="text-slate-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider">{title}</p>
+        <p className="text-slate-900 dark:text-white text-xl font-black font-mono mt-0.5">{value}</p>
       </div>
     </div>
   );
@@ -168,15 +168,15 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
   return (
     <motion.div
       layout
-      className={`flex items-center justify-between py-3.5 px-6 hover:bg-yellow-500/5 transition-colors border-b border-gray-800/40 last:border-b-0 ${isLow ? 'bg-red-500/5' : ''}`}
+      className={`flex items-center justify-between py-3.5 px-6 hover:bg-amber-500/5 transition-colors border-b border-slate-100 dark:border-gray-800/40 last:border-b-0 ${isLow ? 'bg-rose-50/50 dark:bg-red-500/5' : ''}`}
     >
       <div className="flex-1 min-w-0 mr-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-gray-100 font-semibold text-sm">{stock.label}</p>
+          <p className="text-slate-900 dark:text-gray-100 font-bold text-sm">{stock.label}</p>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
             stock.type === FILTER_SARRAFIYE
-              ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-              : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+              ? 'bg-amber-500/10 text-amber-800 dark:text-yellow-400 border-amber-500/20'
+              : 'bg-blue-500/10 text-blue-800 dark:text-blue-400 border-blue-500/20'
           }`}>
             {TYPE_LABELS[stock.type] ?? stock.type}
           </span>
@@ -193,7 +193,7 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
             />
           )}
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-gray-500 font-mono mt-1 flex-wrap">
+        <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-gray-500 font-mono mt-1 flex-wrap">
           <span>Güncelleme: {new Date(stock.updatedAt).toLocaleString('tr-TR')}</span>
           {turnoverItem && turnoverItem.daysToStockout !== Infinity && (
             <span>• Tahmini Tükenme: {turnoverItem.daysToStockout > 0 ? `${turnoverItem.daysToStockout} gün` : 'Tükendi'}</span>
@@ -207,23 +207,23 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
       <div className="flex items-center gap-6 flex-shrink-0">
         {livePrice && stock.amount > 0 && (
           <div className="text-right hidden md:block w-32">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Tahmini TL Değer</p>
-            <p className="text-yellow-400 text-sm font-bold font-mono">
+            <p className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold">Tahmini TL Değer</p>
+            <p className="text-amber-700 dark:text-yellow-400 text-sm font-black font-mono">
               {totalValueBid != null ? `₺${Math.round(totalValueBid).toLocaleString('tr-TR')}` : '—'}
             </p>
           </div>
         )}
 
         <div className="text-right w-24">
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Stok</p>
-          <p className={`text-sm font-bold font-mono ${isLow ? 'text-red-400' : 'text-white'}`}>
+          <p className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold">Stok</p>
+          <p className={`text-sm font-black font-mono ${isLow ? 'text-rose-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
             {stock.amount % 1 === 0 ? stock.amount.toFixed(0) : stock.amount.toFixed(2)} {unit !== 'Adet' ? unit : ''}
           </p>
         </div>
 
         <button
           onClick={() => onEdit(stock)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-300 bg-gray-800/60 hover:bg-yellow-500/20 hover:text-yellow-400 border border-gray-700/50 hover:border-yellow-500/30 transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-gray-300 bg-slate-100 dark:bg-gray-800/60 hover:bg-amber-100 dark:hover:bg-yellow-500/20 hover:text-amber-900 dark:hover:text-yellow-400 border border-slate-200 dark:border-gray-700/50 hover:border-amber-300 dark:hover:border-yellow-500/30 transition-all shadow-xs"
         >
           <Edit3 size={12} />
           {MESSAGES.STOCKS_EDIT}
@@ -924,7 +924,7 @@ export default function StocksPage() {
             {/* Kamera İle Barkod Tara */}
             <button
               onClick={() => setShowCameraScanner(true)}
-              className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white rounded-xl text-sm font-bold flex items-center gap-1.5 transition-colors border border-gray-700/60"
+              className="px-3.5 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 hover:text-slate-900 dark:hover:text-white rounded-xl text-sm font-bold flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-gray-700/60 shadow-xs"
               title="Kamera Barkod Okut"
             >
               <Camera size={15} />
@@ -934,9 +934,9 @@ export default function StocksPage() {
             {activeView === 'barcode' && (
               <button
                 onClick={() => setShowProductModal(true)}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-xl text-sm font-bold flex items-center transition-all shadow-lg shadow-yellow-500/10"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-sm font-bold flex items-center transition-all shadow-md shadow-amber-500/20"
               >
-                <Plus size={15} className="mr-2 text-black" />
+                <Plus size={15} className="mr-2 text-slate-950" />
                 Yeni Ürün Kartı
               </button>
             )}
@@ -955,13 +955,13 @@ export default function StocksPage() {
       <div className="p-3.5 sm:p-6 flex flex-col gap-4 sm:gap-6 min-w-0">
         
         {/* Main View Switcher */}
-        <div className="flex border-b border-gray-800/40 pb-px gap-4 sm:gap-6 overflow-x-auto">
+        <div className="flex border-b border-slate-200 dark:border-gray-800/40 pb-px gap-4 sm:gap-6 overflow-x-auto">
           <button
             onClick={() => setActiveView('standard')}
             className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
               activeView === 'standard'
-                ? 'border-yellow-500 text-yellow-500'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                ? 'border-amber-500 text-amber-700 dark:text-yellow-500'
+                : 'border-transparent text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-gray-300'
             }`}
           >
             <Package size={16} /> Genel Stok (Sarrafiye & Döviz)
@@ -970,11 +970,11 @@ export default function StocksPage() {
             onClick={() => setActiveView('barcode')}
             className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
               activeView === 'barcode'
-                ? 'border-yellow-500 text-yellow-500'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                ? 'border-amber-500 text-amber-700 dark:text-yellow-500'
+                : 'border-transparent text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-gray-300'
             }`}
           >
-            <Barcode size={16} className="text-yellow-400" /> Takı & Barkod Yönetimi
+            <Barcode size={16} className="text-amber-600 dark:text-yellow-400" /> Takı & Barkod Yönetimi
           </button>
         </div>
 
@@ -985,10 +985,10 @@ export default function StocksPage() {
           <>
             {/* Özet Kartları */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard title="Toplam Ürün" value={stocks.length} icon={Package} color="bg-yellow-500/20" />
-              <StatCard title="Sarrafiye Kalem" value={sarrafiyeCount} icon={Coins} color="bg-amber-500/20" />
-              <StatCard title="Döviz Kalem" value={dovizCount} icon={TrendingUp} color="bg-blue-500/20" />
-              <StatCard title="İşlem Geçmişi" value={transactions.length} icon={TrendingDown} color="bg-purple-500/20" />
+              <StatCard title="Toplam Ürün" value={stocks.length} icon={Package} color="bg-amber-500/15" />
+              <StatCard title="Sarrafiye Kalem" value={sarrafiyeCount} icon={Coins} color="bg-yellow-500/15" />
+              <StatCard title="Döviz Kalem" value={dovizCount} icon={TrendingUp} color="bg-blue-500/15" />
+              <StatCard title="İşlem Geçmişi" value={transactions.length} icon={TrendingDown} color="bg-purple-500/15" />
             </div>
 
             {/* Filtre Sekmeleri */}
@@ -1001,8 +1001,8 @@ export default function StocksPage() {
                     onClick={() => setFilter(tab)}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                       filter === tab
-                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                        : 'text-gray-400 hover:text-gray-200 bg-gray-800/40 border border-gray-700/30 hover:border-gray-600/40'
+                        ? 'bg-amber-100/90 dark:bg-yellow-500/20 text-amber-900 dark:text-yellow-400 border border-amber-300 dark:border-yellow-500/30 font-bold shadow-xs'
+                        : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-200 bg-white dark:bg-gray-800/40 border border-slate-200 dark:border-gray-700/30 hover:border-slate-300 dark:hover:border-gray-600/40 shadow-xs'
                     }`}
                   >
                     {tab === FILTER_ALL ? 'Tümü' : tab === FILTER_SARRAFIYE ? 'Sarrafiye' : 'Döviz'}
@@ -1011,13 +1011,13 @@ export default function StocksPage() {
               </div>
 
               {/* Stok Seviyesi Filtreleri */}
-              <div className="flex items-center gap-2 bg-gray-950/60 p-1 rounded-xl border border-gray-800 flex-wrap">
+              <div className="flex items-center gap-2 bg-slate-100 dark:bg-gray-950/60 p-1 rounded-xl border border-slate-200 dark:border-gray-800 flex-wrap shadow-xs">
                 <button
                   onClick={() => setLevelFilter('all')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     levelFilter === 'all'
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-400 hover:text-gray-200'
+                      ? 'bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-200'
                   }`}
                 >
                   Tüm Seviyeler
@@ -1063,15 +1063,15 @@ export default function StocksPage() {
               transition={{ duration: ANIM.DURATION.NORMAL }}
               className={`${THEME.GLASS_CARD} overflow-hidden`}
             >
-              <div className="px-5 py-4 border-b border-gray-800/40 flex items-center justify-between flex-wrap gap-2">
+              <div className="px-5 py-4 border-b border-slate-200 dark:border-gray-800/40 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
-                  <Package size={18} className="text-yellow-500" />
-                  <h2 className="text-white font-bold text-base">Sarrafiye & Döviz Stok Listesi</h2>
+                  <Package size={18} className="text-amber-500" />
+                  <h2 className="text-slate-900 dark:text-white font-bold text-base">Sarrafiye & Döviz Stok Listesi</h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowCustomStockModal(true)}
-                  className="px-3 py-1.5 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 bg-amber-500/15 text-amber-800 dark:text-yellow-400 hover:bg-amber-500/25 border border-amber-300 dark:border-yellow-500/30 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
                 >
                   <Plus size={14} />
                   Yeni Stok Kalemi Tanımla
