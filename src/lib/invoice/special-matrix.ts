@@ -6,7 +6,7 @@ import {
   InvoiceType,
   InvoiceDocumentType,
 } from '@/constants/invoice';
-import { CARAT_MILYEM_MAP } from '@/constants/workshop';
+import { CARAT_MILYEM_MAP, getMilyemForCarat } from '@/constants/workshop';
 
 export interface SpecialMatrixItemInput {
   name: string;
@@ -51,7 +51,7 @@ export interface SpecialMatrixInvoiceResult {
  */
 export function calculateSpecialMatrixItem(input: SpecialMatrixItemInput): SpecialMatrixItemResult {
   const carat = input.carat || 24;
-  const milyem = input.milyem ?? (CARAT_MILYEM_MAP[carat] || 0.995);
+  const milyem = getMilyemForCarat(carat, input.milyem);
   const weight = Math.max(0, input.weight || 0);
   const hasGoldPrice = Math.max(0, input.hasGoldPrice || 0);
 
@@ -61,21 +61,25 @@ export function calculateSpecialMatrixItem(input: SpecialMatrixItemInput): Speci
   // 2. Külçe Altın Bedeli (KDV İstisna Matrahı)
   const goldCost = Number((pureGoldWeight * hasGoldPrice).toFixed(2));
 
-  // 3. İşçilik Bedeli (KDV Matrahı)
+  // 3. İşçilik Bedeli (KDV Matrahı) & 4. KDV Tutarı
   let laborAmount = 0;
+  let kdvAmount = 0;
+
   if (input.sellingPrice !== undefined && input.sellingPrice > 0) {
     // Doğrudan satış fiyatı üzerinden: Satış Fiyatı - Külçe Bedeli = İşçilik + KDV
-    const diff = Math.max(0, input.sellingPrice - goldCost);
+    const diff = Math.max(0, Number((input.sellingPrice - goldCost).toFixed(2)));
     // diff = laborAmount * (1 + kdvRate/100)
     laborAmount = Number((diff / (1 + INVOICE_KDV_RATES.LABOR_PERCENT / 100)).toFixed(2));
-  } else if (input.laborCost !== undefined) {
-    laborAmount = Number(Math.max(0, input.laborCost).toFixed(2));
-  } else if (input.laborPerGram !== undefined) {
-    laborAmount = Number((Math.max(0, input.laborPerGram) * weight).toFixed(2));
+    // 1-kuruşluk yuvarlama farkını önlemek için KDV = diff - laborAmount
+    kdvAmount = Number((diff - laborAmount).toFixed(2));
+  } else {
+    if (input.laborCost !== undefined) {
+      laborAmount = Number(Math.max(0, input.laborCost).toFixed(2));
+    } else if (input.laborPerGram !== undefined) {
+      laborAmount = Number((Math.max(0, input.laborPerGram) * weight).toFixed(2));
+    }
+    kdvAmount = Number((laborAmount * (INVOICE_KDV_RATES.LABOR_PERCENT / 100)).toFixed(2));
   }
-
-  // 4. KDV Tutarı (İşçilik üzerinden %20)
-  const kdvAmount = Number((laborAmount * (INVOICE_KDV_RATES.LABOR_PERCENT / 100)).toFixed(2));
 
   // 5. Kalem Genel Toplamı
   const total = Number((goldCost + laborAmount + kdvAmount).toFixed(2));

@@ -5,10 +5,13 @@ import { logActivity } from '@/lib/logger';
 import {
   WORKSHOP_JOB_STATUS,
   WORKSHOP_ACTIONS,
+  WORKSHOP_DEFAULTS,
   CARAT_MILYEM_MAP,
+  getMilyemForCarat,
   SUPPORTED_SCRAP_CARATS,
   WORKSHOP_LIMITS,
 } from '@/constants/workshop';
+import { ASSET_TYPES } from '@/constants/cari';
 import { calculateTakozMilyem, calculateWorkshopLoss } from '@/lib/workshop/takoz-calculator';
 
 export const dynamic = 'force-dynamic';
@@ -142,7 +145,7 @@ export async function POST(request: NextRequest) {
         givenTargetMilyem,
         targetLossPercent = WORKSHOP_LIMITS.DEFAULT_MAX_FIRE_PERCENT,
         laborCost = 0,
-        laborPaymentMethod = 'TL',
+        laborPaymentMethod = ASSET_TYPES.TL,
         deliveryDate,
         notes,
       } = body;
@@ -165,7 +168,14 @@ export async function POST(request: NextRequest) {
         where: { dealerId: currentUserDealerId },
       });
       const year = new Date().getFullYear();
-      const jobNo = `ATL-${year}-${String(count + 1).padStart(4, '0')}`;
+      const jobNo = `${WORKSHOP_DEFAULTS.JOB_PREFIX}-${year}-${String(count + 1).padStart(4, '0')}`;
+
+      // Güvenli Tarih Ayrıştırma
+      const parsedDeliveryDate = deliveryDate
+        ? isNaN(new Date(deliveryDate).getTime())
+          ? null
+          : new Date(deliveryDate)
+        : null;
 
       const created = await prisma.workshopJob.create({
         data: {
@@ -181,7 +191,7 @@ export async function POST(request: NextRequest) {
           targetLossPercent: Number(targetLossPercent) || WORKSHOP_LIMITS.DEFAULT_MAX_FIRE_PERCENT,
           laborCost: Number(laborCost) || 0,
           laborPaymentMethod,
-          deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
+          deliveryDate: parsedDeliveryDate,
           notes: notes?.trim() || null,
         },
       });
@@ -194,7 +204,15 @@ export async function POST(request: NextRequest) {
         userName,
       });
 
-      return NextResponse.json(created);
+      const safeCreated = {
+        ...created,
+        deliveryDate: created.deliveryDate ? created.deliveryDate.toISOString() : null,
+        completedDate: created.completedDate ? created.completedDate.toISOString() : null,
+        createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : new Date().toISOString(),
+        updatedAt: created.updatedAt instanceof Date ? created.updatedAt.toISOString() : new Date().toISOString(),
+      };
+
+      return NextResponse.json(safeCreated);
     }
 
     // 2. Atölye İş Emrini Tamamlama / Ramat Kapatma
@@ -203,6 +221,7 @@ export async function POST(request: NextRequest) {
         jobId,
         receivedFinishedWeight = 0,
         receivedScrapWeight = 0,
+        scrapCarat = 14,
         completedDate,
         notes,
       } = body;
@@ -247,19 +266,68 @@ export async function POST(request: NextRequest) {
         job.targetLossPercent
       );
 
-      const updated = await prisma.workshopJob.update({
-        where: { id: jobId },
-        data: {
-          status: WORKSHOP_JOB_STATUS.COMPLETED,
-          receivedFinishedWeight: lossResult.receivedFinishedWeight,
-          receivedScrapWeight: lossResult.receivedScrapWeight,
-          receivedTotalWeight: lossResult.receivedTotalWeight,
-          lossWeight: lossResult.lossWeight,
-          lossPercent: lossResult.lossPercent,
-          isExcessiveLoss: lossResult.isExcessiveLoss,
-          completedDate: completedDate ? new Date(completedDate) : new Date(),
-          notes: notes ? `${job.notes ? job.notes + ' | ' : ''}${notes}` : job.notes,
-        },
+      const parsedCompletedDate = completedDate
+        ? isNaN(new Date(completedDate).getTime())
+          ? new Date()
+          : new Date(completedDate)
+        : new Date();
+
+      // Atomik İşlem: İş emrini kapat ve dönüş hurdasını (astar) sandığa ekle
+      const updated = await prisma.$transaction(async (tx) => {
+        const upJob = await tx.workshopJob.update({
+          where: { id: jobId },
+          data: {
+            status: WORKSHOP_JOB_STATUS.COMPLETED,
+            receivedFinishedWeight: lossResult.receivedFinishedWeight,
+            receivedScrapWeight: lossResult.receivedScrapWeight,
+            receivedTotalWeight: lossResult.receivedTotalWeight,
+            lossWeight: lossResult.lossWeight,
+            lossPercent: lossResult.lossPercent,
+            isExcessiveLoss: lossResult.isExcessiveLoss,
+            completedDate: parsedCompletedDate,
+            notes: notes ? `${job.notes ? job.notes + ' | ' : ''}${notes}` : job.notes,
+          },
+        });
+
+        // Eğer astar/hurda altın teslim alındıysa hurda sandığına otomatik ekle
+        if (numScrap > 0) {
+          const targetScrapCarat = Number(scrapCarat) || 14;
+          const scrapMilyem = getMilyemForCarat(targetScrapCarat);
+          const scrapPure = Number((numScrap * scrapMilyem).toFixed(4));
+
+          const currentScrap = await tx.scrapInventory.findUnique({
+            where: {
+              dealerId_carat: {
+                dealerId: currentUserDealerId,
+                carat: targetScrapCarat,
+              },
+            },
+          });
+
+          const newWeight = Number(((currentScrap?.weight || 0) + numScrap).toFixed(4));
+          const newPureWeight = Number(((currentScrap?.pureWeight || 0) + scrapPure).toFixed(4));
+
+          await tx.scrapInventory.upsert({
+            where: {
+              dealerId_carat: {
+                dealerId: currentUserDealerId,
+                carat: targetScrapCarat,
+              },
+            },
+            update: {
+              weight: newWeight,
+              pureWeight: newPureWeight,
+            },
+            create: {
+              dealerId: currentUserDealerId,
+              carat: targetScrapCarat,
+              weight: newWeight,
+              pureWeight: newPureWeight,
+            },
+          });
+        }
+
+        return upJob;
       });
 
       await logActivity({
@@ -270,7 +338,15 @@ export async function POST(request: NextRequest) {
         userName,
       });
 
-      return NextResponse.json(updated);
+      const safeUpdated = {
+        ...updated,
+        deliveryDate: updated.deliveryDate ? updated.deliveryDate.toISOString() : null,
+        completedDate: updated.completedDate ? updated.completedDate.toISOString() : null,
+        createdAt: updated.createdAt instanceof Date ? updated.createdAt.toISOString() : new Date().toISOString(),
+        updatedAt: updated.updatedAt instanceof Date ? updated.updatedAt.toISOString() : new Date().toISOString(),
+      };
+
+      return NextResponse.json(safeUpdated);
     }
 
     // 3. Hurda Sandığı Gramaj Güncelleme (Giriş / Çıkış)

@@ -14,7 +14,7 @@ import {
   CASH_MOVEMENT_TYPES,
   CASH_MOVEMENT_CATEGORIES,
 } from '@/constants/kasa';
-import { CUSTOMER_TRANSACTION_TYPES } from '@/constants/cari';
+import { CUSTOMER_TRANSACTION_TYPES, ASSET_TYPES } from '@/constants/cari';
 
 export const dynamic = 'force-dynamic';
 
@@ -156,10 +156,13 @@ export async function POST(request: NextRequest) {
       where: { dealerId: currentUserDealerId },
     });
     const year = new Date().getFullYear();
-    const planNumber = `TKST-${year}-${String(existingCount + 1).padStart(4, '0')}`;
+    const planNumber = `${INSTALLMENT_DEFAULTS.PLAN_PREFIX}-${year}-${String(existingCount + 1).padStart(4, '0')}`;
 
-    // Taksit kalemleri ve senet numaraları oluştur
-    const startDate = firstDueDate ? new Date(firstDueDate) : new Date();
+    // Taksit kalemleri ve senet numaraları oluştur (Tarih güvenliği)
+    const parsedFirstDue = firstDueDate ? new Date(firstDueDate) : null;
+    const isValidFirstDue = parsedFirstDue !== null && !isNaN(parsedFirstDue.getTime());
+    const startDate = isValidFirstDue ? parsedFirstDue : new Date();
+
     const itemsData: Array<{
       installmentNo: number;
       dueDate: Date;
@@ -173,10 +176,10 @@ export async function POST(request: NextRequest) {
 
     for (let i = 1; i <= count; i++) {
       const itemDueDate = new Date(startDate.getTime());
-      if (firstDueDate && i === 1) {
-        // İlk taksit doğrudan belirtilen tarihte
+      if (isValidFirstDue && i === 1) {
+        // İlk taksit doğrudan belirtilen geçerli tarihte
       } else {
-        itemDueDate.setDate(itemDueDate.getDate() + (i - (firstDueDate ? 1 : 0)) * periodDays);
+        itemDueDate.setDate(itemDueDate.getDate() + (i - (isValidFirstDue ? 1 : 0)) * periodDays);
       }
 
       // Son taksitte kuruş yuvarlama farkını denkleştir
@@ -226,7 +229,7 @@ export async function POST(request: NextRequest) {
           customerId,
           dealerId: currentUserDealerId,
           type: CUSTOMER_TRANSACTION_TYPES.BORC,
-          assetType: 'TL',
+          assetType: ASSET_TYPES.TL,
           amount: tAmount,
           hasEquivalent: 0,
           description: `Taksitli Satış Sözleşmesi (${planNumber}) - Toplam: ${tAmount} TL`,
@@ -240,7 +243,7 @@ export async function POST(request: NextRequest) {
             customerId,
             dealerId: currentUserDealerId,
             type: CUSTOMER_TRANSACTION_TYPES.TAHSILAT,
-            assetType: 'TL',
+            assetType: ASSET_TYPES.TL,
             amount: dPayment,
             hasEquivalent: 0,
             description: `Taksitli Satış Peşinatı (${planNumber})`,
@@ -266,7 +269,7 @@ export async function POST(request: NextRequest) {
               category: CASH_MOVEMENT_CATEGORIES.COLLECTION,
               paymentMethod: PAYMENT_METHODS.CASH,
               amount: dPayment,
-              currency: 'TL',
+              currency: ASSET_TYPES.TL,
               hasEquivalent: 0,
               description: `Taksitli Satış Peşinatı - ${plan.customer.name} (${planNumber})`,
               referenceId: plan.id,

@@ -49,6 +49,7 @@ export const ROUTES = {
   API_INVOICES: '/api/invoices',
   API_INSTALLMENTS: '/api/installments',
   API_WORKSHOP: '/api/workshop',
+  API_CUSTOMER_DEPOSITS: '/api/customers/deposits',
 } as const;
 
 

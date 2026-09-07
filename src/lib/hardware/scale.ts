@@ -67,16 +67,59 @@ export function parseScaleData(rawText: string): ScaleReading | null {
   }
 
   // Ağırlık sayısını ve birimi yakalama regex'i
-  // Negatif veya pozitif ondalıklı sayılar: "+ 14.250", "14,250", "-0.05"
-  const match = cleaned.match(/([+-]?\s*\d+([.,]\d+)?)\s*(g|gr|gram|ct|gn)?/i);
+  // Negatif veya pozitif ondalıklı ve binlik basamaklı sayılar: "+ 14.250", "14,250", "1,250.750", "1.250,750", "-0.05"
+  const match = cleaned.match(/([+-]?\s*[\d\s.,]+?)\s*(g|gr|gram|ct|gn)?(?:\s|$)/i);
   if (!match) return null;
 
-  const numberStr = match[1].replace(/\s+/g, '').replace(',', '.');
-  const weight = parseFloat(numberStr);
+  let numberStr = match[1].replace(/\s+/g, '');
+  if (!numberStr || !/\d/.test(numberStr)) return null;
 
-  if (isNaN(weight)) return null;
+  // İşareti ayıkla
+  let sign = 1;
+  if (numberStr.startsWith('-')) {
+    sign = -1;
+    numberStr = numberStr.slice(1);
+  } else if (numberStr.startsWith('+')) {
+    numberStr = numberStr.slice(1);
+  }
 
-  const unit = (match[3] || 'g').toLowerCase();
+  const lastDot = numberStr.lastIndexOf('.');
+  const lastComma = numberStr.lastIndexOf(',');
+
+  if (lastDot !== -1 && lastComma !== -1) {
+    // Hem nokta hem virgül var (Örn: "1,250.75" veya "1.250,75")
+    if (lastDot > lastComma) {
+      // Nokta en sonda: virgüller binlik ayırıcı, nokta ondalık (Örn: 1,250.75)
+      numberStr = numberStr.replace(/,/g, '');
+    } else {
+      // Virgül en sonda: noktalar binlik ayırıcı, virgül ondalık (Örn: 1.250,75)
+      numberStr = numberStr.replace(/\./g, '').replace(',', '.');
+    }
+  } else if (lastComma !== -1) {
+    // Sadece virgül var
+    const commaCount = (numberStr.match(/,/g) || []).length;
+    if (commaCount > 1) {
+      // Birden fazla virgül: binlik ayracı
+      numberStr = numberStr.replace(/,/g, '');
+    } else {
+      // Tek virgül: ondalık ayracı (Örn: 14,250 -> 14.250)
+      numberStr = numberStr.replace(',', '.');
+    }
+  } else if (lastDot !== -1) {
+    // Sadece nokta var
+    const dotCount = (numberStr.match(/\./g) || []).length;
+    if (dotCount > 1) {
+      // Birden fazla nokta: binlik ayracı
+      numberStr = numberStr.replace(/\./g, '');
+    }
+    // Tek nokta: zaten standart JavaScript ondalık noktası
+  }
+
+  const parsedNumber = parseFloat(numberStr);
+  if (isNaN(parsedNumber)) return null;
+
+  const weight = sign * parsedNumber;
+  const unit = (match[2] || 'g').toLowerCase();
 
   return {
     weight: Number(weight.toFixed(3)),

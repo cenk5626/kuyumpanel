@@ -22,6 +22,7 @@ import {
   Send,
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
+import { ROUTES } from '@/constants/routes';
 import {
   INSTALLMENT_STATUS,
   INSTALLMENT_STATUS_LABELS,
@@ -164,7 +165,7 @@ export default function InstallmentsClient({
 
     setIsPaying(true);
     try {
-      const res = await fetch(`/api/installments/${payModalItem.plan.id}/pay`, {
+      const res = await fetch(`${ROUTES.API_INSTALLMENTS}/${payModalItem.plan.id}/pay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -241,7 +242,7 @@ export default function InstallmentsClient({
 
     setIsCreating(true);
     try {
-      const res = await fetch('/api/installments', {
+      const res = await fetch(ROUTES.API_INSTALLMENTS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

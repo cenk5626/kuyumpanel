@@ -32,5 +32,6 @@ export const INSTALLMENT_LIMITS = {
 export const INSTALLMENT_DEFAULTS = {
   CURRENCY: 'TRY',
   SENET_PREFIX: 'SNT',
+  PLAN_PREFIX: 'TKST',
   CITY: 'İstanbul',
 } as const;

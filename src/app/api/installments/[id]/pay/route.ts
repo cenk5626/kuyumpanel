@@ -9,7 +9,7 @@ import {
   CASH_MOVEMENT_TYPES,
   CASH_MOVEMENT_CATEGORIES,
 } from '@/constants/kasa';
-import { CUSTOMER_TRANSACTION_TYPES } from '@/constants/cari';
+import { CUSTOMER_TRANSACTION_TYPES, ASSET_TYPES } from '@/constants/cari';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,7 +117,7 @@ export async function POST(
             customerId: plan.customerId,
             dealerId: plan.dealerId,
             type: CUSTOMER_TRANSACTION_TYPES.TAHSILAT,
-            assetType: 'TL',
+            assetType: ASSET_TYPES.TL,
             amount: actualPayAmount,
             hasEquivalent: 0,
             description: `Taksit Tahsilatı (${targetItem.senetNo || `${plan.planNumber} #${targetItem.installmentNo}`}) - ${paymentMethod}`,
@@ -151,7 +151,7 @@ export async function POST(
             category: CASH_MOVEMENT_CATEGORIES.COLLECTION,
             paymentMethod,
             amount: actualPayAmount,
-            currency: 'TL',
+            currency: ASSET_TYPES.TL,
             hasEquivalent: 0,
             description: `Taksit Tahsilatı - ${plan.customer?.name || 'Müşteri'} (${targetItem.senetNo || plan.planNumber}) [${paymentMethod}]`,
             referenceId: plan.id,
@@ -180,6 +180,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       item: safeItem,
+      paidAmount: actualPayAmount,
       planRemainingAmount: newRemainingAmount,
       planCompleted: allPaid,
     });

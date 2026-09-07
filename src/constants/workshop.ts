@@ -16,6 +16,11 @@ export const WORKSHOP_STATUS_LABELS: Record<WorkshopJobStatus, string> = {
   CANCELLED: 'İptal Edildi',
 };
 
+export const WORKSHOP_DEFAULTS = {
+  JOB_PREFIX: 'ATL',
+  DEFAULT_CARAT: 14,
+} as const;
+
 // Altın ayarları ve standart saflık milyem çarpanları
 export const CARAT_MILYEM_MAP: Record<number, number> = {
   24: 0.995,
@@ -25,6 +30,23 @@ export const CARAT_MILYEM_MAP: Record<number, number> = {
   14: 0.585,
   8: 0.333,
 };
+
+/**
+ * Verilen ayar (carat) için milyem çarpanını döner.
+ * Harici/nadir ayarlar (örn: 9K, 10K, 19K) için matematiksel oran (carat/24) hesaplar.
+ */
+export function getMilyemForCarat(carat: number, customMilyem?: number): number {
+  if (customMilyem !== undefined && customMilyem > 0) {
+    return customMilyem;
+  }
+  if (CARAT_MILYEM_MAP[carat]) {
+    return CARAT_MILYEM_MAP[carat];
+  }
+  if (carat > 0 && carat <= 24) {
+    return Number((carat / 24).toFixed(3));
+  }
+  return 0.995;
+}
 
 export const SUPPORTED_SCRAP_CARATS = [8, 14, 18, 21, 22, 24] as const;
 

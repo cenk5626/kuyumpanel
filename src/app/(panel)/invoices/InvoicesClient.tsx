@@ -19,6 +19,7 @@ import {
   Scale,
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
+import { ROUTES } from '@/constants/routes';
 import {
   INVOICE_TYPES,
   INVOICE_DOCUMENT_TYPES,
@@ -168,7 +169,7 @@ export default function InvoicesClient({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/invoices', {
+      const res = await fetch(ROUTES.API_INVOICES, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -161,5 +161,55 @@ export function registerF23SpecialMatrixInvoiceTests(): void {
       expect(netWeight).not.toBeNull();
       expect(netWeight?.weight).toBe(15.55);
     });
+
+    test('23.8 Terazide standart ("1,250.750 g") ve Avrupa ("1.250,750 g") binlik basamak ayrımı doğrulaması', () => {
+      // Standart binlik ayracı (virgül binlik, nokta ondalık)
+      const standardKilo = parseScaleData('ST,GS,+ 1,250.750 g\r\n');
+      expect(standardKilo).not.toBeNull();
+      expect(standardKilo?.weight).toBe(1250.75);
+
+      // Avrupa binlik ayracı (nokta binlik, virgül ondalık)
+      const euroKilo = parseScaleData('ST,GS,+ 1.250,750 g\r\n');
+      expect(euroKilo).not.toBeNull();
+      expect(euroKilo?.weight).toBe(1250.75);
+
+      // 10 Kiloluk külçe takozu
+      const heavyIngot = parseScaleData('ST,GS,+ 10,000.000 g\r\n');
+      expect(heavyIngot).not.toBeNull();
+      expect(heavyIngot?.weight).toBe(10000);
+    });
+
+    test('23.9 Özel matrah faturasında nadir ayarların (10K, 9K) matematiksel oranla kusursuz hesabı', () => {
+      // 10 gr 10 Ayar takı (10/24 = 0.417 milyem), Has fiyatı 3,000 TL
+      const item10K = calculateSpecialMatrixItem({
+        name: '10K Tasarım Küpe',
+        weight: 10.0,
+        carat: 10,
+        hasGoldPrice: 3000,
+        laborCost: 1500,
+      });
+
+      // 10 * 0.417 = 4.17 gr Has
+      expect(item10K.pureGoldWeight).toBe(4.17);
+      expect(item10K.goldCost).toBe(12510);
+      expect(item10K.laborAmount).toBe(1500);
+      expect(item10K.kdvAmount).toBe(300);
+      expect(item10K.total).toBe(14310);
+    });
+
+    test('23.10 Doğrudan satış fiyatında kuruş farkı olmaksızın tam denkleşme garantisi (Zero kuruş drift)', () => {
+      // Satış fiyatı: 15,000 TL, Külçe bedeli: 7,956.16 TL -> diff: 7,043.84 TL
+      const item = calculateSpecialMatrixItem({
+        name: '14K Kolye',
+        weight: 4.25,
+        carat: 14,
+        hasGoldPrice: 3200,
+        sellingPrice: 15000,
+      });
+
+      // goldCost + laborAmount + kdvAmount tam olarak sellingPrice (15000 TL) etmeli
+      expect(Number((item.goldCost + item.laborAmount + item.kdvAmount).toFixed(2))).toBe(15000);
+      expect(item.total).toBe(15000);
+    });
   });
 }

@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import { logActivity } from '@/lib/logger';
 import {
   CARAT_MILYEM_MAP,
+  getMilyemForCarat,
   CUSTOMER_DEPOSIT_ACTIONS,
   CUSTOMER_DEPOSIT_STATUS,
 } from '@/constants/workshop';
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
       }
 
       const numCarat = Number(carat) || 24;
-      const milyem = CARAT_MILYEM_MAP[numCarat] || 0.995;
+      const milyem = getMilyemForCarat(numCarat);
       const pureGoldWeight = Number((numWeight * milyem).toFixed(4));
 
       const deposit = await prisma.$transaction(async (tx) => {
@@ -154,7 +155,13 @@ export async function POST(request: NextRequest) {
         userName,
       });
 
-      return NextResponse.json(deposit);
+      const safeDeposit = {
+        ...deposit,
+        createdAt: deposit.createdAt instanceof Date ? deposit.createdAt.toISOString() : new Date().toISOString(),
+        updatedAt: deposit.updatedAt instanceof Date ? deposit.updatedAt.toISOString() : new Date().toISOString(),
+      };
+
+      return NextResponse.json(safeDeposit);
     }
 
     // 2. Emanet Altın İadesi (Müşteri emanetini geri teslim aldı)
@@ -199,7 +206,13 @@ export async function POST(request: NextRequest) {
         userName,
       });
 
-      return NextResponse.json(updated);
+      const safeUpdated = {
+        ...updated,
+        createdAt: updated.createdAt instanceof Date ? updated.createdAt.toISOString() : new Date().toISOString(),
+        updatedAt: updated.updatedAt instanceof Date ? updated.updatedAt.toISOString() : new Date().toISOString(),
+      };
+
+      return NextResponse.json(safeUpdated);
     }
 
     // 3. Müşteri ParaPuan / Sadakat Puanı İşlemi

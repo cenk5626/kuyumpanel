@@ -171,7 +171,11 @@ export async function POST(request: NextRequest) {
         totalKdvAmount: invoiceCalc.totalKdvAmount,
         grandTotal: invoiceCalc.grandTotal,
         note: note?.trim() || invoiceCalc.legalNotice,
-        issueDate: issueDate ? new Date(issueDate) : new Date(),
+        issueDate: issueDate
+          ? isNaN(new Date(issueDate).getTime())
+            ? new Date()
+            : new Date(issueDate)
+          : new Date(),
       },
     });
 
@@ -188,6 +192,7 @@ export async function POST(request: NextRequest) {
       items: invoiceCalc.items,
       issueDate: created.issueDate ? created.issueDate.toISOString() : new Date().toISOString(),
       createdAt: created.createdAt ? created.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: created.updatedAt ? created.updatedAt.toISOString() : new Date().toISOString(),
     });
   } catch (error: any) {
     console.error('[API Invoices] POST Error:', error);

@@ -1,5 +1,6 @@
 import {
   CARAT_MILYEM_MAP,
+  getMilyemForCarat,
   WORKSHOP_LIMITS,
   WorkshopJobStatus,
   WORKSHOP_JOB_STATUS,
@@ -55,7 +56,7 @@ export function calculateTakozMilyem(
   const processedItems = items
     .filter((item) => item.weight > 0)
     .map((item) => {
-      const milyem = item.milyem ?? (CARAT_MILYEM_MAP[item.carat] || 0.995);
+      const milyem = getMilyemForCarat(item.carat, item.milyem);
       const pureWeight = Number((item.weight * milyem).toFixed(4));
       totalWeight += item.weight;
       totalPureWeight += pureWeight;

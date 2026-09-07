@@ -25,11 +25,13 @@ import {
   Cpu,
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
+import { ROUTES } from '@/constants/routes';
 import {
   WORKSHOP_JOB_STATUS,
   WORKSHOP_STATUS_LABELS,
   WORKSHOP_ACTIONS,
   CARAT_MILYEM_MAP,
+  getMilyemForCarat,
   SUPPORTED_SCRAP_CARATS,
   WORKSHOP_LIMITS,
   CUSTOMER_DEPOSIT_ACTIONS,
@@ -136,6 +138,7 @@ export default function WorkshopClient({
   const [jobWorkshopName, setJobWorkshopName] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [jobGivenWeight, setJobGivenWeight] = useState<number>(50.0);
+  const [jobGivenCarat, setJobGivenCarat] = useState<number>(24);
   const [jobLaborCost, setJobLaborCost] = useState<number>(2500);
   const [jobTargetLossPercent, setJobTargetLossPercent] = useState<number>(3.5);
   const [jobDeliveryDate, setJobDeliveryDate] = useState<string>(() => {
@@ -148,6 +151,7 @@ export default function WorkshopClient({
   // İş Emri Kapatma Form State
   const [recvFinishedWeight, setRecvFinishedWeight] = useState<number>(0);
   const [recvScrapWeight, setRecvScrapWeight] = useState<number>(0);
+  const [recvScrapCarat, setRecvScrapCarat] = useState<number>(14);
   const [isClosingJob, setIsClosingJob] = useState(false);
 
   // Hurda Sandığı Güncelleme Form State
@@ -187,7 +191,10 @@ export default function WorkshopClient({
 
     setIsSubmittingJob(true);
     try {
-      const res = await fetch('/api/workshop', {
+      const milyem = getMilyemForCarat(jobGivenCarat);
+      const pureWeight = Number((jobGivenWeight * milyem).toFixed(3));
+
+      const res = await fetch(ROUTES.API_WORKSHOP, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -195,7 +202,8 @@ export default function WorkshopClient({
           workshopName: jobWorkshopName.trim(),
           description: jobDescription.trim(),
           givenWeight: jobGivenWeight,
-          givenPureWeight: Number((jobGivenWeight * 0.995).toFixed(3)),
+          givenPureWeight: pureWeight,
+          givenCaratBreakdown: JSON.stringify([{ carat: jobGivenCarat, weight: jobGivenWeight }]),
           targetLossPercent: jobTargetLossPercent,
           laborCost: jobLaborCost,
           deliveryDate: jobDeliveryDate,
@@ -222,7 +230,7 @@ export default function WorkshopClient({
 
     setIsClosingJob(true);
     try {
-      const res = await fetch('/api/workshop', {
+      const res = await fetch(ROUTES.API_WORKSHOP, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -230,12 +238,31 @@ export default function WorkshopClient({
           jobId: completeJobModal.id,
           receivedFinishedWeight: recvFinishedWeight,
           receivedScrapWeight: recvScrapWeight,
+          scrapCarat: recvScrapCarat,
         }),
       });
 
       if (!res.ok) throw new Error('İş emri kapatılamadı.');
       const updated = await res.json();
       setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+
+      // Sandığa eklenen astar hurda varsa state'i de anında güncelle
+      if (recvScrapWeight > 0) {
+        const scrapMilyem = getMilyemForCarat(recvScrapCarat);
+        const scrapPure = Number((recvScrapWeight * scrapMilyem).toFixed(4));
+        setScrap((prev) =>
+          prev.map((s) =>
+            s.carat === recvScrapCarat
+              ? {
+                  ...s,
+                  weight: Number((s.weight + recvScrapWeight).toFixed(4)),
+                  pureWeight: Number((s.pureWeight + scrapPure).toFixed(4)),
+                }
+              : s
+          )
+        );
+      }
+
       setCompleteJobModal(null);
     } catch (err: any) {
       alert(err.message || 'Hata oluştu.');
@@ -282,7 +309,7 @@ export default function WorkshopClient({
 
     setIsSavingDeposit(true);
     try {
-      const res = await fetch('/api/customers/deposits', {
+      const res = await fetch(ROUTES.API_CUSTOMER_DEPOSITS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -300,6 +327,13 @@ export default function WorkshopClient({
       }
       const created = await res.json();
       setDeposits((prev) => [created, ...prev]);
+      setCustomerList((prev) =>
+        prev.map((c) =>
+          c.id === depCustomerId
+            ? { ...c, emanetGold: Number(((c.emanetGold || 0) + (created.pureGoldWeight || 0)).toFixed(4)) }
+            : c
+        )
+      );
       setIsDepositModalOpen(false);
       setDepItemDesc('');
     } catch (err: any) {
@@ -314,7 +348,7 @@ export default function WorkshopClient({
     if (!confirm('Emanet altın müşteriye teslim edilsin mi?')) return;
 
     try {
-      const res = await fetch('/api/customers/deposits', {
+      const res = await fetch(ROUTES.API_CUSTOMER_DEPOSITS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: CUSTOMER_DEPOSIT_ACTIONS.WITHDRAW, depositId }),
@@ -324,10 +358,19 @@ export default function WorkshopClient({
         const err = await res.json();
         throw new Error(err.error || 'Emanet iade edilemedi.');
       }
-      const updated = await res.json();
+      const targetDep = deposits.find((d) => d.id === depositId);
       setDeposits((prev) =>
         prev.map((d) => (d.id === depositId ? { ...d, status: CUSTOMER_DEPOSIT_STATUS.RETURNED } : d))
       );
+      if (targetDep) {
+        setCustomerList((prev) =>
+          prev.map((c) =>
+            c.id === targetDep.customerId
+              ? { ...c, emanetGold: Math.max(0, Number(((c.emanetGold || 0) - (targetDep.pureGoldWeight || 0)).toFixed(4))) }
+              : c
+          )
+        );
+      }
     } catch (err: any) {
       alert(err.message || 'Hata oluştu.');
     }
@@ -340,7 +383,7 @@ export default function WorkshopClient({
 
     setIsSubmittingLoyalty(true);
     try {
-      const res = await fetch('/api/customers/deposits', {
+      const res = await fetch(ROUTES.API_CUSTOMER_DEPOSITS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -360,6 +403,13 @@ export default function WorkshopClient({
       const updatedCustomer = await res.json();
       setCustomerList((prev) =>
         prev.map((c) => (c.id === updatedCustomer.id ? { ...c, loyaltyPoints: updatedCustomer.loyaltyPoints } : c))
+      );
+      setDeposits((prev) =>
+        prev.map((d) =>
+          d.customerId === updatedCustomer.id
+            ? { ...d, customer: { ...d.customer, loyaltyPoints: updatedCustomer.loyaltyPoints } }
+            : d
+        )
       );
       setIsLoyaltyModalOpen(false);
       setLoyaltyPoints(50);
@@ -1076,10 +1126,25 @@ export default function WorkshopClient({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="font-bold text-slate-500 uppercase block mb-1">Verilen Ayar</label>
+                  <select
+                    value={jobGivenCarat}
+                    onChange={(e) => setJobGivenCarat(Number(e.target.value))}
+                    className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+                  >
+                    <option value={24}>24K Has (0.995)</option>
+                    <option value={22}>22K (0.916)</option>
+                    <option value={18}>18K (0.750)</option>
+                    <option value={14}>14K (0.585)</option>
+                    <option value={8}>8K (0.333)</option>
+                  </select>
+                </div>
+
+                <div className="col-span-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-slate-500 uppercase">Verilen Altın (gr) *</label>
+                    <label className="font-bold text-slate-500 uppercase">Verilen Gram (gr) *</label>
                     <ScaleButton
                       size="sm"
                       onWeightReceived={(w) => setJobGivenWeight(w)}
@@ -1094,7 +1159,9 @@ export default function WorkshopClient({
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono font-bold"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="font-bold text-slate-500 uppercase block mb-1">İşçilik Tutarı (TL)</label>
                   <input
@@ -1105,9 +1172,7 @@ export default function WorkshopClient({
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-500 uppercase block mb-1">Fire Toleransı (%)</label>
                   <input
@@ -1192,21 +1257,38 @@ export default function WorkshopClient({
                 />
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="font-bold text-slate-500 uppercase">Teslim Alınan Astar / Dönüş Hurda (gr)</label>
-                  <ScaleButton
-                    size="sm"
-                    onWeightReceived={(w) => setRecvScrapWeight(w)}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-500 uppercase">Teslim Alınan Astar (gr)</label>
+                    <ScaleButton
+                      size="sm"
+                      onWeightReceived={(w) => setRecvScrapWeight(w)}
+                    />
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={recvScrapWeight}
+                    onChange={(e) => setRecvScrapWeight(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono"
                   />
                 </div>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={recvScrapWeight}
-                  onChange={(e) => setRecvScrapWeight(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono"
-                />
+
+                <div className="col-span-1">
+                  <label className="font-bold text-slate-500 uppercase block mb-1">Astar Ayarı</label>
+                  <select
+                    value={recvScrapCarat}
+                    onChange={(e) => setRecvScrapCarat(Number(e.target.value))}
+                    className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+                  >
+                    <option value={14}>14K (0.585)</option>
+                    <option value={18}>18K (0.750)</option>
+                    <option value={22}>22K (0.916)</option>
+                    <option value={24}>24K (0.995)</option>
+                    <option value={8}>8K (0.333)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Canlı Fire Hesap Raporu */}
