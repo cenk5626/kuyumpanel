@@ -39,6 +39,24 @@ export const MENU_ITEMS = [
     icon: 'UserCheck',
   },
   {
+    id: 'installments',
+    label: MESSAGES.MENU_INSTALLMENTS,
+    href: ROUTES.INSTALLMENTS,
+    icon: 'CalendarClock',
+  },
+  {
+    id: 'invoices',
+    label: MESSAGES.MENU_INVOICES,
+    href: ROUTES.INVOICES,
+    icon: 'ReceiptText',
+  },
+  {
+    id: 'workshop',
+    label: MESSAGES.MENU_WORKSHOP,
+    href: ROUTES.WORKSHOP,
+    icon: 'Flame',
+  },
+  {
     id: 'z-report',
     label: MESSAGES.MENU_Z_REPORT,
     href: ROUTES.Z_REPORT,

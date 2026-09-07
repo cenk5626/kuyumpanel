@@ -37,7 +37,10 @@ import { PAYMENT_METHODS } from '@/constants/kasa';
 import HeaderActions from '@/components/HeaderActions';
 import CameraScannerModal from '@/components/CameraScannerModal';
 import POSTransactionReceiptModal, { ReceiptData } from '@/components/POSTransactionReceiptModal';
+import ScaleButton from '@/components/ScaleButton';
 import { generateWhatsAppReceiptUrl } from '@/lib/whatsapp';
+import { DEFAULT_FALLBACK_PRICE_TL } from '@/constants/prices';
+
 
 
 // ─── Sabitler ─────────────────────────────────────────────────────────────────
@@ -1064,6 +1067,29 @@ export default function TransactionsPage() {
             >
               <Camera size={18} /> Kamera
             </button>
+
+            <ScaleButton
+              onWeightReceived={(weight) => {
+                if (basket.length > 0) {
+                  const last = basket[basket.length - 1];
+                  handleUpdateRowField(last.id, 'quantity', weight);
+                  showToast(`✓ Terazi gramajı uygulandı: ${weight.toFixed(3)} gr`, 'success');
+                } else {
+                  const unitP = Math.round(livePrices['mil22Ayar']?.bid || DEFAULT_FALLBACK_PRICE_TL);
+                  const newItem: BasketItem = {
+                    id: 'scale-' + Date.now(),
+                    type: 'buy',
+                    productType: 'sarrafiye',
+                    productCode: 'mil22Ayar',
+                    quantity: weight,
+                    price: unitP,
+                    total: Math.round(unitP * weight),
+                  };
+                  setBasket([newItem]);
+                  showToast(`✓ Teraziden 22 Ayar eklendi: ${weight.toFixed(3)} gr`, 'success');
+                }
+              }}
+            />
           </div>
         </div>
 

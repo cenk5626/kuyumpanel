@@ -223,7 +223,49 @@ export const MESSAGES = {
   AI_CHAT_PLACEHOLDER: 'Mağazanız hakkında bir soru sorun (örn: Bu ay en karlı ürünler neler? Vadesi geçen alacaklar kimde?)...',
   AI_BRIEFING_BUTTON: 'Haftalık Patron Brifingi Çıkar',
   AI_WHATSAPP_SHARE_BUTTON: 'WhatsApp ile Bana Gönder',
+
+  // 7. Özel Matrahlı Fatura & E-Arşiv (KDV 23/e)
+  MENU_INVOICES: 'Özel Matrah Fatura (KDV 23/e)',
+  INVOICES_TITLE: 'Özel Matrahlı Kuyumcu Faturası & e-Arşiv',
+  INVOICES_SUBTITLE: 'KDV Kanunu 23/e uyarınca külçe altın bedeli istisna, yalnızca işçilik matrahı üzerinden KDV hesaplanan yasal fatura ve bilgi fişi yönetimi.',
+  INVOICE_CREATE_BTN: 'Yeni Fatura / Fiş Düzenle',
+  INVOICE_TABLE_NO: 'Fatura No',
+  INVOICE_TABLE_CUSTOMER: 'Müşteri / Ünvan',
+  INVOICE_TABLE_TOTAL: 'Toplam Satış',
+  INVOICE_TABLE_EXEMPT: 'İstisna Has Bedeli',
+  INVOICE_TABLE_LABOR: 'İşçilik Matrahı',
+  INVOICE_TABLE_VAT: 'KDV Tutarı (%20)',
+  INVOICE_TABLE_TYPE: 'Belge Türü',
+
+  // 8. Taksitli Satış & Senet Takip
+  MENU_INSTALLMENTS: 'Taksitli Satış & Senet Takip',
+  INSTALLMENTS_TITLE: 'Taksitli Satış, Senet & Vade Hatırlatıcı',
+  INSTALLMENTS_SUBTITLE: 'Müşteri taksit planları, Türk Ticaret Kanunu uyumlu matbu senet basımı ve tek tıkla WhatsApp vade bildirimi.',
+  INSTALLMENTS_CREATE_BTN: 'Yeni Taksit Planı Aç',
+  INSTALLMENTS_TABLE_CUSTOMER: 'Müşteri',
+  INSTALLMENTS_TABLE_AMOUNT: 'Toplam Tutar',
+  INSTALLMENTS_TABLE_COUNT: 'Taksit',
+  INSTALLMENTS_TABLE_REMAINING: 'Kalan Borç',
+  INSTALLMENTS_TABLE_NEXT_DUE: 'Sıradaki Vade',
+  INSTALLMENTS_PRINT_SENET: 'Matbu Senet Yazdır',
+  INSTALLMENTS_WHATSAPP_REMIND: 'WhatsApp Vade Hatırlat',
+
+  // 9. Hurda Sandığı, Takoz & Atölye Ramat
+  MENU_WORKSHOP: 'Hurda, Takoz & Atölye Ramat',
+  WORKSHOP_TITLE: 'Hurda Kasası, Eritme Takoz & Atölye Ramat Takibi',
+  WORKSHOP_SUBTITLE: 'Hurda altın stokları, pota eritme takoz milyem analitiği, atölye iş emirleri ve fire/ramat kayıp hesaplaması.',
+  WORKSHOP_NEW_JOB_BTN: 'Yeni Atölye İş Emri',
+  WORKSHOP_TAKOZ_CALC_TITLE: 'Pota Takoz Ortalama Milyem Hesaplayıcı',
+  WORKSHOP_SCRAP_BOX_TITLE: 'Hurda Sandığı (Fiziki Ayar Stokları)',
+  WORKSHOP_JOBS_TITLE: 'Atölye İş Emirleri & Fire/Ramat Defteri',
+
+  // 10. Hassas Kuyumcu Terazisi
+  SCALE_BUTTON_DEFAULT: 'Teraziden Al',
+  SCALE_BUTTON_READING: 'Okunuyor...',
+  SCALE_ERROR_SIMULATION_APPLIED: 'Donanım bulunamadı, simüle gramaj uygulandı.',
+  SCALE_SUCCESS_TOAST: '✓ Terazi gramajı uygulandı',
 } as const;
+
 
 
 

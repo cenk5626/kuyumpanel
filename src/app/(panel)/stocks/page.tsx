@@ -46,6 +46,7 @@ import CriticalStockBadge, { TurnoverBadge } from '@/components/CriticalStockBad
 import ReorderDraftModal from '@/components/ReorderDraftModal';
 import CameraScannerModal from '@/components/CameraScannerModal';
 import DiamondCertificateModal from '@/components/DiamondCertificateModal';
+import ScaleButton from '@/components/ScaleButton';
 import { DIAMOND_COLORS, DIAMOND_CLARITIES, DIAMOND_CUTS, CERTIFICATE_ORGS } from '@/constants/diamond';
 import type { StockTurnoverItem, TurnoverAnalyticsSummary } from '@/lib/stocks/analytics';
 
@@ -2019,7 +2020,13 @@ export default function StocksPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className={THEME.LABEL}>Birim Ağırlığı (gr) *</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className={THEME.LABEL}>Birim Ağırlığı (gr) *</label>
+                        <ScaleButton
+                          size="sm"
+                          onWeightReceived={(w) => setProductFormData(prev => ({ ...prev, weight: w.toString() }))}
+                        />
+                      </div>
                       <input
                         type="number"
                         step="0.001"

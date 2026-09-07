@@ -43,6 +43,12 @@ export const ROUTES = {
   API_AI_CHAT: '/api/ai/chat',
   API_AI_BRIEFING: '/api/ai/briefing',
   API_DEALER_AI_SETTINGS: '/api/dealer/ai-settings',
+  INVOICES: '/invoices',
+  INSTALLMENTS: '/installments',
+  WORKSHOP: '/workshop',
+  API_INVOICES: '/api/invoices',
+  API_INSTALLMENTS: '/api/installments',
+  API_WORKSHOP: '/api/workshop',
 } as const;
 
 

@@ -38,6 +38,11 @@ model Dealer {
   cashMovements        CashMovement[]
   priceAlerts          PriceAlert[]
   stockAuditSessions   StockAuditSession[]
+  invoices             Invoice[]
+  installmentPlans     InstallmentPlan[]
+  scrapInventories     ScrapInventory[]
+  workshopJobs         WorkshopJob[]
+  customerDeposits     CustomerDeposit[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -360,9 +365,14 @@ model Customer {
   tlBalance      Float                 @default(0) // TL cinsinden borç (+) veya alacak (-) bakiyesi
   creditLimitTL  Float?                @default(0) // Tanımlanan maksimum TL borçlanma limiti (0 = limitsiz)
   creditLimitHas Float?                @default(0) // Tanımlanan maksimum Has Altın borçlanma limiti (gr)
+  loyaltyPoints  Float                 @default(0) // Müşteri ParaPuan / Sadakat Puanı
+  emanetGold     Float                 @default(0) // Emanet Altın Kasası toplam (gr Has)
   dealerId       String
   dealer         Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   transactions CustomerTransaction[]
+  installmentPlans InstallmentPlan[]
+  invoices       Invoice[]
+  deposits       CustomerDeposit[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt @default(now())
 }
@@ -424,5 +434,130 @@ model StockAuditSession {
   auditedBy       String    // Sayımı yapan personel
   notes           String?
   createdAt       DateTime  @default(now())
+}
+
+// 3065 Sayılı KDV Kanunu 23/e Özel Matrahlı Kuyumcu Faturası & e-Arşiv
+model Invoice {
+  id                  String   @id @default(cuid())
+  invoiceNumber       String   // Örn: "KYM202600000001"
+  dealerId            String
+  dealer              Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId          String?
+  customer            Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  type                String   @default("OZEL_MATRAH") // OZEL_MATRAH, STANDART, IADE
+  documentType        String   @default("E_ARSIV")     // E_ARSIV, E_FATURA, BILGI_FISI
+  status              String   @default("ISSUED")      // ISSUED, CANCELLED, DRAFT
+  customerName        String
+  customerTaxId       String?  // TCKN / VKN
+  customerTaxOffice   String?
+  customerAddress     String?
+  itemsJson           String   // JSON: [{ name, weight, carat, milyem, goldCost, laborCost, kdvPercent, kdvAmount, total }]
+  totalPureGoldWeight Float    @default(0) // Toplam Has Altın Gramajı (gr)
+  totalGoldAmount     Float    @default(0) // Külçe Altın Bedeli (KDV İstisnası) (TL)
+  totalLaborAmount    Float    @default(0) // İşçilik Bedeli (KDV Matrahı) (TL)
+  totalKdvAmount      Float    @default(0) // %20 KDV Tutarı (TL)
+  grandTotal          Float    @default(0) // Genel Toplam (TL)
+  note                String?  // KDV 23/e Özel Matrah Meşruat Şerhi
+  issueDate           DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// Taksitli Satış & Senet Takip Ana Planı
+model InstallmentPlan {
+  id               String            @id @default(cuid())
+  planNumber       String            // Örn: "TKST-2026-0001"
+  dealerId         String
+  dealer           Dealer            @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId       String
+  customer         Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  totalAmount      Float             // Toplam Satış Tutarı (TL)
+  downPayment      Float             @default(0) // Peşinat (TL)
+  remainingAmount  Float             // Kalan Taksitlendirilen Tutar (TL)
+  installmentCount Int               // Taksit Sayısı
+  status           String            @default("PENDING") // PENDING, PAID, OVERDUE, CANCELLED
+  notes            String?
+  items            InstallmentItem[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+// Taksit Kalemi & Matbu Senet (Bono)
+model InstallmentItem {
+  id            String          @id @default(cuid())
+  planId        String
+  plan          InstallmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  installmentNo Int             // 1, 2, 3...
+  dueDate       DateTime        // Vade Tarihi
+  amount        Float           // Taksit Tutarı (TL)
+  paidAmount    Float           @default(0) // Ödenen Tutar (TL)
+  status        String          @default("PENDING") // PENDING, PAID, OVERDUE
+  paidDate      DateTime?
+  paymentMethod String?         // CASH, CARD, BANK, HAS
+  senetNo       String?         // Matbu Senet Numarası (örn: SNT-2026-0001-1)
+  notes         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+// Hurda Sandığı (Farklı Ayarlardaki Hurda Altınlar)
+model ScrapInventory {
+  id         String   @id @default(cuid())
+  dealerId   String
+  dealer     Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  carat      Int      // 8, 14, 18, 21, 22, 24
+  weight     Float    @default(0) // Sandıktaki fiziksel hurda gramajı (gr)
+  pureWeight Float    @default(0) // Has Altın Karşılığı (gr)
+  notes      String?
+  updatedAt  DateTime @updatedAt
+
+  @@unique([dealerId, carat])
+}
+
+// Atölye İş Emirleri, Takoz & Ramat (Fire) Takibi
+model WorkshopJob {
+  id                     String    @id @default(cuid())
+  jobNo                  String    // Örn: "ATL-2026-0001"
+  dealerId               String
+  dealer                 Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  workshopName           String    // Atölye / Taş / Dökümcü Firma Adı
+  description            String    // İş Tanımı (Örn: "14K Baget Yüzük Üretimi")
+  status                 String    @default("PENDING") // PENDING, IN_PRODUCTION, COMPLETED, CANCELLED
+  givenWeight            Float     @default(0) // Atölyeye verilen toplam hurda/has gram (gr)
+  givenPureWeight        Float     @default(0) // Verilen Has Altın Karşılığı (gr)
+  givenCaratBreakdown    String?   // JSON dizi
+  givenTargetMilyem      Float?    // Eritme pota milyemi
+  receivedFinishedWeight Float     @default(0) // Teslim alınan mamul takı (gr)
+  receivedScrapWeight    Float     @default(0) // Teslim alınan astar / fire dönüşü (gr)
+  receivedTotalWeight    Float     @default(0) // Mamul + Astar (gr)
+  lossWeight             Float     @default(0) // Ramat / Fire (gr)
+  lossPercent            Float     @default(0) // Fire oranı (%)
+  targetLossPercent      Float     @default(3.0) // İzin verilen azami fire (%)
+  isExcessiveLoss        Boolean   @default(false) // Fire limiti aşıldı mı?
+  laborCost              Float     @default(0) // Atölye işçilik tutarı (TL)
+  laborPaymentMethod     String?   // TL, HAS
+  deliveryDate           DateTime? // Termin Tarihi
+  completedDate          DateTime? // Kapatılma Tarihi
+  notes                  String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+// Emanet Altın Kasası (Cetasoft Karşılaştırmalı Özellik - Müşteri Emanet Takibi)
+model CustomerDeposit {
+  id              String   @id @default(cuid())
+  dealerId        String
+  dealer          Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type            String   // "DEPOSIT" (Emanet Girişi) | "WITHDRAW" (Emanet İadesi)
+  itemDescription String   // Örn: "3 Adet Burma Bilezik (22K)" veya "10 gr Has Altın"
+  weight          Float    // Gramaj
+  carat           Int?     // Ayar
+  pureGoldWeight  Float    // Has Karşılığı (gr)
+  status          String   @default("ACTIVE") // ACTIVE, RETURNED
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 

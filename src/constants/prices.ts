@@ -76,3 +76,6 @@ export const DEFAULT_SETTINGS = {
   mil14Ayar:     583,
   gremseMil:     0,
 } as const;
+
+export const DEFAULT_FALLBACK_PRICE_TL = 3000;
+

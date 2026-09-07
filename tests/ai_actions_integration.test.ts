@@ -4,6 +4,7 @@ import {
   AI_CONFIRMATION_KEYWORDS,
   PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
+  PaymentMethod,
   SESSION_STATUS,
   DISCREPANCY_STATUS,
 } from '../src/constants';
@@ -30,7 +31,7 @@ describe('AI Assistant Integrated Actions (Sales, Supplier Reconciliation, End-o
       };
 
       // Payment method normalization test
-      let paymentMethod = PAYMENT_METHODS.CASH;
+      let paymentMethod: PaymentMethod = PAYMENT_METHODS.CASH;
       const rawPm = proposalPayload.paymentMethod.toUpperCase();
       if (rawPm.includes('IBAN') || rawPm.includes('HAVALE') || rawPm.includes('BANK')) {
         paymentMethod = PAYMENT_METHODS.BANK;
