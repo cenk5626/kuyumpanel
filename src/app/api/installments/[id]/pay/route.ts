@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 import { INSTALLMENT_STATUS } from '@/constants/installment';
 import {
@@ -23,11 +23,11 @@ export async function POST(
 ) {
   try {
     const { id: planId } = await context.params;
-    const session = await auth().catch(() => null);
-    const currentUserRole = (session?.user as any)?.role || 'ADMIN';
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
-    const userEmail = (session?.user as any)?.email;
-    const userName = (session?.user as any)?.name;
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const body = await request.json();
     const { itemId, amount, paymentMethod = PAYMENT_METHODS.CASH } = body;
@@ -188,7 +188,7 @@ export async function POST(
     console.error('[API Installments Pay] Error:', error);
     return NextResponse.json(
       { error: error?.message || 'Taksit ödemesi kaydedilirken hata oluştu.' },
-      { status: 500 }
+      { status: error?.statusCode || 500 }
     );
   }
 }

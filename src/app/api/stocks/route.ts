@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 
 // API log başlığı
@@ -27,17 +27,13 @@ const DEFAULT_STOCKS = [
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
 
     // Bayinin veritabanında var olduğunu garanti et
     await prisma.dealer.upsert({
       where: { id: dealerId },
-      create: { id: dealerId, name: dealerId === 'merkez' ? 'Merkez Mağaza' : dealerId },
+      create: { id: dealerId, name: dealerId },
       update: {},
     });
 
@@ -95,18 +91,14 @@ export async function GET() {
  */
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
-    const userEmail = session.user?.email;
-    const userName = session.user?.name;
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     await prisma.dealer.upsert({
       where: { id: dealerId },
-      create: { id: dealerId, name: dealerId === 'merkez' ? 'Merkez Mağaza' : dealerId },
+      create: { id: dealerId, name: dealerId },
       update: {},
     });
 
@@ -199,14 +191,10 @@ export async function PUT(req: Request) {
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
-    const userEmail = session.user?.email;
-    const userName = session.user?.name;
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const body = await req.json();
     const { product, label, type, amount, minThreshold } = body;
@@ -217,7 +205,7 @@ export async function POST(req: Request) {
 
     await prisma.dealer.upsert({
       where: { id: dealerId },
-      create: { id: dealerId, name: dealerId === 'merkez' ? 'Merkez Mağaza' : dealerId },
+      create: { id: dealerId, name: dealerId },
       update: {},
     });
 

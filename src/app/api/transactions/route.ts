@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
+import { checkIdempotency } from '@/lib/security/idempotency';
 import { logActivity } from '@/lib/logger';
 import {
   PAYMENT_METHODS,
@@ -25,12 +26,8 @@ const TX_TYPE_SELL = 'sell';
  */
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
     const { searchParams } = new URL(req.url);
     const includeDeleted = searchParams.get('includeDeleted') === 'true';
     const onlySuspicious = searchParams.get('suspicious') === 'true';
@@ -89,18 +86,21 @@ export interface TxItem {
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
-    const dealerId = (session.user as any).dealerId || 'merkez';
-    const userEmail = session.user?.email;
-    const userName = session.user?.name;
+    // Idempotency kontrolü: Mükerrer istekleri engelle
+    const idempotencyKey = req.headers.get('idempotency-key');
+    const idempotency = checkIdempotency(idempotencyKey, dealerId, 'transaction_create');
+    if (idempotency.isDuplicate) {
+      return NextResponse.json(idempotency.cachedResponse || { success: true, message: 'İşlem zaten işlendi (Idempotent).' });
+    }
 
     await prisma.dealer.upsert({
       where: { id: dealerId },
-      create: { id: dealerId, name: dealerId === 'merkez' ? 'Merkez Mağaza' : dealerId },
+      create: { id: dealerId, name: dealerId },
       update: {},
     });
 
@@ -349,6 +349,7 @@ export async function POST(req: Request) {
       });
     }
 
+    idempotency.markCompleted(results);
     return NextResponse.json(results);
   } catch (error) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
@@ -368,14 +369,10 @@ export async function POST(req: Request) {
  */
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
-    const userEmail = session.user?.email;
-    const userName = session.user?.name;
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const body = await req.json();
     const { id, quantity, price, total, orderNote, reason, paymentMethod } = body;
@@ -494,14 +491,10 @@ export async function PUT(req: Request) {
  */
 export async function DELETE(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
-    const userEmail = session.user?.email;
-    const userName = session.user?.name;
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

@@ -36,6 +36,12 @@ import { registerF21EnterpriseTests } from './tier1/f21_enterprise_modules.test'
 import { registerF22AiAssistantTests } from './tier1/f22_ai_patron_assistant.test';
 import { registerF23SpecialMatrixInvoiceTests } from './tier1/f23_special_matrix_invoice.test';
 import { registerF24InstallmentsWorkshopTests } from './tier1/f24_installments_workshop.test';
+import { registerF25SecurityTests } from './tier1/f25_security_hardening.test';
+import { registerF26BranchTransferTests } from './tier1/f26_branch_transfers.test';
+import { registerF27PurchaseGoodsReceiptTests } from './tier1/f27_purchase_goods_receipt.test';
+import { registerF28MultiCurrencyCashFxTests } from './tier1/f28_multicurrency_cash_fx.test';
+import { registerF29LoyaltyRfmSpecialDaysTests } from './tier1/f29_loyalty_rfm_special_days.test';
+import { registerF30OfficialInvoiceExpenseVoucherTests } from './tier1/f30_official_invoice_expense_voucher.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -74,17 +80,22 @@ const FEATURE_NAMES: Record<number, string> = {
   22: 'AI Patron Assistant & WhatsApp Engine',
   23: 'KDV 23/e Özel Matrah & Terazi Entegrasyonu',
   24: 'Taksitli Satış, Senet & Atölye Ramat Takibi',
+  25: 'Enterprise Security Hardening & Zero-Trust',
+  26: 'Branch Management & Inter-Branch Transfers',
+  27: 'Purchase Orders & Goods Receipt with Cost Variance',
+  28: 'Multi-Currency Cash Drawer, Forex Valuation & Discrepancies',
+  29: 'Customer Loyalty, Points, RFM & Special Days',
+  30: 'Official Invoicing, e-Document Lifecycle & Expense Vouchers',
 };
 
 async function main() {
   console.log('\n' + '='.repeat(80));
-  console.log('       👑 KUYUMPANEL ENTERPRISE JEWELRY ERP — AUTOMATED TEST RUNNER 👑       ');
-  console.log('='.repeat(80));
-  console.log('Registering Test Suites across Tiers 1-4 for 24 Features...\n');
+  console.log('   KUYUMPANEL ENTERPRISE TEST HARNESS - MULTI-TIER VERIFICATION');
+  console.log('='.repeat(80) + '\n');
 
   clearRegistry();
 
-  // 1. Register Tier 1 (121 tests)
+  // 1. Register Tier 1 (All features)
   registerF01Tests();
   registerF02Tests();
   registerF03Tests();
@@ -109,6 +120,12 @@ async function main() {
   registerF22AiAssistantTests();
   registerF23SpecialMatrixInvoiceTests();
   registerF24InstallmentsWorkshopTests();
+  registerF25SecurityTests();
+  registerF26BranchTransferTests();
+  registerF27PurchaseGoodsReceiptTests();
+  registerF28MultiCurrencyCashFxTests();
+  registerF29LoyaltyRfmSpecialDaysTests();
+  registerF30OfficialInvoiceExpenseVoucherTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();
@@ -138,7 +155,7 @@ async function main() {
 
   // Group by Feature
   const featureMatrix: Record<number, { featureName: string; tier1: number; tier2: number; tier3: number; tier4: number; passed: boolean }> = {};
-  for (let i = 1; i <= 24; i++) {
+  for (let i = 1; i <= 30; i++) {
     featureMatrix[i] = {
       featureName: FEATURE_NAMES[i] || `Feature ${i}`,
       tier1: 0,
@@ -206,10 +223,10 @@ async function main() {
   }
 
   console.log('-'.repeat(80));
-  console.log('FEATURE MATRIX COVERAGE (All 20 Features):');
+  console.log('FEATURE MATRIX COVERAGE (All 27 Features):');
   console.log('ID | Feature Name                                | T1 | T2 | T3 | T4 | Status');
   console.log('---+---------------------------------------------+----+----+----+----+-------');
-  for (let i = 1; i <= 20; i++) {
+  for (let i = 1; i <= 27; i++) {
     const f = featureMatrix[i];
     const idStr = String(i).padStart(2);
     const nameStr = f.featureName.padEnd(43);

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
 import { computeCustomerStatement } from '@/lib/cari';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/customers/[id]/statement
@@ -12,18 +14,12 @@ export async function GET(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
 
     const { id } = await props.params;
     if (!id) {
       return NextResponse.json({ error: 'Müşteri ID gereklidir.' }, { status: 400 });
     }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
 
     const customer = await prisma.customer.findUnique({
       where: { id },
@@ -38,9 +34,7 @@ export async function GET(
       return NextResponse.json({ error: 'Müşteri bulunamadı.' }, { status: 404 });
     }
 
-    if (currentUserRole !== 'SUPER_ADMIN' && customer.dealerId !== currentUserDealerId) {
-      return NextResponse.json({ error: 'Bu müşterinin ekstresini görüntüleme yetkiniz yok.' }, { status: 403 });
-    }
+    assertTenantOwnership(ctx, customer.dealerId, 'müşteri ekstresi');
 
     // URL parametreleri (Tarih filtreleri ve Spot Kuru)
     const { searchParams } = new URL(req.url);
@@ -67,7 +61,7 @@ export async function GET(
 
     // Tüm hareketlerin kronolojik yürüyen bakiye hesaplaması
     const { rows: allRows, summary } = computeCustomerStatement(
-      customer.transactions.map((tx) => ({
+      customer.transactions.map((tx: any) => ({
         id: tx.id,
         customerId: tx.customerId,
         type: tx.type,

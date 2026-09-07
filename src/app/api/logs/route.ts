@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, requirePermission } from '@/lib/security/auth-context';
+import { PERMISSIONS } from '@/constants/permissions';
 import { USER_ROLES } from '@/constants/roles';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/logs — Bayiye ait işlem loglarını listeler.
@@ -9,21 +12,11 @@ import { USER_ROLES } from '@/constants/roles';
  */
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    requirePermission(ctx, PERMISSIONS.AUDIT_READ);
 
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
-
-    // Güvenlik Kontrolü: Sadece Admin veya Super Admin erişebilir
-    if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
-      return NextResponse.json(
-        { error: 'İşlem loglarını görüntüleme yetkiniz yok. Bu alan sadece yetkili yöneticilere açıktır.' },
-        { status: 403 }
-      );
-    }
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     let whereClause: any = {};
     if (currentUserRole !== USER_ROLES.SUPER_ADMIN) {
@@ -48,8 +41,12 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(logs);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Logs] GET Error:', error);
-    return NextResponse.json({ error: 'Log kayıtları okunamadı.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Log kayıtları okunamadı.' },
+      { status: error?.statusCode || 500 }
+    );
   }
 }
+

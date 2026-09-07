@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building,
@@ -28,6 +28,8 @@ import {
   HelpCircle,
   Layers,
   ArrowRight,
+  ArrowRightLeft,
+  Check,
   X
 } from 'lucide-react';
 import { THEME, ANIM } from '@/constants/theme';
@@ -43,6 +45,11 @@ import {
   CASH_CURRENCIES,
   PaymentMethod,
 } from '@/constants/kasa';
+import {
+  DISCREPANCY_STATUS as FX_DISCREPANCY_STATUS,
+  DISCREPANCY_STATUS_LABELS as FX_DISCREPANCY_LABELS,
+  CURRENCIES,
+} from '@/constants/forex';
 import { DailyZReportMetrics, CashMovementRecord } from '@/lib/z-report';
 import ZReportSlipModal from '@/components/ZReportSlipModal';
 import HeaderActions from '@/components/HeaderActions';
@@ -65,14 +72,20 @@ export default function ZReportClient({
   const [data, setData] = useState(initialSummary);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [activeTab, setActiveTab] = useState<'movements' | 'archive'>('movements');
+  const [activeTab, setActiveTab] = useState<'movements' | 'archive' | 'forex' | 'discrepancies'>('movements');
 
   // Modallar
   const [isOpenModalOpen, setIsOpenModalOpen] = useState(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
+  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
   const [isSlipModalOpen, setIsSlipModalOpen] = useState(false);
   const [selectedSlipMetrics, setSelectedSlipMetrics] = useState<DailyZReportMetrics | null>(null);
+
+  // Faz 3: Döviz ve Kasa Farkı Listeleri
+  const [forexList, setForexList] = useState<any[]>([]);
+  const [discrepancyList, setDiscrepancyList] = useState<any[]>([]);
+  const [isValuating, setIsValuating] = useState(false);
 
   // Kasa Açılış Form State
   const [openForm, setOpenForm] = useState({
@@ -104,6 +117,18 @@ export default function ZReportClient({
     employeeName: currentUserName,
   });
 
+  // Faz 3: Döviz Alım-Satım Form State
+  const [exchangeForm, setExchangeForm] = useState({
+    fromCurrency: 'USD',
+    toCurrency: 'TL',
+    fromAmount: '',
+    exchangeRate: '',
+    marketRate: '',
+    customerName: '',
+    customerPhone: '',
+    notes: '',
+  });
+
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -128,6 +153,137 @@ export default function ZReportClient({
       showToast('Ağ hatası oluştu.', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchForex = async () => {
+    try {
+      const res = await fetch('/api/cash/exchange');
+      if (res.ok) {
+        const d = await res.json();
+        setForexList(d.exchanges || []);
+      }
+    } catch (e) {
+      console.error('Forex fetch error:', e);
+    }
+  };
+
+  const fetchDiscrepancies = async () => {
+    try {
+      const res = await fetch('/api/cash/discrepancies');
+      if (res.ok) {
+        const d = await res.json();
+        setDiscrepancyList(d.logs || []);
+      }
+    } catch (e) {
+      console.error('Discrepancies fetch error:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchForex();
+    fetchDiscrepancies();
+  }, []);
+
+  // Faz 3: Döviz Alım-Satım Gönder
+  const handleExchangeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const fromAmountNum = parseFloat(exchangeForm.fromAmount);
+    const rateNum = parseFloat(exchangeForm.exchangeRate);
+    if (!fromAmountNum || fromAmountNum <= 0) {
+      showToast('Geçerli bir kaynak tutar giriniz.', 'error');
+      return;
+    }
+    if (!rateNum || rateNum <= 0) {
+      showToast('Geçerli bir döviz kuru giriniz.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/cash/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromCurrency: exchangeForm.fromCurrency,
+          fromAmount: fromAmountNum,
+          toCurrency: exchangeForm.toCurrency,
+          exchangeRate: rateNum,
+          marketRate: exchangeForm.marketRate ? parseFloat(exchangeForm.marketRate) : undefined,
+          customerName: exchangeForm.customerName || undefined,
+          customerPhone: exchangeForm.customerPhone || undefined,
+          notes: exchangeForm.notes || undefined,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        showToast(result.error || 'Döviz işlemi gerçekleştirilemedi.', 'error');
+      } else {
+        showToast(`✓ ${result.exchange?.exchangeNumber || 'Döviz'} işlemi başarıyla tamamlandı.`, 'success');
+        setIsExchangeModalOpen(false);
+        setExchangeForm({
+          fromCurrency: 'USD',
+          toCurrency: 'TL',
+          fromAmount: '',
+          exchangeRate: '',
+          marketRate: '',
+          customerName: '',
+          customerPhone: '',
+          notes: '',
+        });
+        await fetchData(selectedDate);
+        await fetchForex();
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Döviz işlemi başarısız.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Faz 3: Canlı Kurlarla Kambiyo Değerlemesi
+  const handleValuateForex = async () => {
+    setIsValuating(true);
+    try {
+      const res = await fetch('/api/z-report/forex-valuation', { method: 'POST' });
+      const result = await res.json();
+      if (res.ok) {
+        showToast(
+          `✓ Kambiyo değerlemesi güncellendi. K/Z: ${result.forexGainLossTL >= 0 ? '+' : ''}₺${result.forexGainLossTL?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`,
+          'success'
+        );
+        await fetchData(selectedDate);
+      } else {
+        showToast(result.error || 'Değerleme yapılamadı.', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Değerleme hatası oluştu.', 'error');
+    } finally {
+      setIsValuating(false);
+    }
+  };
+
+  // Faz 3: Sayım Farkı Onay / Ret
+  const handleDiscrepancyAction = async (id: string, action: 'APPROVE' | 'REJECT') => {
+    try {
+      const res = await fetch('/api/cash/discrepancies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        showToast(`✓ Fark kaydı ${action === 'APPROVE' ? 'onaylandı' : 'reddedildi'}.`, 'success');
+        await fetchDiscrepancies();
+        await fetchData(selectedDate);
+      } else {
+        showToast(result.error || 'İşlem başarısız.', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('İşlem hatası oluştu.', 'error');
     }
   };
 
@@ -340,6 +496,16 @@ export default function ZReportClient({
 
           {isSessionOpen ? (
             <>
+              {/* Manuel Hareket Ekle */}
+              {/* Döviz Al / Sat (Faz 3) */}
+              <button
+                onClick={() => setIsExchangeModalOpen(true)}
+                className="px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+              >
+                <Coins size={14} />
+                Döviz Al / Sat
+              </button>
+
               {/* Manuel Hareket Ekle */}
               <button
                 onClick={() => setIsMovementModalOpen(true)}
@@ -592,10 +758,49 @@ export default function ZReportClient({
           </div>
         )}
 
+        {/* FAZ 3: ÇOK PARA BİRİMLİ KASA & KAMBİYO DEĞERLEMESİ */}
+        {activeSession && (
+          <div className={`${THEME.GLASS_CARD} p-4 border border-indigo-500/30 bg-gradient-to-r from-indigo-950/30 via-gray-900 to-indigo-950/20 flex flex-wrap items-center justify-between gap-4`}>
+            <div className="flex items-center gap-6 flex-wrap">
+              <div>
+                <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">
+                  Kambiyo Değerleme Kâr / Zararı
+                </span>
+                <div className="text-xl font-black font-mono mt-0.5 flex items-center gap-2">
+                  <span className={(activeSession.forexGainLossTL ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    {(activeSession.forexGainLossTL ?? 0) >= 0 ? '+' : ''}₺{(activeSession.forexGainLossTL ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+              <div className="h-8 w-px bg-gray-800 hidden sm:block" />
+              <div>
+                <span className="text-[10px] text-gray-400 font-semibold uppercase block">
+                  Çekmecedeki Döviz & Has Bakiyesi
+                </span>
+                <div className="text-xs font-mono font-bold text-gray-200 mt-1 flex items-center gap-3">
+                  <span className="text-emerald-400">${(activeSession.systemCashUSD ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                  <span className="text-gray-600">•</span>
+                  <span className="text-blue-400">€{(activeSession.systemCashEUR ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                  <span className="text-gray-600">•</span>
+                  <span className="text-yellow-400">{(activeSession.systemHasGram ?? 0).toFixed(3)} gr Has</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleValuateForex}
+              disabled={isValuating}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/20 disabled:opacity-50"
+            >
+              <RefreshCw size={12} className={isValuating ? 'animate-spin' : ''} />
+              {isValuating ? 'Değerleniyor...' : 'Canlı Kurlarla Değerle'}
+            </button>
+          </div>
+        )}
+
         {/* 3. SEKME BAŞLIKLARI VE LİSTELER */}
         <div className={`${THEME.GLASS_CARD} flex flex-col overflow-hidden`}>
           {/* Sekme Butonları */}
-          <div className="flex border-b border-gray-800 bg-gray-950/40 p-2 gap-2">
+          <div className="flex border-b border-gray-800 bg-gray-950/40 p-2 gap-2 flex-wrap">
             <button
               onClick={() => setActiveTab('movements')}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
@@ -617,6 +822,34 @@ export default function ZReportClient({
             >
               <Clock size={14} />
               Geçmiş Z-Raporları Arşivi ({data.archiveSessions.length})
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('forex');
+                fetchForex();
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                activeTab === 'forex'
+                  ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/10'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-900'
+              }`}
+            >
+              <Coins size={14} />
+              Döviz İşlemleri ({forexList.length})
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('discrepancies');
+                fetchDiscrepancies();
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+                activeTab === 'discrepancies'
+                  ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/10'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-900'
+              }`}
+            >
+              <AlertTriangle size={14} />
+              Sayım Farkları & İzahatlari ({discrepancyList.length})
             </button>
           </div>
 
@@ -757,6 +990,155 @@ export default function ZReportClient({
                               <Printer size={12} />
                               Z-Fişi
                             </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* SEKME 3: DÖVİZ ALIM-SATIM İŞLEMLERİ TABLOSU */}
+          {activeTab === 'forex' && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-gray-900/60 text-gray-400 text-[10px] uppercase font-bold border-b border-gray-800">
+                  <tr>
+                    <th className="p-3.5">İşlem No</th>
+                    <th className="p-3.5">Tarih / Saat</th>
+                    <th className="p-3.5">Şube</th>
+                    <th className="p-3.5">Alınan (Giriş)</th>
+                    <th className="p-3.5">Verilen (Çıkış)</th>
+                    <th className="p-3.5 text-right">İşlem Kuru</th>
+                    <th className="p-3.5 text-right">İşlem Kârı (TL)</th>
+                    <th className="p-3.5">Müşteri</th>
+                    <th className="p-3.5">Açıklama / Not</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800/60 font-medium text-gray-300">
+                  {forexList.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-gray-500">
+                        Kayıtlı döviz alım-satım hareketi bulunamadı.
+                      </td>
+                    </tr>
+                  ) : (
+                    forexList.map((fx: any) => (
+                      <tr key={fx.id} className="hover:bg-gray-900/30 transition-colors">
+                        <td className="p-3.5 font-mono font-bold text-yellow-400">{fx.exchangeNumber}</td>
+                        <td className="p-3.5 text-gray-400 font-mono">
+                          {new Date(fx.createdAt).toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td className="p-3.5 text-gray-400">{fx.branch?.name || 'Merkez'}</td>
+                        <td className="p-3.5 font-mono text-emerald-400 font-bold">
+                          +{fx.fromAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {fx.fromCurrency}
+                        </td>
+                        <td className="p-3.5 font-mono text-red-400 font-bold">
+                          -{fx.toAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {fx.toCurrency}
+                        </td>
+                        <td className="p-3.5 text-right font-mono font-bold text-white">
+                          {fx.exchangeRate.toFixed(4)}
+                        </td>
+                        <td className="p-3.5 text-right font-mono font-bold text-emerald-400">
+                          {fx.profitTL > 0 ? `+₺${fx.profitTL.toFixed(2)}` : '—'}
+                        </td>
+                        <td className="p-3.5 text-white">{fx.customerName || '—'}</td>
+                        <td className="p-3.5 text-gray-400 max-w-xs truncate">{fx.notes || '—'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* SEKME 4: KASA SAYIM FARKLARI VE İZAHATLARI */}
+          {activeTab === 'discrepancies' && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-gray-900/60 text-gray-400 text-[10px] uppercase font-bold border-b border-gray-800">
+                  <tr>
+                    <th className="p-3.5">Tarih</th>
+                    <th className="p-3.5">Oturum No</th>
+                    <th className="p-3.5">Birim</th>
+                    <th className="p-3.5 text-right">Sistem Tutarı</th>
+                    <th className="p-3.5 text-right">Sayılan Tutar</th>
+                    <th className="p-3.5 text-right">Fark</th>
+                    <th className="p-3.5">İzahat Açıklaması</th>
+                    <th className="p-3.5 text-center">Durum</th>
+                    <th className="p-3.5 text-center">Yönetici Onayı</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800/60 font-medium text-gray-300">
+                  {discrepancyList.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-gray-500">
+                        Kayıtlı kasa sayım farkı bulunmamaktadır.
+                      </td>
+                    </tr>
+                  ) : (
+                    discrepancyList.map((disc: any) => {
+                      const isShort = disc.diffAmount < 0;
+                      const statusConfig =
+                        FX_DISCREPANCY_LABELS[disc.status as keyof typeof FX_DISCREPANCY_LABELS] || {
+                          label: disc.status,
+                          color: 'text-gray-400',
+                          bg: 'bg-gray-800',
+                        };
+
+                      return (
+                        <tr key={disc.id} className="hover:bg-gray-900/30 transition-colors">
+                          <td className="p-3.5 text-gray-400 font-mono">
+                            {new Date(disc.createdAt).toLocaleDateString('tr-TR')}
+                          </td>
+                          <td className="p-3.5 font-mono text-yellow-400">{disc.session?.sessionNumber || '—'}</td>
+                          <td className="p-3.5 font-bold text-white">{disc.currency}</td>
+                          <td className="p-3.5 text-right font-mono text-gray-400">
+                            {disc.systemAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="p-3.5 text-right font-mono text-gray-200 font-bold">
+                            {disc.countedAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className={`p-3.5 text-right font-mono font-black ${isShort ? 'text-red-400' : 'text-emerald-400'}`}>
+                            {disc.diffAmount >= 0 ? '+' : ''}
+                            {disc.diffAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {disc.currency}
+                          </td>
+                          <td className="p-3.5 text-gray-300 max-w-xs">{disc.explanation || '—'}</td>
+                          <td className="p-3.5 text-center">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${statusConfig.bg} ${statusConfig.color}`}>
+                              {statusConfig.label}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-center">
+                            {disc.status === FX_DISCREPANCY_STATUS.PENDING ? (
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => handleDiscrepancyAction(disc.id, 'APPROVE')}
+                                  className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-colors"
+                                  title="Fark İzahatını Onayla"
+                                >
+                                  <Check size={11} />
+                                  Onayla
+                                </button>
+                                <button
+                                  onClick={() => handleDiscrepancyAction(disc.id, 'REJECT')}
+                                  className="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-colors"
+                                  title="Fark İzahatını Reddet"
+                                >
+                                  <X size={11} />
+                                  Reddet
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-gray-500">{disc.approvedBy || disc.reviewedBy || '—'}</span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1178,6 +1560,144 @@ export default function ZReportClient({
                     className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-lg shadow-blue-600/20"
                   >
                     {loading ? 'Kaydediliyor...' : 'Hareketi Kaydet'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── MODAL: DÖVİZ ALIM - SATIM (FAZ 3) ─── */}
+      <AnimatePresence>
+        {isExchangeModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className={`${THEME.GLASS_CARD} w-full max-w-lg p-6 flex flex-col gap-4 border border-emerald-500/30 shadow-2xl`}
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+                <div className="flex items-center gap-2">
+                  <Coins className="text-emerald-400" size={20} />
+                  <h2 className="text-base font-bold text-white">Döviz Alım-Satım & Kambiyo İşlemi</h2>
+                </div>
+                <button onClick={() => setIsExchangeModalOpen(false)} className="text-gray-400 hover:text-white">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleExchangeSubmit} className="flex flex-col gap-4 text-xs">
+                {/* Kaynak Para Birimi ve Tutar */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2">
+                    <label className="block text-gray-400 font-semibold mb-1">Müşteriden Alınan Tutar *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      required
+                      value={exchangeForm.fromAmount}
+                      onChange={(e) => setExchangeForm({ ...exchangeForm, fromAmount: e.target.value })}
+                      placeholder="0.00"
+                      className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 font-semibold mb-1">Alınan Birim</label>
+                    <select
+                      value={exchangeForm.fromCurrency}
+                      onChange={(e) => setExchangeForm({ ...exchangeForm, fromCurrency: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="HAS">Has (gr)</option>
+                      <option value="TL">TL (₺)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Hedef Para Birimi ve Kur */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2">
+                    <label className="block text-gray-400 font-semibold mb-1">İşlem Kuru (Fiyat) *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      required
+                      value={exchangeForm.exchangeRate}
+                      onChange={(e) => setExchangeForm({ ...exchangeForm, exchangeRate: e.target.value })}
+                      placeholder="Örn: 34.50"
+                      className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 font-semibold mb-1">Verilecek Birim</label>
+                    <select
+                      value={exchangeForm.toCurrency}
+                      onChange={(e) => setExchangeForm({ ...exchangeForm, toCurrency: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="TL">TL (₺)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="HAS">Has (gr)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Hesaplanan Hedef Tutar Önizleme */}
+                {exchangeForm.fromAmount && exchangeForm.exchangeRate && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between">
+                    <span className="text-gray-300 font-semibold">Müşteriye Ödenecek / Kasadan Çıkacak:</span>
+                    <span className="font-mono font-black text-emerald-400 text-sm">
+                      {exchangeForm.fromCurrency === 'TL'
+                        ? (parseFloat(exchangeForm.fromAmount) / parseFloat(exchangeForm.exchangeRate)).toFixed(2)
+                        : (parseFloat(exchangeForm.fromAmount) * parseFloat(exchangeForm.exchangeRate)).toFixed(2)}{' '}
+                      {exchangeForm.toCurrency}
+                    </span>
+                  </div>
+                )}
+
+                {/* Müşteri ve Not */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-gray-400 font-semibold mb-1">Müşteri Ad Soyad</label>
+                    <input
+                      type="text"
+                      value={exchangeForm.customerName}
+                      onChange={(e) => setExchangeForm({ ...exchangeForm, customerName: e.target.value })}
+                      placeholder="İsteğe bağlı"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 font-semibold mb-1">İşlem Notu</label>
+                    <input
+                      type="text"
+                      value={exchangeForm.notes}
+                      onChange={(e) => setExchangeForm({ ...exchangeForm, notes: e.target.value })}
+                      placeholder="Açıklama..."
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-800">
+                  <button
+                    type="button"
+                    onClick={() => setIsExchangeModalOpen(false)}
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold"
+                  >
+                    Vazgeç
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black rounded-xl shadow-lg shadow-emerald-600/20 disabled:opacity-50"
+                  >
+                    {loading ? 'İşleniyor...' : 'Döviz İşlemini Tamamla'}
                   </button>
                 </div>
               </form>

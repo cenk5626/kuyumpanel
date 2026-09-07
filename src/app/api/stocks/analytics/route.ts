@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { analyzeStockTurnover } from '@/lib/stocks/analytics';
 import { TURNOVER_PERIODS } from '@/constants/stocks';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API Stocks Analytics]';
 
@@ -13,12 +15,9 @@ const LOG_PREFIX = '[API Stocks Analytics]';
  */
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
 
-    const dealerId = (session.user as any).dealerId || 'merkez';
     const { searchParams } = new URL(req.url);
     const daysParam = parseInt(searchParams.get('days') || '30', 10);
     const periodDays = isNaN(daysParam) || daysParam <= 0 ? TURNOVER_PERIODS.DAYS_30 : daysParam;
@@ -47,11 +46,12 @@ export async function GET(req: Request) {
     const summary = analyzeStockTurnover(stocks, transactions, periodDays);
 
     return NextResponse.json(summary);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
     return NextResponse.json(
-      { error: 'Stok analiz verileri hesaplanamadı.' },
-      { status: 500 }
+      { error: error?.message || 'Stok analiz verileri hesaplanamadı.' },
+      { status: error?.statusCode || 500 }
     );
   }
 }
+

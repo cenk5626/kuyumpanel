@@ -50,6 +50,22 @@ export const ROUTES = {
   API_INSTALLMENTS: '/api/installments',
   API_WORKSHOP: '/api/workshop',
   API_CUSTOMER_DEPOSITS: '/api/customers/deposits',
+  BRANCHES: '/branches',
+  TRANSFERS: '/transfers',
+  PURCHASES: '/purchases',
+  API_BRANCHES: '/api/branches',
+  API_TRANSFERS: '/api/transfers',
+  API_PURCHASES: '/api/purchases',
+  API_GOODS_RECEIPTS: '/api/purchases/receipts',
+  API_FX_EXCHANGE: '/api/cash/exchange',
+  API_CASH_DISCREPANCIES: '/api/cash/discrepancies',
+  API_FOREX_VALUATION: '/api/z-report/forex-valuation',
+  LOYALTY: '/loyalty',
+  API_LOYALTY: '/api/customers/loyalty',
+  API_RFM: '/api/customers/rfm',
+  API_SPECIAL_DAYS: '/api/customers/special-days',
+  EXPENSE_VOUCHERS: '/expense-vouchers',
+  API_EXPENSE_VOUCHERS: '/api/expense-vouchers',
 } as const;
 
 

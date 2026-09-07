@@ -264,8 +264,20 @@ export const MESSAGES = {
   SCALE_BUTTON_READING: 'Okunuyor...',
   SCALE_ERROR_SIMULATION_APPLIED: 'Donanım bulunamadı, simüle gramaj uygulandı.',
   SCALE_SUCCESS_TOAST: '✓ Terazi gramajı uygulandı',
+
+  // 11. Şube Yönetimi ve Şubeler Arası Transfer (Faz 1)
+  MENU_BRANCHES: 'Şubeler & Transfer',
+  BRANCHES_TITLE: 'Şube Yönetimi',
+  BRANCHES_SUBTITLE: 'Mağaza şubeleri, şube bazlı stok/personel izolasyonu ve şubeler arası güvenli transfer yönetimi.',
+  BRANCHES_NEW_BTN: 'Yeni Şube Ekle',
+  TRANSFERS_TITLE: 'Şubeler Arası Stok & Ürün Transferi',
+  TRANSFERS_SUBTITLE: 'Kaynak ve hedef şube arasında barkodlu takı ve külçe altın sevkiyatı, onay ve mal kabul döngüsü.',
+  TRANSFERS_NEW_BTN: 'Yeni Transfer Başlat',
+
+  // 12. Tedarik Siparişi, Mal Kabul ve Maliyet Farkı (Faz 2)
+  MENU_PURCHASES: 'Tedarik & Mal Kabul',
+  PURCHASES_TITLE: 'Tedarik Siparişi & Mal Kabul',
+  PURCHASES_SUBTITLE: 'Toptancı siparişleri, fiili terazi tartımlı mal kabul, Has ve maliyet farkı mutabakatı.',
+  PURCHASES_NEW_BTN: 'Yeni Tedarik Siparişi',
+  PURCHASES_RECEIPT_BTN: 'Mal Kabul Girişi Yap',
 } as const;
-
-
-
-

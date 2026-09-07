@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 import {
   SESSION_STATUS,
@@ -12,6 +12,8 @@ import {
 } from '@/constants/kasa';
 import { calculateSessionMetrics, formatThermalReceiptText } from '@/lib/z-report';
 
+export const dynamic = 'force-dynamic';
+
 const LOG_PREFIX = '[API Z-Report Session]';
 
 /**
@@ -19,12 +21,8 @@ const LOG_PREFIX = '[API Z-Report Session]';
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
 
     const activeSession = await prisma.cashRegisterSession.findFirst({
       where: {
@@ -47,9 +45,9 @@ export async function GET() {
     return NextResponse.json({
       activeSession: activeMetrics,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
-    return NextResponse.json({ error: 'Kasa oturumu alınamadı.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Kasa oturumu alınamadı.' }, { status: error?.statusCode || 500 });
   }
 }
 
@@ -58,13 +56,10 @@ export async function GET() {
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
-    const userName = (session.user as any).name || (session.user as any).email || 'Kasiyer';
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const userName = ctx.userName || 'Kasiyer';
+    const userEmail = ctx.userEmail;
     const body = await req.json();
 
     const action = body.action || 'open';
@@ -153,8 +148,8 @@ export async function POST(req: Request) {
         dealerId,
         action: 'Kasa Açılışı',
         details: `Kasa Açıldı: ${sessionNumber} - Açılış Kasası: ₺${openingCashTL.toLocaleString('tr-TR')} (Açan: ${openedBy})`,
-        userEmail: session.user?.email,
-        userName: session.user?.name,
+        userEmail,
+        userName,
       });
 
       const metrics = await calculateSessionMetrics(newSession, dealerId);
@@ -168,6 +163,9 @@ export async function POST(req: Request) {
         targetSession = await prisma.cashRegisterSession.findUnique({
           where: { id: body.sessionId },
         });
+        if (targetSession && targetSession.dealerId !== dealerId && ctx.role !== 'SUPER_ADMIN') {
+          return NextResponse.json({ error: 'Bu kasa oturumunu kapatma yetkiniz yok.' }, { status: 403 });
+        }
       } else {
         targetSession = await prisma.cashRegisterSession.findFirst({
           where: { dealerId, status: SESSION_STATUS.OPEN },
@@ -252,6 +250,68 @@ export async function POST(req: Request) {
               employeeName: closedBy,
             },
           });
+
+          await tx.cashDiscrepancyLog.create({
+            data: {
+              dealerId,
+              branchId: targetSession.branchId || null,
+              sessionId: updated.id,
+              currency: 'TL',
+              systemAmount: metrics.systemCashTL,
+              countedAmount: countedCashTL,
+              diffAmount: discrepancyTL,
+              status: 'PENDING',
+              explanation: closeNotes || `Gün sonu TL sayım farkı: ${discrepancyTL > 0 ? '+' : ''}${discrepancyTL} TL`,
+            },
+          });
+        }
+
+        if (diffUSD != null && Math.abs(diffUSD) > 0.01) {
+          await tx.cashDiscrepancyLog.create({
+            data: {
+              dealerId,
+              branchId: targetSession.branchId || null,
+              sessionId: updated.id,
+              currency: 'USD',
+              systemAmount: metrics.systemCashUSD,
+              countedAmount: countedCashUSD!,
+              diffAmount: diffUSD,
+              status: 'PENDING',
+              explanation: closeNotes || `Gün sonu USD sayım farkı: ${diffUSD > 0 ? '+' : ''}${diffUSD} USD`,
+            },
+          });
+        }
+
+        if (diffEUR != null && Math.abs(diffEUR) > 0.01) {
+          await tx.cashDiscrepancyLog.create({
+            data: {
+              dealerId,
+              branchId: targetSession.branchId || null,
+              sessionId: updated.id,
+              currency: 'EUR',
+              systemAmount: metrics.systemCashEUR,
+              countedAmount: countedCashEUR!,
+              diffAmount: diffEUR,
+              status: 'PENDING',
+              explanation: closeNotes || `Gün sonu EUR sayım farkı: ${diffEUR > 0 ? '+' : ''}${diffEUR} EUR`,
+            },
+          });
+        }
+
+        if (diffHas != null && Math.abs(diffHas) > 0.001) {
+          await tx.cashDiscrepancyLog.create({
+            data: {
+              dealerId,
+              branchId: targetSession.branchId || null,
+              sessionId: updated.id,
+              currency: 'HAS',
+              systemAmount: metrics.systemHasGram,
+              countedAmount: countedHasGram!,
+              diffAmount: diffHas,
+              status: 'PENDING',
+              explanation: closeNotes || `Gün sonu Has sayım farkı: ${diffHas > 0 ? '+' : ''}${diffHas} gr Has`,
+            },
+          });
         }
 
         return updated;
@@ -270,8 +330,8 @@ export async function POST(req: Request) {
         )}, Sayılan: ₺${countedCashTL.toLocaleString('tr-TR')}, Fark: ₺${discrepancyTL.toLocaleString(
           'tr-TR'
         )} (${updatedMetrics.discrepancyStatus}) (Kapatan: ${closedBy})`,
-        userEmail: session.user?.email,
-        userName: session.user?.name,
+        userEmail,
+        userName,
       });
 
       return NextResponse.json({
@@ -328,8 +388,8 @@ export async function POST(req: Request) {
         dealerId,
         action: movementType === CASH_MOVEMENT_TYPES.INFLOW ? 'Kasa Manuel Giriş' : 'Kasa Manuel Çıkış',
         details: `${description} - Tutar: ${amount.toLocaleString('tr-TR')} ${currency} (Personel: ${employeeName})`,
-        userEmail: session.user?.email,
-        userName: session.user?.name,
+        userEmail,
+        userName,
       });
 
       const updatedMetrics = await calculateSessionMetrics(activeSession, dealerId);
@@ -337,14 +397,14 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ error: 'Geçersiz işlem tipi.' }, { status: 400 });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
     return NextResponse.json(
       {
-        error: 'Kasa oturum işlemi gerçekleştirilemedi.',
+        error: error?.message || 'Kasa oturum işlemi gerçekleştirilemedi.',
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: error?.statusCode || 500 }
     );
   }
 }

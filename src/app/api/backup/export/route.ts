@@ -1,19 +1,16 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
+import { sanitizeCsvCell } from '@/lib/security/masking';
 import * as XLSX from 'xlsx';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserRole = (session.user as any)?.role;
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     let whereDealer: any = {};
     if (currentUserRole !== 'SUPER_ADMIN') {
@@ -86,7 +83,7 @@ export async function GET(req: NextRequest) {
         orderBy: { barcode: 'asc' },
       });
 
-      const rows = products.map((p) => ({
+      const rows = products.map((p: any) => ({
         'Barkod': p.barcode,
         'Ürün Başlığı': p.title || '',
         'Kategori': p.category || '',
@@ -118,17 +115,17 @@ export async function GET(req: NextRequest) {
         orderBy: { name: 'asc' },
       });
 
-      const rows = customers.map((c) => ({
-        'Müşteri Adı': c.name,
-        'Telefon': c.phone ?? '',
-        'TC Kimlik No': c.tcNo ?? '',
-        'E-posta': c.email ?? '',
+      const rows = customers.map((c: any) => ({
+        'Müşteri Adı': sanitizeCsvCell(c.name),
+        'Telefon': sanitizeCsvCell(c.phone ?? ''),
+        'TC Kimlik No': sanitizeCsvCell(c.tcNo ?? ''),
+        'E-posta': sanitizeCsvCell(c.email ?? ''),
         'Has Bakiye (gr)': c.hasBalance,
         'TL Bakiye (₺)': c.tlBalance,
         'TL Borç Limiti': c.creditLimitTL ?? 0,
         'Has Borç Limiti': c.creditLimitHas ?? 0,
-        'Adres': c.address ?? '',
-        'Not': c.note ?? '',
+        'Adres': sanitizeCsvCell(c.address ?? ''),
+        'Not': sanitizeCsvCell(c.note ?? ''),
         'Kayıt Tarihi': c.createdAt ? new Date(c.createdAt).toLocaleDateString('tr-TR') : '',
       }));
 
@@ -140,13 +137,13 @@ export async function GET(req: NextRequest) {
         orderBy: { name: 'asc' },
       });
 
-      const rows = suppliers.map((s) => ({
-        'Toptancı / Atölye Adı': s.name,
-        'Telefon': s.phone ?? '',
+      const rows = suppliers.map((s: any) => ({
+        'Toptancı / Atölye Adı': sanitizeCsvCell(s.name),
+        'Telefon': sanitizeCsvCell(s.phone ?? ''),
         'Has Altın Borcumuz (gr)': s.hasBalance,
         'TL Borcumuz (₺)': s.tlBalance,
-        'Adres': s.address ?? '',
-        'Not': s.note ?? '',
+        'Adres': sanitizeCsvCell(s.address ?? ''),
+        'Not': sanitizeCsvCell(s.note ?? ''),
         'Kayıt Tarihi': s.createdAt ? new Date(s.createdAt).toLocaleDateString('tr-TR') : '',
       }));
 
@@ -159,7 +156,7 @@ export async function GET(req: NextRequest) {
         take: 1000,
       });
 
-      const rows = transactions.map((t) => ({
+      const rows = transactions.map((t: any) => ({
         'İşlem ID': t.id,
         'Tarih': t.createdAt ? new Date(t.createdAt).toLocaleString('tr-TR') : '',
         'İşlem Tipi': t.type === 'sell' ? 'Satış' : 'Alış',

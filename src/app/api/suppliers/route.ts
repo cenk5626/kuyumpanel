@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API Suppliers]';
 
@@ -14,13 +16,9 @@ const DEFAULT_SUPPLIERS = [
 
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -38,6 +36,7 @@ export async function GET(req: Request) {
       if (!supplier) {
         return NextResponse.json({ error: 'Toptancı bulunamadı.' }, { status: 404 });
       }
+      assertTenantOwnership(ctx, supplier.dealerId, 'Toptancı');
       return NextResponse.json(supplier);
     }
 
@@ -50,8 +49,8 @@ export async function GET(req: Request) {
       where: whereClause,
       include: {
         _count: {
-          select: { transactions: true }
-        }
+          select: { transactions: true },
+        },
       },
       orderBy: { name: 'asc' },
     });
@@ -72,28 +71,25 @@ export async function GET(req: Request) {
         where: whereClause,
         include: {
           _count: {
-            select: { transactions: true }
-          }
+            select: { transactions: true },
+          },
         },
         orderBy: { name: 'asc' },
       });
     }
 
     return NextResponse.json(suppliers);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
-    return NextResponse.json({ error: 'Toptancılar listelenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Toptancılar listelenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
 
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
     const body = await req.json();
     const { name, phone, address, note, hasBalance, tlBalance } = body;
 
@@ -114,18 +110,17 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newSupplier, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
-    return NextResponse.json({ error: 'Toptancı eklenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Toptancı eklenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const body = await req.json();
     const { id, name, phone, address, note } = body;
@@ -138,6 +133,7 @@ export async function PUT(req: Request) {
     if (!existing) {
       return NextResponse.json({ error: 'Toptancı bulunamadı.' }, { status: 404 });
     }
+    assertTenantOwnership(ctx, existing.dealerId, 'Toptancı');
 
     const updated = await prisma.supplier.update({
       where: { id },
@@ -150,18 +146,17 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} PUT Error:`, error);
-    return NextResponse.json({ error: 'Toptancı güncellenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Toptancı güncellenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function DELETE(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -169,6 +164,12 @@ export async function DELETE(req: Request) {
     if (!id) {
       return NextResponse.json({ error: 'ID gerekli.' }, { status: 400 });
     }
+
+    const existing = await prisma.supplier.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Toptancı bulunamadı.' }, { status: 404 });
+    }
+    assertTenantOwnership(ctx, existing.dealerId, 'Toptancı');
 
     const count = await prisma.supplierTransaction.count({
       where: { supplierId: id },
@@ -180,8 +181,8 @@ export async function DELETE(req: Request) {
 
     await prisma.supplier.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} DELETE Error:`, error);
-    return NextResponse.json({ error: 'Toptancı silinemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Toptancı silinemedi.' }, { status: error?.statusCode || 500 });
   }
 }

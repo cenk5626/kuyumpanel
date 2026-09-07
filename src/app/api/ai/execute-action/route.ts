@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import {
   PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
@@ -38,10 +38,10 @@ function resolveStockProduct(input: string): { id: string; label: string; type: 
 
 export async function POST(req: Request) {
   try {
-    const session = await auth().catch(() => null);
-    const dealerId = (session?.user as any)?.dealerId || 'merkez';
-    const userName = session?.user?.name || 'Patron';
-    const userEmail = session?.user?.email || undefined;
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const userName = ctx.userName || 'Patron';
+    const userEmail = ctx.userEmail;
 
     const body = await req.json();
     const { actionType, payload } = body;
@@ -1007,8 +1007,8 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('[AI Execute Action Error]:', error);
     return NextResponse.json(
-      { error: error.message || 'Eylem gerçekleştirilirken bir hata oluştu.' },
-      { status: 500 }
+      { error: error?.message || 'Eylem gerçekleştirilirken bir hata oluştu.' },
+      { status: error?.statusCode || 500 }
     );
   }
 }

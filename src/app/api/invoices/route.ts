@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 import {
   INVOICE_TYPES,
@@ -21,9 +21,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth().catch(() => null);
-    const currentUserRole = (session?.user as any)?.role || 'ADMIN';
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const searchParams = request.nextUrl.searchParams;
     const typeFilter = searchParams.get('type');
@@ -92,11 +92,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth().catch(() => null);
-    const currentUserRole = (session?.user as any)?.role || 'ADMIN';
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
-    const userEmail = (session?.user as any)?.email;
-    const userName = (session?.user as any)?.name;
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const body = await request.json();
     const {

@@ -4,6 +4,8 @@ import { compare } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { ROUTES } from '@/constants/routes';
 
+import { SECURITY_CONFIG } from '@/constants/security';
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   providers: [
@@ -26,14 +28,42 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        // Hesap kilitli mi kontrol et (Brute-Force Koruması)
+        if (user.lockedUntil && user.lockedUntil > new Date()) {
+          console.warn(`[Auth] Giriş engellendi: Hesap kilitli (${user.email})`);
+          return null;
+        }
+
         const isValid = await compare(
           credentials.password as string,
           user.password
         );
 
         if (!isValid) {
+          const newFailedAttempts = (user.failedLoginAttempts || 0) + 1;
+          const shouldLock = newFailedAttempts >= SECURITY_CONFIG.MAX_FAILED_LOGIN_ATTEMPTS;
+          const lockedUntil = shouldLock ? new Date(Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION_MS) : null;
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginAttempts: newFailedAttempts,
+              lockedUntil,
+            },
+          });
+
           return null;
         }
+
+        // Başarılı giriş: Hatalı giriş sayacını sıfırla ve son giriş zamanını güncelle
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            failedLoginAttempts: 0,
+            lockedUntil: null,
+            lastLoginAt: new Date(),
+          },
+        });
 
         return {
           id: user.id,

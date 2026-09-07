@@ -1,18 +1,15 @@
-﻿import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { generateAiResponse, getStoreContext } from '@/lib/ai-engine';
+import { NextResponse } from 'next/server';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
+import { generateAiResponse } from '@/lib/ai-engine';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-sender';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
 
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
     const body = await req.json().catch(() => ({}));
     const { sendToWhatsApp, targetPhone } = body;
 
@@ -42,7 +39,8 @@ Rapor şu bölümleri içersin:
   } catch (error: any) {
     console.error('[AI Briefing Error]:', error);
     return NextResponse.json({
-      error: error.message || 'Brifing oluşturulamadı.',
-    }, { status: 500 });
+      error: error?.message || 'Brifing oluşturulamadı.',
+    }, { status: error?.statusCode || 500 });
   }
 }
+

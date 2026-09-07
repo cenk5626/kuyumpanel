@@ -9,16 +9,25 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  name        String
-  email       String   @unique
-  password    String
-  role        String   @default("USER") // SUPER_ADMIN, ADMIN, USER
-  permissions String?  @default("[\"dashboard\",\"prices\",\"stocks\",\"transactions\",\"suppliers\",\"price-check\",\"users\"]")
-  dealerId    String?  // Nullable for SUPER_ADMIN
-  dealer      Dealer?  @relation(fields: [dealerId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  name                String
+  email               String    @unique
+  password            String
+  role                String    @default("USER") // SUPER_ADMIN, ADMIN, USER, TABLET, PC
+  permissions         String?   @default("[\"dashboard\",\"prices\",\"stocks\",\"transactions\",\"suppliers\",\"price-check\",\"users\"]")
+  dealerId            String?   // Nullable for SUPER_ADMIN
+  dealer              Dealer?   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId            String?
+  branch              Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  twoFactorSecret     String?   // Şifreli TOTP secret
+  twoFactorEnabled    Boolean   @default(false)
+  recoveryCodes       String?   // Şifreli kurtarma kodları JSON dizisi
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime? // Brute force koruması geçici kilit
+  lastLoginAt         DateTime?
+  lastLoginIp         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 
 model Dealer {
@@ -43,6 +52,15 @@ model Dealer {
   scrapInventories     ScrapInventory[]
   workshopJobs         WorkshopJob[]
   customerDeposits     CustomerDeposit[]
+  branches             Branch[]
+  inventoryTransfers   InventoryTransfer[]
+  purchaseOrders       PurchaseOrder[]
+  goodsReceipts        GoodsReceipt[]
+  fxExchanges          FxExchange[]
+  cashDiscrepancyLogs  CashDiscrepancyLog[]
+  customerLoyaltyLogs  CustomerLoyaltyLog[]
+  customerSpecialDayLogs CustomerSpecialDayLog[]
+  expenseVouchers      ExpenseVoucher[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -105,6 +123,8 @@ model Stock {
   minThreshold Float    @default(5) // Minimum kritik stok seviyesi
   dealerId     String
   dealer       Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId     String?
+  branch       Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   updatedAt    DateTime @updatedAt
 
   @@unique([product, dealerId])
@@ -134,6 +154,8 @@ model Transaction {
   customerId     String?                  // Müşteri ID (varsa)
   sessionId      String?                  // İlgili Kasa / Z-Raporu oturumu
   session        CashRegisterSession?     @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  branchId       String?
+  branch         Branch?                  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   employeeName   String?                  // İşlemi gerçekleştiren çalışan adı
   revisions      TransactionRevisionLog[]
   createdAt      DateTime                 @default(now())
@@ -196,10 +218,23 @@ model CashRegisterSession {
   diffCashEUR    Float?
   diffHasGram    Float?
 
+  // FAZ 3: Çok Para Birimli Döviz & Altın Kuru Değerleme Kâr/Zararı
+  openingRateUSD Float?
+  closingRateUSD Float?
+  openingRateEUR Float?
+  closingRateEUR Float?
+  openingRateHAS Float?
+  closingRateHAS Float?
+  forexGainLossTL Float?        @default(0) // Gün içi kur değişiminden kaynaklanan kambiyo kâr/zararı (TL)
+
   dealerId       String
   dealer         Dealer         @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId       String?
+  branch         Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
   movements      CashMovement[]
   transactions   Transaction[]
+  fxExchanges    FxExchange[]
+  discrepancyLogs CashDiscrepancyLog[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
@@ -229,6 +264,8 @@ model Employee {
   name      String
   dealerId  String
   dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -275,10 +312,13 @@ model ProductItem {
   certificateOrg    String?  // GIA, HRD, IGI, MAĞAZA
   diamondStoneCount Int?     @default(1) // Taş Adedi
   
-  dealerId     String
-  dealer       Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  dealerId          String
+  dealer            Dealer                  @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId          String?
+  branch            Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  transferLines     InventoryTransferLine[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
 }
 
 model Category {
@@ -319,6 +359,8 @@ model Supplier {
   dealerId     String
   dealer       Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   transactions SupplierTransaction[]
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts  GoodsReceipt[]
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt @default(now())
 }
@@ -340,15 +382,21 @@ model SupplierTransaction {
   createdAt          DateTime @default(now())
 }
 
-// Sistem & İşlem Logları (Audit Log)
+// Sistem & İşlem Logları (Audit Log - Append Only)
 model AuditLog {
   id        String   @id @default(cuid())
   dealerId  String
   dealer    Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   action    String   // Örn: "POS Satış", "Stok Düzeltme", "Müşteri Borç Ekleme", "Şüpheli İşlem"
   details   String   // Detaylı işlem açıklaması
+  userId    String?  // İşlemi yapan kullanıcı ID'si
   userEmail String?  // İşlemi yapan kullanıcı e-postası
   userName  String?  // İşlemi yapan kullanıcı adı
+  ipAddress String?  // İstekçi IP adresi
+  userAgent String?  // İstekçi tarayıcı bilgisi
+  oldValues String?  // JSON: Değişiklik öncesi durum
+  newValues String?  // JSON: Değişiklik sonrası durum
+  reason    String?  // Düzeltme / Değişiklik gerekçesi
   createdAt DateTime @default(now())
 }
 
@@ -366,13 +414,23 @@ model Customer {
   creditLimitTL  Float?                @default(0) // Tanımlanan maksimum TL borçlanma limiti (0 = limitsiz)
   creditLimitHas Float?                @default(0) // Tanımlanan maksimum Has Altın borçlanma limiti (gr)
   loyaltyPoints  Float                 @default(0) // Müşteri ParaPuan / Sadakat Puanı
+  loyaltyTier    String?               @default("BRONZE") // "BRONZE" | "SILVER" | "GOLD" | "PLATINUM"
   emanetGold     Float                 @default(0) // Emanet Altın Kasası toplam (gr Has)
+  birthDate      DateTime?             // Doğum Günü
+  anniversaryDate DateTime?            // Evlilik Yıldönümü / Özel Gün
+  rfmSegment     String?               // "CHAMPION" | "LOYAL" | "POTENTIAL_LOYALIST" | "AT_RISK" | "HIBERNATING" | "LOST" | "NEW"
+  rfmScore       Int?                  // 111 - 555
+  rfmRecencyDays Int?                  // Son alışverişten bu yana geçen gün sayısı
+  rfmFrequency   Int?                  // Toplam alışveriş / işlem adedi
+  rfmMonetaryTL  Float?                // Toplam ciro / harcama tutarı TL
   dealerId       String
   dealer         Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   transactions CustomerTransaction[]
   installmentPlans InstallmentPlan[]
   invoices       Invoice[]
   deposits       CustomerDeposit[]
+  loyaltyLogs    CustomerLoyaltyLog[]
+  specialDayLogs CustomerSpecialDayLog[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt @default(now())
 }
@@ -459,6 +517,19 @@ model Invoice {
   grandTotal          Float    @default(0) // Genel Toplam (TL)
   note                String?  // KDV 23/e Özel Matrah Meşruat Şerhi
   issueDate           DateTime @default(now())
+
+  // FAZ 4: e-Belge Entegratör ve Resmî Yaşam Döngüsü Alanları
+  provider            String?  @default("GIB_PORTAL") // "GIB_PORTAL" | "MOCK_SANDBOX" | "ENTEGRATOR"
+  environment         String?  @default("TEST") // "TEST" | "PRODUCTION"
+  externalDocumentId  String?
+  uuid                String?
+  submissionStatus    String   @default("READY") // "DRAFT" | "READY" | "SUBMITTING" | "SENT" | "ACCEPTED" | "REJECTED" | "CANCELLED" | "ERROR"
+  errorMessage        String?
+  submittedAt         DateTime?
+  cancelledAt         DateTime?
+  pdfUrl              String?
+  xmlUrl              String?
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
@@ -509,6 +580,7 @@ model ScrapInventory {
   weight     Float    @default(0) // Sandıktaki fiziksel hurda gramajı (gr)
   pureWeight Float    @default(0) // Has Altın Karşılığı (gr)
   notes      String?
+  expenseVouchers ExpenseVoucher[]
   updatedAt  DateTime @updatedAt
 
   @@unique([dealerId, carat])
@@ -559,5 +631,314 @@ model CustomerDeposit {
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// FAZ 1: Şube Yönetimi Modeli
+model Branch {
+  id                   String                @id @default(cuid())
+  dealerId             String
+  dealer               Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  name                 String                // Örn: "Merkez Şube", "Kadıköy Şubesi", "Nişantaşı Butik"
+  code                 String                // Örn: "MRKZ", "KDKY", "NST"
+  address              String?
+  phone                String?
+  isActive             Boolean               @default(true)
+  isDefault            Boolean               @default(false)
+  
+  users                User[]
+  stocks               Stock[]
+  productItems         ProductItem[]
+  transactions         Transaction[]
+  cashSessions         CashRegisterSession[]
+  employees            Employee[]
+  transfersFrom        InventoryTransfer[]   @relation("TransfersFromBranch")
+  transfersTo          InventoryTransfer[]   @relation("TransfersToBranch")
+  purchaseOrders       PurchaseOrder[]
+  goodsReceipts        GoodsReceipt[]
+  fxExchanges          FxExchange[]
+  cashDiscrepancyLogs  CashDiscrepancyLog[]
+  expenseVouchers      ExpenseVoucher[]
+  
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@unique([dealerId, code])
+}
+
+// Şubeler Arası Stok / Ürün Transfer Modeli
+model InventoryTransfer {
+  id                String                  @id @default(cuid())
+  dealerId          String
+  dealer            Dealer                  @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  transferNumber    String                  // Örn: "TRF-2026-0001"
+  fromBranchId      String
+  fromBranch        Branch                  @relation("TransfersFromBranch", fields: [fromBranchId], references: [id], onDelete: Cascade)
+  toBranchId        String
+  toBranch          Branch                  @relation("TransfersToBranch", fields: [toBranchId], references: [id], onDelete: Cascade)
+  status            String                  @default("DRAFT") // "DRAFT" | "APPROVED" | "SHIPPED" | "RECEIVED" | "CANCELLED" | "REJECTED"
+  requestedBy       String                  // İsteyen personel
+  approvedBy        String?                 // Onaylayan personel
+  shippedAt         DateTime?
+  receivedAt        DateTime?
+  notes             String?
+  discrepancyNotes  String?                 // Sayım veya teslim fark notları
+  lines             InventoryTransferLine[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@unique([dealerId, transferNumber])
+}
+
+// Transfer Kalemleri
+model InventoryTransferLine {
+  id               String            @id @default(cuid())
+  transferId       String
+  transfer         InventoryTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  productItemId    String?           // Münferit barkodlu takı için
+  productItem      ProductItem?      @relation(fields: [productItemId], references: [id], onDelete: SetNull)
+  productTitle     String            // Kalem adı
+  barcode          String?           // Varsa barkod
+  quantity         Int               @default(1)
+  weight           Float?            // Gramaj
+  carat            Int?              // Ayar
+  receivedQuantity Int?              // Teslim alınan adet
+  notes            String?
+  createdAt        DateTime          @default(now())
+}
+
+// =============================================================
+// FAZ 2: Tedarik Siparişi, Mal Kabul ve Maliyet Farkı Modelleri
+// =============================================================
+
+model PurchaseOrder {
+  id                   String              @id @default(cuid())
+  dealerId             String
+  dealer               Dealer              @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  supplierId           String
+  supplier             Supplier            @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  branchId             String?
+  branch               Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  orderNumber          String              // Örn: "PO-2026-0001"
+  orderDate            DateTime            @default(now())
+  expectedDeliveryDate DateTime?
+  status               String              @default("ORDERED") // "DRAFT" | "ORDERED" | "PARTIALLY_RECEIVED" | "RECEIVED" | "CANCELLED"
+  totalEstimatedWeight Float               @default(0) // Tahmini toplam gramaj
+  totalEstimatedHas    Float               @default(0) // Tahmini Has karşılığı
+  totalEstimatedTl     Float               @default(0) // Tahmini TL bedeli / işçilik
+  notes                String?
+  createdBy            String?
+  lines                PurchaseOrderLine[]
+  receipts             GoodsReceipt[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@unique([dealerId, orderNumber])
+}
+
+model PurchaseOrderLine {
+  id                   String              @id @default(cuid())
+  purchaseOrderId      String
+  purchaseOrder        PurchaseOrder       @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productCategory      String              // "BILEZIK" | "YUZUK" | "KOLYE" | "ZIYNET" | "HAS_KULCE" vb.
+  description          String
+  carat                Int                 // 8, 14, 18, 22, 24
+  orderedWeight        Float               // Sipariş edilen tahmini gram
+  orderedQuantity      Int                 @default(1)
+  laborCostPerGram     Float               @default(0) // Gr başına işçilik bedeli
+  laborCurrency        String              @default("TL") // "TL" | "USD" | "EUR" | "HAS"
+  receivedWeight       Float               @default(0) // Fiili mal kabulde gelen toplam gram
+  receivedQuantity     Int                 @default(0) // Teslim alınan adet
+  status               String              @default("PENDING") // "PENDING" | "PARTIALLY_RECEIVED" | "COMPLETED" | "CANCELLED"
+  notes                String?
+  goodsReceiptLines    GoodsReceiptLine[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model GoodsReceipt {
+  id                   String              @id @default(cuid())
+  dealerId             String
+  dealer               Dealer              @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  supplierId           String
+  supplier             Supplier            @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  purchaseOrderId      String?
+  purchaseOrder        PurchaseOrder?      @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  branchId             String?
+  branch               Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  receiptNumber        String              // Örn: "GR-2026-0001"
+  receiptDate          DateTime            @default(now())
+  invoiceNumber        String?             // Toptancının fatura / irsaliye no
+  receivedBy           String              // Teslim alan personel
+  totalActualWeight    Float               @default(0) // Terazi ile ölçülen fiili toplam gram
+  totalHasEquivalent   Float               @default(0) // Milyem hesaplı toplam saf Has gramajı
+  totalLaborCostTl     Float               @default(0) // Toplam işçilik TL bedeli
+  notes                String?
+  lines                GoodsReceiptLine[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@unique([dealerId, receiptNumber])
+}
+
+model GoodsReceiptLine {
+  id                   String              @id @default(cuid())
+  goodsReceiptId       String
+  goodsReceipt         GoodsReceipt        @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  purchaseOrderLineId  String?
+  purchaseOrderLine    PurchaseOrderLine?  @relation(fields: [purchaseOrderLineId], references: [id], onDelete: SetNull)
+  description          String
+  barcode              String?
+  carat                Int
+  milyem               Float               // Ayarın milyem değeri (örn: 14K -> 585, 22K -> 916 vb.)
+  actualWeight         Float               // Terazi fiili gramajı
+  quantity             Int                 @default(1)
+  laborCostPerGram     Float               @default(0)
+  laborCostTl          Float               @default(0)
+  hasEquivalent        Float               // actualWeight * (milyem / 1000)
+  weightVariance       Float?              // Siparişe göre gramaj farkı (actualWeight - orderedWeight)
+  costVarianceNote     String?             // Fark açıklaması
+  createdAt            DateTime            @default(now())
+}
+
+// =============================================================
+// FAZ 3: Çok Para Birimli Kasa & Döviz Alım-Satım / Bozma Modelleri
+// =============================================================
+
+model FxExchange {
+  id               String               @id @default(cuid())
+  dealerId         String
+  dealer           Dealer               @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId         String?
+  branch           Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  sessionId        String?
+  session          CashRegisterSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  exchangeNumber   String               // Örn: "FX-2026-0001"
+  fromCurrency     String               // "USD" | "EUR" | "TL" | "HAS"
+  fromAmount       Float
+  toCurrency       String               // "TL" | "USD" | "EUR" | "HAS"
+  toAmount         Float
+  exchangeRate     Float                // Müşteriye uygulanan işlem kuru
+  marketRate       Float?               // İşlem anındaki piyasa gösterge kuru
+  profitTL         Float                @default(0) // Net kambiyo / arbitraj kârı (TL)
+  customerName     String?              // Müşteri adı
+  customerPhone    String?
+  notes            String?
+  createdBy        String?
+  createdAt        DateTime             @default(now())
+
+  @@unique([dealerId, exchangeNumber])
+}
+
+model CashDiscrepancyLog {
+  id               String               @id @default(cuid())
+  dealerId         String
+  dealer           Dealer               @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId         String?
+  branch           Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  sessionId        String
+  session          CashRegisterSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  currency         String               // "TL" | "USD" | "EUR" | "HAS"
+  systemAmount     Float
+  countedAmount    Float
+  diffAmount       Float                // countedAmount - systemAmount (Pozitif: Kasa Fazlası, Negatif: Kasa Noksanı)
+  status           String               @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED" | "RESOLVED"
+  explanation      String?              // Kasa sayım farkı izahatı
+  reviewedBy       String?
+  approvedBy       String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+}
+
+// FAZ 4: Müşteri Sadakat & ParaPuan Hareket Kaydı
+model CustomerLoyaltyLog {
+  id            String    @id @default(cuid())
+  dealerId      String
+  dealer        Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  actionType    String    // "EARN" | "REDEEM" | "ADJUST" | "EXPIRE"
+  points        Float     // İşlem puanı
+  tlValue       Float     // Puanın TL karşılığı
+  balanceAfter  Float     // İşlem sonrası güncel puan bakiyesi
+  referenceType String?   // "TRANSACTION" | "MANUAL" | "SPECIAL_DAY_GIFT"
+  referenceId   String?   // İşlem ID veya özel gün ID
+  description   String?   // Açıklama / Not
+  createdAt     DateTime  @default(now())
+}
+
+// FAZ 4: Müşteri Özel Gün Bildirim ve Kampanya Kaydı
+model CustomerSpecialDayLog {
+  id             String    @id @default(cuid())
+  dealerId       String
+  dealer         Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  specialDayType String    // "BIRTHDAY" | "WEDDING_ANNIVERSARY" | "CUSTOM"
+  channel        String    @default("WHATSAPP") // "WHATSAPP" | "SMS"
+  messageText    String    // Gönderilen / hazırlanan mesaj metni
+  giftPoints     Float?    // Tanımlanan hediye puan
+  discountCode   String?   // İndirim kupon kodu
+  status         String    @default("SENT") // "SENT" | "PENDING"
+  sentAt         DateTime  @default(now())
+}
+
+// =============================================================
+// FAZ 4: Resmî Gider Pusulası (Kıymetli Maden & Hurda Alım Belgesi)
+// =============================================================
+
+model ExpenseVoucher {
+  id                String                @id @default(cuid())
+  dealerId          String
+  dealer            Dealer                @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId          String?
+  branch            Branch?               @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  voucherNumber     String                // Örn: "GP-2026-0001"
+  issueDate         DateTime              @default(now())
+  sellerName        String                // Müşteri / Bireysel Satıcı Adı
+  sellerTaxId       String                // TCKN
+  sellerPhone       String?
+  sellerAddress     String?
+  paymentMethod     String                @default("NAKIT") // "NAKIT" | "BANKA_HAVALE" | "HAS_TAKAS"
+  grossAmount       Float                 // Brüt tutar (TL)
+  withholdingRate   Float                 @default(0) // Stopaj oranı (örn: %0 veya %2)
+  withholdingAmount Float                 @default(0) // Stopaj kesintisi (TL)
+  netAmount         Float                 // Ödenen net tutar (TL)
+  hasEquivalent     Float                 @default(0) // Has altın karşılığı (gram)
+  status            String                @default("APPROVED") // "DRAFT" | "APPROVED" | "CANCELLED"
+  signatureStatus   String                @default("SIGNED_MANUAL") // "PENDING" | "SIGNED_MANUAL" | "SIGNED_DIGITAL"
+  notes             String?
+  scrapInventoryId  String?               // Hurda sandığı ilişkisi
+  scrapInventory    ScrapInventory?       @relation(fields: [scrapInventoryId], references: [id], onDelete: SetNull)
+  lines             ExpenseVoucherLine[]
+  events            ExpenseVoucherEvent[]
+  createdById       String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  @@unique([dealerId, voucherNumber])
+}
+
+model ExpenseVoucherLine {
+  id                String         @id @default(cuid())
+  voucherId         String
+  voucher           ExpenseVoucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  description       String         // Kalem tanımı (örn: "22 Ayar Hurda Bilezik")
+  carat             Int            // Ayar (örn: 22)
+  milyem            Float          // 916
+  weight            Float          // Gramaj
+  unitPrice         Float          // Gram alış fiyatı
+  totalPrice        Float          // weight * unitPrice
+  hasEquivalent     Float          // weight * (milyem / 1000)
+  createdAt         DateTime       @default(now())
+}
+
+model ExpenseVoucherEvent {
+  id                String         @id @default(cuid())
+  voucherId         String
+  voucher           ExpenseVoucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  eventType         String         // "CREATED" | "APPROVED" | "SIGNED" | "CANCELLED"
+  actorEmail        String?
+  notes             String?
+  createdAt         DateTime       @default(now())
 }
 

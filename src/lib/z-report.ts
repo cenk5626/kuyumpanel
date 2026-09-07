@@ -72,6 +72,15 @@ export interface DailyZReportMetrics {
   systemHasGram: number;
   countedHasGram: number | null;
   diffHasGram: number | null;
+
+  // FAZ 3: Çok Para Birimli Kasa & Kambiyo Değerleme Kâr/Zararı
+  openingRateUSD?: number | null;
+  closingRateUSD?: number | null;
+  openingRateEUR?: number | null;
+  closingRateEUR?: number | null;
+  openingRateHAS?: number | null;
+  closingRateHAS?: number | null;
+  forexGainLossTL?: number | null;
 }
 
 export interface CashMovementRecord {
@@ -98,6 +107,8 @@ export async function getDailyZReportSummary(
   activeSession: DailyZReportMetrics | null;
   archiveSessions: DailyZReportMetrics[];
   recentMovements: CashMovementRecord[];
+  fxExchanges?: any[];
+  discrepancyLogs?: any[];
 }> {
   const dateObj = targetDate ? new Date(targetDate) : new Date();
   const startOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 0, 0, 0);
@@ -152,12 +163,24 @@ export async function getDailyZReportSummary(
     archiveMetrics.push(m);
   }
 
-  // Son kasa hareketleri
-  const recentMovementsRaw = await prisma.cashMovement.findMany({
-    where: { dealerId },
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-  });
+  // Son kasa hareketleri, döviz işlemleri ve sayım farkı denetim kayıtları
+  const [recentMovementsRaw, fxExchangesRaw, discrepancyLogsRaw] = await Promise.all([
+    prisma.cashMovement.findMany({
+      where: { dealerId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    }),
+    prisma.fxExchange.findMany({
+      where: { dealerId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    }),
+    prisma.cashDiscrepancyLog.findMany({
+      where: { dealerId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    }),
+  ]);
 
   const recentMovements: CashMovementRecord[] = recentMovementsRaw.map((m) => ({
     id: m.id,
@@ -177,6 +200,8 @@ export async function getDailyZReportSummary(
     activeSession: activeMetrics,
     archiveSessions: archiveMetrics,
     recentMovements,
+    fxExchanges: fxExchangesRaw,
+    discrepancyLogs: discrepancyLogsRaw,
   };
 }
 
@@ -429,6 +454,14 @@ export async function calculateSessionMetrics(
     systemHasGram: Number((openingHasGram + customerHasCollectionsGram - supplierHasPaymentsGram + scrapGoldGramsIn).toFixed(3)),
     countedHasGram: session.countedHasGram != null ? Number(session.countedHasGram.toFixed(3)) : null,
     diffHasGram: session.diffHasGram,
+
+    openingRateUSD: session.openingRateUSD || null,
+    closingRateUSD: session.closingRateUSD || null,
+    openingRateEUR: session.openingRateEUR || null,
+    closingRateEUR: session.closingRateEUR || null,
+    openingRateHAS: session.openingRateHAS || null,
+    closingRateHAS: session.closingRateHAS || null,
+    forexGainLossTL: session.forexGainLossTL || 0,
   };
 }
 

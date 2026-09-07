@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API Categories]';
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
 
     await prisma.dealer.upsert({
       where: { id: currentUserDealerId },
@@ -24,11 +22,11 @@ export async function GET() {
       include: {
         subCategories: {
           include: {
-            subSubCategories: true
-          }
-        }
+            subSubCategories: true,
+          },
+        },
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
 
     if (categories.length === 0) {
@@ -40,7 +38,7 @@ export async function GET() {
         { name: 'Bileklik', code: 'BLK', subs: ['Künye', 'Şahmeran', 'Su Yolu'] },
         { name: 'Zincir', code: 'ZNC', subs: ['Halat', 'Doç', 'Singapur', 'Kral'] },
         { name: 'Gerdanlık', code: 'GRD', subs: ['Set', 'Trabzon Hasırı', 'Su Yolu'] },
-        { name: 'Sarrafiye', code: 'SRF', subs: ['Gram Altın', 'Çeyrek', 'Yarım', 'Tam'] }
+        { name: 'Sarrafiye', code: 'SRF', subs: ['Gram Altın', 'Çeyrek', 'Yarım', 'Tam'] },
       ];
 
       for (const def of defaults) {
@@ -50,9 +48,9 @@ export async function GET() {
             code: def.code,
             dealerId: currentUserDealerId,
             subCategories: {
-              create: def.subs.map(s => ({ name: s }))
-            }
-          }
+              create: def.subs.map((s) => ({ name: s })),
+            },
+          },
         });
       }
 
@@ -61,29 +59,27 @@ export async function GET() {
         include: {
           subCategories: {
             include: {
-              subSubCategories: true
-            }
-          }
+              subSubCategories: true,
+            },
+          },
         },
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' },
       });
     }
 
     return NextResponse.json(categories);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
-    return NextResponse.json({ error: 'Kategoriler yüklenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Kategoriler yüklenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
+    const currentUserRole = ctx.role;
 
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
     const body = await req.json();
     const { type, name, code, categoryId, subCategoryId } = body;
 
@@ -98,7 +94,7 @@ export async function POST(req: Request) {
 
       // Check duplicates
       const existing = await prisma.category.findFirst({
-        where: { name, dealerId: currentUserDealerId }
+        where: { name, dealerId: currentUserDealerId },
       });
       if (existing) {
         return NextResponse.json({ error: 'Bu kategori zaten mevcut.' }, { status: 400 });
@@ -108,8 +104,8 @@ export async function POST(req: Request) {
         data: {
           name,
           code: code.toUpperCase(),
-          dealerId: currentUserDealerId
-        }
+          dealerId: currentUserDealerId,
+        },
       });
       return NextResponse.json(newCategory, { status: 201 });
     }
@@ -119,11 +115,17 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Kategori ID gereklidir.' }, { status: 400 });
       }
 
+      const parentCat = await prisma.category.findUnique({ where: { id: categoryId } });
+      if (!parentCat) {
+        return NextResponse.json({ error: 'Üst kategori bulunamadı.' }, { status: 404 });
+      }
+      assertTenantOwnership(ctx, parentCat.dealerId, 'Kategori');
+
       const newSub = await prisma.subCategory.create({
         data: {
           name,
-          categoryId
-        }
+          categoryId,
+        },
       });
       return NextResponse.json(newSub, { status: 201 });
     }
@@ -133,28 +135,36 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Alt Kategori ID gereklidir.' }, { status: 400 });
       }
 
+      const parentSub = await prisma.subCategory.findUnique({
+        where: { id: subCategoryId },
+        include: { category: true },
+      });
+      if (!parentSub) {
+        return NextResponse.json({ error: 'Üst kategori bulunamadı.' }, { status: 404 });
+      }
+      assertTenantOwnership(ctx, parentSub.category.dealerId, 'Kategori');
+
       const newSubSub = await prisma.subSubCategory.create({
         data: {
           name,
-          subCategoryId
-        }
+          subCategoryId,
+        },
       });
       return NextResponse.json(newSubSub, { status: 201 });
     }
 
     return NextResponse.json({ error: 'Geçersiz ekleme türü.' }, { status: 400 });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
-    return NextResponse.json({ error: 'Kategori kaydedilemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Kategori kaydedilemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function DELETE(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
+    const currentUserRole = ctx.role;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -165,18 +175,34 @@ export async function DELETE(req: Request) {
     }
 
     if (type === 'category') {
+      const cat = await prisma.category.findUnique({ where: { id } });
+      if (!cat) return NextResponse.json({ error: 'Kategori bulunamadı.' }, { status: 404 });
+      assertTenantOwnership(ctx, cat.dealerId, 'Kategori');
       await prisma.category.delete({ where: { id } });
     } else if (type === 'subCategory') {
+      const sub = await prisma.subCategory.findUnique({
+        where: { id },
+        include: { category: true },
+      });
+      if (!sub) return NextResponse.json({ error: 'Kategori bulunamadı.' }, { status: 404 });
+      assertTenantOwnership(ctx, sub.category.dealerId, 'Kategori');
       await prisma.subCategory.delete({ where: { id } });
     } else if (type === 'subSubCategory') {
+      const subSub = await prisma.subSubCategory.findUnique({
+        where: { id },
+        include: { subCategory: { include: { category: true } } },
+      });
+      if (!subSub) return NextResponse.json({ error: 'Kategori bulunamadı.' }, { status: 404 });
+      assertTenantOwnership(ctx, subSub.subCategory.category.dealerId, 'Kategori');
       await prisma.subSubCategory.delete({ where: { id } });
     } else {
       return NextResponse.json({ error: 'Geçersiz silme türü.' }, { status: 400 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} DELETE Error:`, error);
-    return NextResponse.json({ error: 'Kategori silinemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Kategori silinemedi.' }, { status: error?.statusCode || 500 });
   }
 }
+

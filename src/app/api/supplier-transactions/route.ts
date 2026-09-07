@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API SupplierTransactions]';
 
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const supplierId = searchParams.get('supplierId');
@@ -18,27 +19,30 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'supplierId parametresi zorunludur.' }, { status: 400 });
     }
 
+    const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
+    if (!supplier) {
+      return NextResponse.json({ error: 'Toptancı bulunamadı.' }, { status: 404 });
+    }
+    assertTenantOwnership(ctx, supplier.dealerId, 'Toptancı');
+
     const transactions = await prisma.supplierTransaction.findMany({
       where: { supplierId },
       orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json(transactions);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
-    return NextResponse.json({ error: 'Toptancı işlemleri yüklenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Toptancı işlemleri yüklenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
-    const currentUserName = (session.user as any).name || 'Kullanıcı';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
+    const currentUserName = ctx.userName || 'Kullanıcı';
 
     const body = await req.json();
     const { 
@@ -59,6 +63,7 @@ export async function POST(req: Request) {
     if (!supplier) {
       return NextResponse.json({ error: 'Toptancı bulunamadı.' }, { status: 404 });
     }
+    assertTenantOwnership(ctx, supplier.dealerId, 'Toptancı');
 
     const parsedHas = parseFloat(hasAmount) || 0;
     const parsedTl = parseFloat(tlAmount) || 0;
@@ -118,8 +123,9 @@ export async function POST(req: Request) {
       transaction,
       supplier: updatedSupplier,
     }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
-    return NextResponse.json({ error: 'Toptancı işlemi kaydedilemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Toptancı işlemi kaydedilemedi.' }, { status: error?.statusCode || 500 });
   }
 }
+

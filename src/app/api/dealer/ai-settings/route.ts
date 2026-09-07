@@ -1,17 +1,15 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, requirePermission } from '@/lib/security/auth-context';
+import { PERMISSIONS } from '@/constants/permissions';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    requirePermission(ctx, PERMISSIONS.SETTINGS_MANAGE);
+    const dealerId = ctx.dealerId;
 
     const dealer = await prisma.dealer.findUnique({
       where: { id: dealerId },
@@ -47,18 +45,16 @@ export async function GET() {
 
     return NextResponse.json(maskedSettings);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Ayarlar alınamadı.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Ayarlar alınamadı.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    requirePermission(ctx, PERMISSIONS.SETTINGS_MANAGE);
+    const dealerId = ctx.dealerId;
 
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
     const body = await req.json();
 
     const updateData: any = {};
@@ -77,13 +73,14 @@ export async function PUT(req: Request) {
     if (body.waGatewayInstanceId !== undefined) updateData.waGatewayInstanceId = body.waGatewayInstanceId || null;
     if (body.waGatewayToken !== undefined) updateData.waGatewayToken = body.waGatewayToken || null;
 
-    const updated = await prisma.dealer.update({
+    await prisma.dealer.update({
       where: { id: dealerId },
       data: updateData,
     });
 
     return NextResponse.json({ success: true, message: 'Yapay Zeka ve WhatsApp ayarları kaydedildi.' });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Ayarlar güncellenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Ayarlar güncellenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
+

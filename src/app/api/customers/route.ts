@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
 
@@ -9,9 +9,9 @@ import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
  */
 export async function GET() {
   try {
-    const session = await auth().catch(() => null);
-    const currentUserRole = (session?.user as any)?.role || 'ADMIN';
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     let whereClause: any = {};
     if (currentUserRole !== 'SUPER_ADMIN') {
@@ -39,34 +39,31 @@ export async function GET() {
         address: c.address,
         note: c.note,
         dealerId: c.dealerId,
-        tlBalance: balances.tlBalance,
-        usdBalance: balances.usdBalance,
-        eurBalance: balances.eurBalance,
-        hasBalance: balances.hasBalance,
-        totalHasEquivalent: balances.totalHasEquivalent,
         creditLimitTL: c.creditLimitTL ?? 0,
         creditLimitHas: c.creditLimitHas ?? 0,
+        loyaltyPoints: (c as any).loyaltyPoints ?? 0,
+        emanetGold: (c as any).emanetGold ?? 0,
+        ...balances,
         transactionCount: c.transactions ? c.transactions.length : 0,
         createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString(),
       };
     });
 
     return NextResponse.json(formatted);
-  } catch (error) {
-    console.error('[API Customers] GET Error:', error);
-    return NextResponse.json({ error: 'Müşteriler okunamadı.' }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Müşteriler alınamadı.' }, { status: error.statusCode || 500 });
   }
 }
 
 /**
- * POST /api/customers — Yeni müşteri ekle
+ * POST /api/customers — Yeni müşteri oluşturur (Açılış borç bakiyeleri ile birlikte).
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth().catch(() => null);
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
-    const userEmail = session?.user?.email;
-    const userName = session?.user?.name || 'Patron';
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const body = await req.json();
     const {
@@ -95,7 +92,7 @@ export async function POST(req: NextRequest) {
     // Bayinin varlığını garanti et
     await prisma.dealer.upsert({
       where: { id: currentUserDealerId },
-      create: { id: currentUserDealerId, name: currentUserDealerId === 'merkez' ? 'Merkez Mağaza' : currentUserDealerId },
+      create: { id: currentUserDealerId, name: currentUserDealerId },
       update: {},
     });
 
@@ -244,10 +241,10 @@ export async function POST(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth().catch(() => null);
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
-    const userEmail = session?.user?.email;
-    const userName = session?.user?.name || 'Patron';
+    const ctx = await getAuthenticatedContext();
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
+    const currentUserDealerId = ctx.dealerId;
 
     const body = await req.json();
     const { id, name, phone, email, tcNo, address, note, creditLimitTL, creditLimitHas } = body;
@@ -255,6 +252,14 @@ export async function PUT(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'Müşteri ID gereklidir.' }, { status: 400 });
     }
+
+    const existing = await prisma.customer.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Müşteri bulunamadı.' }, { status: 404 });
+    }
+
+    // IDOR Koruması: Kaydın aktif bayiye ait olduğunu doğrula
+    assertTenantOwnership(ctx, existing.dealerId, 'müşteri');
 
     if (name && !name.trim()) {
       return NextResponse.json({ error: 'Müşteri ad soyad boş bırakılamaz.' }, { status: 400 });
@@ -323,10 +328,10 @@ export async function PUT(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -334,10 +339,6 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'Müşteri ID gereklidir.' }, { status: 400 });
     }
-
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
-    const userEmail = session.user?.email;
-    const userName = session.user?.name;
 
     const customer = await prisma.customer.findUnique({
       where: { id },
@@ -347,6 +348,9 @@ export async function DELETE(req: NextRequest) {
     if (!customer) {
       return NextResponse.json({ error: 'Müşteri bulunamadı.' }, { status: 404 });
     }
+
+    // IDOR Koruması: Kaydın aktif bayiye ait olduğunu doğrula
+    assertTenantOwnership(ctx, customer.dealerId, 'müşteri');
 
     // Müşteriyi sil
     await prisma.customer.delete({

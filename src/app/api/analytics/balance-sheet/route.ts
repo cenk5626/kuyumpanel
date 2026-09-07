@@ -1,19 +1,15 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserRole = (session.user as any)?.role;
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     let whereDealer: any = {};
     if (currentUserRole !== 'SUPER_ADMIN') {
@@ -205,8 +201,11 @@ export async function GET() {
         transactionCount: todayTransactions.length,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Balance Sheet] Error:', error);
-    return NextResponse.json({ error: 'Bilanço hesaplanırken hata oluştu.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Bilanço hesaplanırken hata oluştu.' },
+      { status: error?.statusCode || 500 }
+    );
   }
 }

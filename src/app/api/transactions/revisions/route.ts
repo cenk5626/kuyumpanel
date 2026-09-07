@@ -1,18 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/transactions/revisions — İşlem düzenleme ve silme revizyon geçmişini döner.
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
 
     const revisions = await prisma.transactionRevisionLog.findMany({
       where: { dealerId },
@@ -36,8 +34,12 @@ export async function GET() {
     }));
 
     return NextResponse.json(formatted);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Transaction Revisions] GET Error:', error);
-    return NextResponse.json({ error: 'Revizyon kayıtları okunamadı.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Revizyon kayıtları okunamadı.' },
+      { status: error?.statusCode || 500 }
+    );
   }
 }
+

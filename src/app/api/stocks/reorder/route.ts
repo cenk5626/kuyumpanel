@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { generateReorderDraft, calculateDailyVelocity } from '@/lib/stocks/analytics';
 import { TURNOVER_PERIODS } from '@/constants/stocks';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API Stocks Reorder]';
 
@@ -12,12 +14,8 @@ const LOG_PREFIX = '[API Stocks Reorder]';
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
 
     await prisma.dealer.upsert({
       where: { id: dealerId },
@@ -85,11 +83,11 @@ export async function GET() {
       totalItems: draftItems.length,
       items: draftItems,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
     return NextResponse.json(
-      { error: 'Sipariş taslağı oluşturulamadı.' },
-      { status: 500 }
+      { error: error?.message || 'Sipariş taslağı oluşturulamadı.' },
+      { status: error?.statusCode || 500 }
     );
   }
 }

@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 import { validateVirmanInput } from '@/lib/suppliers/virman';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/suppliers/virman — İki toptancı arasında TL veya Has Altın virman transferi yapar
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any)?.dealerId || 'merkez';
-    const userEmail = session.user?.email;
-    const userName = session.user?.name;
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
+    const role = ctx.role;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
 
     const body = await req.json();
     const { fromSupplierId, toSupplierId, assetType, amount, unitPrice, description } = body;
@@ -43,6 +42,9 @@ export async function POST(req: NextRequest) {
     if (!fromSupplier || !toSupplier) {
       return NextResponse.json({ error: 'Kaynak veya hedef toptancı bulunamadı.' }, { status: 404 });
     }
+
+    assertTenantOwnership(ctx, fromSupplier.dealerId, 'Kaynak Toptancı');
+    assertTenantOwnership(ctx, toSupplier.dealerId, 'Hedef Toptancı');
 
     const numAmount = Number(amount);
     const numUnitPrice = unitPrice ? Number(unitPrice) : null;
@@ -122,8 +124,9 @@ export async function POST(req: NextRequest) {
       fromTransactionId: result.outTx.id,
       toTransactionId: result.inTx.id,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Supplier Virman] Error:', error);
-    return NextResponse.json({ error: 'Virman işlemi gerçekleştirilemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Virman işlemi gerçekleştirilemedi.' }, { status: error?.statusCode || 500 });
   }
 }
+

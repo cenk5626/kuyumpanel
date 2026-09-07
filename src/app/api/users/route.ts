@@ -1,61 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hash } from 'bcryptjs';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, requirePermission } from '@/lib/security/auth-context';
+import { PERMISSIONS } from '@/constants/permissions';
 import { USER_ROLES } from '@/constants/roles';
+
+export const dynamic = 'force-dynamic';
 
 const SALT_ROUNDS = 12;
 
 // GET — Kullanıcıları getir (Bayi kısıtlamalı)
 export async function GET() {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try {
+    const ctx = await getAuthenticatedContext();
+    requirePermission(ctx, PERMISSIONS.USERS_MANAGE);
 
-  const userRole = (session.user as any).role;
-  const userDealerId = (session.user as any).dealerId;
+    const userRole = ctx.role;
+    const userDealerId = ctx.dealerId;
 
-  let whereClause = {};
-  if (userRole === USER_ROLES.SUPER_ADMIN) {
-    whereClause = {};
-  } else if (userRole === USER_ROLES.ADMIN) {
-    whereClause = { dealerId: userDealerId };
-  } else {
-    return NextResponse.json({ error: 'Bu sayfa için yetkiniz yok.' }, { status: 403 });
-  }
+    let whereClause = {};
+    if (userRole === USER_ROLES.SUPER_ADMIN) {
+      whereClause = {};
+    } else if (userRole === USER_ROLES.ADMIN) {
+      whereClause = { dealerId: userDealerId };
+    } else {
+      return NextResponse.json({ error: 'Bu sayfa için yetkiniz yok.' }, { status: 403 });
+    }
 
-  const users = await prisma.user.findMany({
-    where: whereClause,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      permissions: true,
-      dealerId: true,
-      dealer: {
-        select: {
-          name: true,
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        permissions: true,
+        dealerId: true,
+        dealer: {
+          select: {
+            name: true,
+          },
         },
+        createdAt: true,
       },
-      createdAt: true,
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+      orderBy: { createdAt: 'asc' },
+    });
 
-  return NextResponse.json(users);
+    return NextResponse.json(users);
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Kullanıcılar alınamadı.' }, { status: error?.statusCode || 500 });
+  }
 }
 
 // POST — Yeni kullanıcı oluştur
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try {
+    const ctx = await getAuthenticatedContext();
+    requirePermission(ctx, PERMISSIONS.USERS_MANAGE);
 
-  const currentUserRole = (session.user as any).role;
-  const currentUserDealerId = (session.user as any).dealerId;
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
   if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
     return NextResponse.json({ error: 'Kullanıcı ekleme yetkiniz yok.' }, { status: 403 });
@@ -110,124 +114,141 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(user, { status: 201 });
+    return NextResponse.json(user, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Kullanıcı oluşturulamadı.' }, { status: error?.statusCode || 500 });
+  }
 }
 
 // PUT — Kullanıcı güncelle
 export async function PUT(req: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try {
+    const ctx = await getAuthenticatedContext();
+    requirePermission(ctx, PERMISSIONS.USERS_MANAGE);
 
-  const currentUserRole = (session.user as any).role;
-  const currentUserDealerId = (session.user as any).dealerId;
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
-  if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
-    return NextResponse.json({ error: 'Kullanıcı düzenleme yetkiniz yok.' }, { status: 403 });
-  }
+    if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
+      return NextResponse.json({ error: 'Kullanıcı düzenleme yetkiniz yok.' }, { status: 403 });
+    }
 
-  const body = await req.json();
-  const { id, name, email, password, role, dealerId, permissions } = body;
+    const body = await req.json();
+    const { id, name, email, password, role, dealerId, permissions } = body;
 
-  if (!id) {
-    return NextResponse.json({ error: 'Kullanıcı ID gerekli.' }, { status: 400 });
-  }
+    if (!id) {
+      return NextResponse.json({ error: 'Kullanıcı ID gerekli.' }, { status: 400 });
+    }
 
-  // Düzenlenecek kullanıcıyı bul
-  const targetUser = await prisma.user.findUnique({ where: { id } });
-  if (!targetUser) {
-    return NextResponse.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
-  }
+    // Düzenlenecek kullanıcıyı bul
+    const targetUser = await prisma.user.findUnique({ where: { id } });
+    if (!targetUser) {
+      return NextResponse.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
+    }
 
-  // Admin sadece kendi bayisinin kullanıcılarını düzenleyebilir
-  if (currentUserRole === USER_ROLES.ADMIN && targetUser.dealerId !== currentUserDealerId) {
-    return NextResponse.json({ error: 'Bu kullanıcıyı düzenleme yetkiniz yok.' }, { status: 403 });
-  }
+    // Admin sadece kendi bayisinin kullanıcılarını düzenleyebilir
+    if (currentUserRole === USER_ROLES.ADMIN && targetUser.dealerId !== currentUserDealerId) {
+      return NextResponse.json({ error: 'Bu kullanıcıyı düzenleme yetkiniz yok.' }, { status: 403 });
+    }
 
-  // Check if email is taken by another user
-  if (email) {
-    const existing = await prisma.user.findFirst({
-      where: { email, NOT: { id } },
+    // Kullanıcı kendi rolünü veya bağlı olduğu bayiyi DEĞİŞTİREMEZ (Yetki Yükseltme Koruması)
+    if (ctx.userId === targetUser.id) {
+      if (role && role !== targetUser.role) {
+        return NextResponse.json({ error: 'Kendi rolünüzü veya yetki seviyenizi değiştiremezsiniz.' }, { status: 403 });
+      }
+      if (dealerId !== undefined && dealerId !== targetUser.dealerId) {
+        return NextResponse.json({ error: 'Kendi bağlı olduğunuz bayiyi değiştiremezsiniz.' }, { status: 403 });
+      }
+    }
+
+    // Check if email is taken by another user
+    if (email) {
+      const existing = await prisma.user.findFirst({
+        where: { email, NOT: { id } },
+      });
+      if (existing) {
+        return NextResponse.json({ error: 'Bu e-posta zaten kullanılıyor.' }, { status: 409 });
+      }
+    }
+
+    const updateData: Record<string, any> = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (Array.isArray(permissions)) updateData.permissions = JSON.stringify(permissions);
+    
+    if (currentUserRole === USER_ROLES.SUPER_ADMIN) {
+      if (role) updateData.role = role;
+      if (dealerId !== undefined) updateData.dealerId = dealerId || null;
+    } else if (currentUserRole === USER_ROLES.ADMIN) {
+      // Admin yetki veya bayi değiştiremez
+      if (role && role !== USER_ROLES.SUPER_ADMIN) {
+        updateData.role = role;
+      }
+    }
+
+    if (password) {
+      updateData.password = await hash(password, SALT_ROUNDS);
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        permissions: true,
+        dealerId: true,
+        createdAt: true,
+      },
     });
-    if (existing) {
-      return NextResponse.json({ error: 'Bu e-posta zaten kullanılıyor.' }, { status: 409 });
-    }
+
+    return NextResponse.json(user);
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Kullanıcı güncellenemedi.' }, { status: error?.statusCode || 500 });
   }
-
-  const updateData: Record<string, any> = {};
-  if (name) updateData.name = name;
-  if (email) updateData.email = email;
-  if (Array.isArray(permissions)) updateData.permissions = JSON.stringify(permissions);
-  
-  if (currentUserRole === USER_ROLES.SUPER_ADMIN) {
-    if (role) updateData.role = role;
-    if (dealerId !== undefined) updateData.dealerId = dealerId || null;
-  } else if (currentUserRole === USER_ROLES.ADMIN) {
-    // Admin yetki veya bayi değiştiremez
-    if (role && role !== USER_ROLES.SUPER_ADMIN) {
-      updateData.role = role;
-    }
-  }
-
-  if (password) {
-    updateData.password = await hash(password, SALT_ROUNDS);
-  }
-
-  const user = await prisma.user.update({
-    where: { id },
-    data: updateData,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      permissions: true,
-      dealerId: true,
-      createdAt: true,
-    },
-  });
-
-  return NextResponse.json(user);
 }
 
 // DELETE — Kullanıcı sil
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const ctx = await getAuthenticatedContext();
+    requirePermission(ctx, PERMISSIONS.USERS_MANAGE);
+
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Kullanıcı ID gerekli.' }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return NextResponse.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
+    }
+
+    // Prevent deleting SUPER_ADMIN
+    if (user.role === USER_ROLES.SUPER_ADMIN) {
+      return NextResponse.json({ error: 'Super Admin silinemez.' }, { status: 403 });
+    }
+
+    // Admin limits
+    if (currentUserRole === USER_ROLES.ADMIN && user.dealerId !== currentUserDealerId) {
+      return NextResponse.json({ error: 'Bu kullanıcıyı silme yetkiniz yok.' }, { status: 403 });
+    }
+
+    if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
+      return NextResponse.json({ error: 'Kullanıcı silme yetkiniz yok.' }, { status: 403 });
+    }
+
+    await prisma.user.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Kullanıcı silinemedi.' }, { status: error?.statusCode || 500 });
   }
-
-  const currentUserRole = (session.user as any).role;
-  const currentUserDealerId = (session.user as any).dealerId;
-
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
-
-  if (!id) {
-    return NextResponse.json({ error: 'Kullanıcı ID gerekli.' }, { status: 400 });
-  }
-
-  const user = await prisma.user.findUnique({ where: { id } });
-  if (!user) {
-    return NextResponse.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
-  }
-
-  // Prevent deleting SUPER_ADMIN
-  if (user.role === USER_ROLES.SUPER_ADMIN) {
-    return NextResponse.json({ error: 'Super Admin silinemez.' }, { status: 403 });
-  }
-
-  // Admin limits
-  if (currentUserRole === USER_ROLES.ADMIN && user.dealerId !== currentUserDealerId) {
-    return NextResponse.json({ error: 'Bu kullanıcıyı silme yetkiniz yok.' }, { status: 403 });
-  }
-
-  if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
-    return NextResponse.json({ error: 'Kullanıcı silme yetkiniz yok.' }, { status: 403 });
-  }
-
-  await prisma.user.delete({ where: { id } });
-
-  return NextResponse.json({ success: true });
 }

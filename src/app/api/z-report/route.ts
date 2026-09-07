@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { getDailyZReportSummary } from '@/lib/z-report';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API Z-Report]';
 
@@ -10,26 +12,23 @@ const LOG_PREFIX = '[API Z-Report]';
  */
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const dealerId = (session.user as any).dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const dealerId = ctx.dealerId;
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get('date') || undefined;
 
     const data = await getDailyZReportSummary(dealerId, dateParam);
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
     return NextResponse.json(
       {
-        error: 'Z-Raporu verileri getirilemedi.',
+        error: error?.message || 'Z-Raporu verileri getirilemedi.',
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: error?.statusCode || 500 }
     );
   }
 }
+

@@ -1,6 +1,6 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -10,20 +10,15 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserRole = (session.user as any)?.role;
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     let whereClause: any = {};
     if (currentUserRole !== 'SUPER_ADMIN') {
       whereClause.dealerId = currentUserDealerId;
     }
 
-    // Alarmları ve güncel canlı fiyatları getir
     const [alerts, livePrices, hasPrice] = await Promise.all([
       prisma.priceAlert.findMany({
         where: whereClause,
@@ -33,7 +28,6 @@ export async function GET() {
       prisma.hasPrice.findUnique({ where: { id: 'singleton' } }),
     ]);
 
-    // Anlık tetiklenme kontrolü
     const priceMap: Record<string, { bid: number; ask: number }> = {};
     if (hasPrice) {
       priceMap['HAS'] = { bid: hasPrice.bid, ask: hasPrice.ask };
@@ -60,29 +54,25 @@ export async function GET() {
         }
 
         if (isNowTriggered && !alert.isTriggered) {
-          // Tetiklendi olarak işaretle
-          try {
-            const updated = await prisma.priceAlert.update({
-              where: { id: alert.id },
-              data: {
-                isTriggered: true,
-                triggeredAt: new Date(),
-                lastCheckedPrice: currentVal,
-              },
-            });
-            return updated;
-          } catch {
-            return { ...alert, isTriggered: true, lastCheckedPrice: currentVal };
-          }
+          return await prisma.priceAlert.update({
+            where: { id: alert.id },
+            data: {
+              isTriggered: true,
+              triggeredAt: new Date(),
+            },
+          });
         }
 
-        return { ...alert, lastCheckedPrice: currentVal };
+        return alert;
       })
     );
 
     return NextResponse.json(updatedAlerts);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Alerts] GET Error:', error);
+    if (error?.statusCode) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json([], { status: 200 });
   }
 }
@@ -92,12 +82,10 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName;
     const body = await req.json();
 
     const { productCode, productLabel, targetPrice, priceType, condition, phone, notes } = body;
@@ -125,14 +113,14 @@ export async function POST(req: NextRequest) {
       dealerId: currentUserDealerId,
       action: 'Fiyat Alarmı Kuruldu',
       details: `${newAlert.productLabel} için ₺${newAlert.targetPrice} (${newAlert.condition === 'GTE' ? '≥' : '≤'}) alarmı oluşturuldu.`,
-      userEmail: session.user?.email || '',
-      userName: session.user?.name || '',
+      userEmail,
+      userName,
     });
 
     return NextResponse.json(newAlert, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Alerts] POST Error:', error);
-    return NextResponse.json({ error: 'Alarm oluşturulurken hata oluştu.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Alarm oluşturulurken hata oluştu.' }, { status: error?.statusCode || 500 });
   }
 }
 
@@ -141,10 +129,9 @@ export async function POST(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const body = await req.json();
     const { id, isActive, isTriggered, targetPrice, phone, notes } = body;
@@ -152,6 +139,12 @@ export async function PUT(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'ID zorunludur.' }, { status: 400 });
     }
+
+    const existing = await prisma.priceAlert.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Alarm bulunamadı.' }, { status: 404 });
+    }
+    assertTenantOwnership(ctx, existing.dealerId, 'Alarm');
 
     const updateData: any = {};
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
@@ -169,9 +162,9 @@ export async function PUT(req: NextRequest) {
     });
 
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Alerts] PUT Error:', error);
-    return NextResponse.json({ error: 'Alarm güncellenirken hata oluştu.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Alarm güncellenirken hata oluştu.' }, { status: error?.statusCode || 500 });
   }
 }
 
@@ -180,10 +173,9 @@ export async function PUT(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -192,10 +184,16 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'ID zorunludur.' }, { status: 400 });
     }
 
+    const existing = await prisma.priceAlert.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Alarm bulunamadı.' }, { status: 404 });
+    }
+    assertTenantOwnership(ctx, existing.dealerId, 'Alarm');
+
     await prisma.priceAlert.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Alerts] DELETE Error:', error);
-    return NextResponse.json({ error: 'Alarm silinirken hata oluştu.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Alarm silinirken hata oluştu.' }, { status: error?.statusCode || 500 });
   }
 }

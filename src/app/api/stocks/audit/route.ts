@@ -1,6 +1,6 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -10,13 +10,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserRole = (session.user as any)?.role;
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     let whereDealer: any = {};
     if (currentUserRole !== 'SUPER_ADMIN') {
@@ -59,8 +55,11 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(parsed);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Stock Audit] GET Error:', error);
+    if (error?.statusCode) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json([], { status: 200 });
   }
 }
@@ -70,13 +69,10 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
-    const currentUserName = session.user?.name || 'Yetkili';
+    const ctx = await getAuthenticatedContext();
+    const currentUserDealerId = ctx.dealerId;
+    const currentUserName = ctx.userName || 'Yetkili';
+    const userEmail = ctx.userEmail;
     const body = await req.json();
 
     const { scope, categoryFilter, scannedBarcodes, notes } = body;
@@ -161,7 +157,7 @@ export async function POST(req: NextRequest) {
       dealerId: currentUserDealerId,
       action: 'Vitrin Sayımı Yapıldı',
       details: `${sessionNumber} — Beklenen: ${totalExpected} adet, Sayılan: ${totalCounted} adet, Eksik: ${totalMissing} adet, Gram Farkı: ${weightDiff} gr.`,
-      userEmail: session.user?.email || '',
+      userEmail,
       userName: currentUserName,
     });
 
@@ -170,8 +166,8 @@ export async function POST(req: NextRequest) {
       scannedBarcodes: barcodes,
       missingItems: missingProducts,
     }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API Stock Audit] POST Error:', error);
-    return NextResponse.json({ error: 'Sayım kaydedilirken bir hata oluştu.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Sayım kaydedilirken bir hata oluştu.' }, { status: error?.statusCode || 500 });
   }
 }

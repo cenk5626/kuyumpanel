@@ -1,24 +1,22 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API Products]';
 
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const action = searchParams.get('action');
     const barcode = searchParams.get('barcode');
     const status = searchParams.get('status'); // IN_STOCK, SOLD, etc.
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
 
     // next-barcode action helper
     if (action === 'next-barcode') {
@@ -98,18 +96,19 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(items);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
-    return NextResponse.json({ error: 'Ürünler listelenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Ürünler listelenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
+    const currentUserName = ctx.userName;
+    const currentUserEmail = ctx.userEmail;
 
     const body = await req.json();
     const { 
@@ -134,9 +133,6 @@ export async function POST(req: Request) {
     if (!carat || !weight || !category) {
       return NextResponse.json({ error: 'Eksik parametreler.' }, { status: 400 });
     }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
 
     let finalBarcode = customBarcode;
 
@@ -265,7 +261,7 @@ export async function POST(req: Request) {
             tlAmount: 0,
             documentNo: finalBarcode,
             description: `Toptandan Mal Alımı (Giriş Milyemi): ${category} (${finalBarcode}) - ${weightNum}gr @ Giriş Milyemi ${entryMilyem.toFixed(3)}`,
-            employeeName: session.user?.name || null,
+            employeeName: currentUserName || null,
           },
         });
 
@@ -282,8 +278,8 @@ export async function POST(req: Request) {
           dealerId: currentUserDealerId,
           action: 'Toptancı Mal Alımı (Stok Girişi)',
           details: `${trimmedSupplier} toptancısından mal alımı: ${finalBarcode} (${category}) - ${weightNum}gr @ Giriş Milyemi ${entryMilyem.toFixed(3)} -> +${addedHasAmount.toFixed(3)} gr Has borç carisine eklendi.`,
-          userEmail: session.user?.email,
-          userName: session.user?.name,
+          userEmail: currentUserEmail,
+          userName: currentUserName,
         });
       }
     } else {
@@ -292,24 +288,23 @@ export async function POST(req: Request) {
         dealerId: currentUserDealerId,
         action: 'Takı Ürün Girişi',
         details: `Yeni stok eklendi: ${finalBarcode} (${category}) - ${weightNum}gr (Mal vitrinde mevcut, toptancı carisine işlenmedi).`,
-        userEmail: session.user?.email,
-        userName: session.user?.name,
+        userEmail: currentUserEmail,
+        userName: currentUserName,
       });
     }
 
     return NextResponse.json(newItem, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
-    return NextResponse.json({ error: 'Ürün eklenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Ürün eklenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const body = await req.json();
     const { 
@@ -338,13 +333,7 @@ export async function PUT(req: Request) {
     if (!existing) {
       return NextResponse.json({ error: 'Ürün bulunamadı.' }, { status: 404 });
     }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
-
-    if (currentUserRole !== 'SUPER_ADMIN' && existing.dealerId !== currentUserDealerId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    assertTenantOwnership(ctx, existing.dealerId, 'Ürün');
 
     const updateData: any = {};
     if (description !== undefined) updateData.description = description;
@@ -389,18 +378,17 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} PUT Error:`, error);
-    return NextResponse.json({ error: 'Ürün güncellenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Ürün güncellenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function DELETE(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -413,18 +401,12 @@ export async function DELETE(req: Request) {
     if (!existing) {
       return NextResponse.json({ error: 'Ürün bulunamadı.' }, { status: 404 });
     }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId || 'merkez';
-
-    if (currentUserRole !== 'SUPER_ADMIN' && existing.dealerId !== currentUserDealerId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    assertTenantOwnership(ctx, existing.dealerId, 'Ürün');
 
     await prisma.productItem.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} DELETE Error:`, error);
-    return NextResponse.json({ error: 'Ürün silinemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Ürün silinemedi.' }, { status: error?.statusCode || 500 });
   }
 }

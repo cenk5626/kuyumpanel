@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
 import {
   CUSTOMER_TRANSACTION_TYPES,
@@ -9,14 +9,16 @@ import {
 } from '@/constants/cari';
 import { calculateCustomerBalancesFromTransactions } from '@/lib/cari';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/customer-transactions?customerId=... — Müşteriye ait veresiye ekstresini döner
  */
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth().catch(() => null);
-    const currentUserRole = (session?.user as any)?.role || 'ADMIN';
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const customerId = searchParams.get('customerId');
@@ -40,9 +42,12 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(transactions);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API CustomerTransactions] GET Error:', error);
-    return NextResponse.json({ error: 'Müşteri ekstre verileri okunamadı.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Müşteri ekstre verileri okunamadı.' },
+      { status: error?.statusCode || 500 }
+    );
   }
 }
 
@@ -51,11 +56,11 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth().catch(() => null);
-    const currentUserRole = (session?.user as any)?.role || 'ADMIN';
-    const currentUserDealerId = (session?.user as any)?.dealerId || 'merkez';
-    const userEmail = session?.user?.email || undefined;
-    const userName = session?.user?.name || 'Patron';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
+    const userEmail = ctx.userEmail;
+    const userName = ctx.userName || 'Patron';
 
     const body = await req.json();
     const { customerId, type, assetType, amount, hasEquivalent, unitPrice, description, employeeName } = body;
@@ -133,35 +138,37 @@ export async function POST(req: NextRequest) {
       return { tx, tlBalance, hasBalance };
     });
 
-    // Turso Veritabanına Çift Yönlü Eşitleme
-    const TURSO_URL = process.env.TURSO_DATABASE_URL || 'libsql://kuyumpanel-db-cenk5626.aws-us-east-1.turso.io';
-    const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODQ5MzUzNjcsImlkIjoiMDE5Zjk2NDMtY2EwMS03MjE4LThkYmEtZGE4YjI1MTY3MjI2Iiwia2lkIjoiNWhmQnk2WTN1NkVDazNkLTd5c3BZc3JBRlRWYW1yVFh0emtVd2dCdGtGNCIsInJpZCI6ImUxNTM3NjllLWUxNWMtNDhkNi05MzMzLTlhYjQ0MjFiNTcwOCJ9.grKQ1ZymXrHb9DWwiJ_uP7y7dZyDu5pO4e8Hem-aUB4h6jr7OIJ19FqUpJkqssm5Wdm4wm3nHR32j9inJJ3ZDA';
-    try {
-      const { createClient } = await import('@libsql/client');
-      const turso = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
-      await turso.execute({
-        sql: `INSERT OR REPLACE INTO CustomerTransaction (id, customerId, dealerId, type, assetType, amount, hasEquivalent, unitPrice, description, employeeName, createdAt)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-        args: [
-          result.tx.id,
-          customerId,
-          currentUserDealerId,
-          normalizedType,
-          normalizedAsset,
-          numAmount,
-          calculatedHasEq,
-          numPrice,
-          description?.trim() || null,
-          employeeName?.trim() || userName,
-          new Date().toISOString(),
-        ],
-      });
-      await turso.execute({
-        sql: `UPDATE Customer SET tlBalance = ?, hasBalance = ?, updatedAt = ? WHERE id = ?;`,
-        args: [result.tlBalance, result.hasBalance, new Date().toISOString(), customerId],
-      });
-    } catch (e: any) {
-      console.warn('[Turso Sync Warning]:', e.message);
+    // Turso Veritabanına Çift Yönlü Eşitleme (Yalnızca ortam değişkenleri tanımlıysa)
+    const TURSO_URL = process.env.TURSO_DATABASE_URL;
+    const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN;
+    if (TURSO_URL && TURSO_TOKEN) {
+      try {
+        const { createClient } = await import('@libsql/client');
+        const turso = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
+        await turso.execute({
+          sql: `INSERT OR REPLACE INTO CustomerTransaction (id, customerId, dealerId, type, assetType, amount, hasEquivalent, unitPrice, description, employeeName, createdAt)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          args: [
+            result.tx.id,
+            customerId,
+            currentUserDealerId,
+            normalizedType,
+            normalizedAsset,
+            numAmount,
+            calculatedHasEq,
+            numPrice,
+            description?.trim() || null,
+            employeeName?.trim() || userName,
+            new Date().toISOString(),
+          ],
+        });
+        await turso.execute({
+          sql: `UPDATE Customer SET tlBalance = ?, hasBalance = ?, updatedAt = ? WHERE id = ?;`,
+          args: [result.tlBalance, result.hasBalance, new Date().toISOString(), customerId],
+        });
+      } catch (e: any) {
+        console.warn('[Turso Sync Warning]:', e.message);
+      }
     }
 
     const isDebt = normalizedType === CUSTOMER_TRANSACTION_TYPES.BORC || normalizedType === CUSTOMER_TRANSACTION_TYPES.ODEME;
@@ -180,8 +187,12 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(result, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API CustomerTransactions] POST Error:', error);
-    return NextResponse.json({ error: 'Müşteri işlem kaydı oluşturulamadı.' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Müşteri işlem kaydı oluşturulamadı.' },
+      { status: error?.statusCode || 500 }
+    );
   }
 }
+

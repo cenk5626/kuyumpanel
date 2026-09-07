@@ -1,23 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
+
+export const dynamic = 'force-dynamic';
 
 const LOG_PREFIX = '[API Employees]';
 
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const dealerIdParam = searchParams.get('dealerId');
 
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId;
-
-    // Filter by dealerId if provided, or default to current user's dealerId if they are ADMIN/TABLET/PC
+    // Filter by dealerId if provided, or default to current user's dealerId if they are not SUPER_ADMIN
     let targetDealerId = dealerIdParam;
     if (currentUserRole !== 'SUPER_ADMIN') {
       targetDealerId = currentUserDealerId;
@@ -28,10 +26,10 @@ export async function GET(req: Request) {
       const allEmployees = await prisma.employee.findMany({
         include: {
           dealer: {
-            select: { name: true }
-          }
+            select: { name: true },
+          },
         },
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' },
       });
       return NextResponse.json(allEmployees);
     }
@@ -40,25 +38,24 @@ export async function GET(req: Request) {
       where: { dealerId: targetDealerId },
       include: {
         dealer: {
-          select: { name: true }
-        }
+          select: { name: true },
+        },
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
 
     return NextResponse.json(employees);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
-    return NextResponse.json({ error: 'Çalışanlar listelenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Çalışanlar listelenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const body = await req.json();
     const { name, dealerId } = body;
@@ -66,9 +63,6 @@ export async function POST(req: Request) {
     if (!name) {
       return NextResponse.json({ error: 'Çalışan ismi zorunludur.' }, { status: 400 });
     }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId;
 
     // Set dealerId based on user role
     let targetDealerId = dealerId;
@@ -87,24 +81,23 @@ export async function POST(req: Request) {
       },
       include: {
         dealer: {
-          select: { name: true }
-        }
-      }
+          select: { name: true },
+        },
+      },
     });
 
-    return NextResponse.json(newEmployee);
-  } catch (error) {
+    return NextResponse.json(newEmployee, { status: 201 });
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
-    return NextResponse.json({ error: 'Çalışan eklenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Çalışan eklenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const body = await req.json();
     const { id, name, dealerId } = body;
@@ -117,14 +110,7 @@ export async function PUT(req: Request) {
     if (!employee) {
       return NextResponse.json({ error: 'Çalışan bulunamadı.' }, { status: 404 });
     }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId;
-
-    // Access check
-    if (currentUserRole !== 'SUPER_ADMIN' && employee.dealerId !== currentUserDealerId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    assertTenantOwnership(ctx, employee.dealerId, 'Çalışan');
 
     let targetDealerId = dealerId;
     if (currentUserRole !== 'SUPER_ADMIN') {
@@ -139,24 +125,23 @@ export async function PUT(req: Request) {
       },
       include: {
         dealer: {
-          select: { name: true }
-        }
-      }
+          select: { name: true },
+        },
+      },
     });
 
     return NextResponse.json(updatedEmployee);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} PUT Error:`, error);
-    return NextResponse.json({ error: 'Çalışan bilgileri güncellenemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Çalışan bilgileri güncellenemedi.' }, { status: error?.statusCode || 500 });
   }
 }
 
 export async function DELETE(req: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -169,18 +154,13 @@ export async function DELETE(req: Request) {
     if (!employee) {
       return NextResponse.json({ error: 'Çalışan bulunamadı.' }, { status: 404 });
     }
-
-    const currentUserRole = (session.user as any).role;
-    const currentUserDealerId = (session.user as any).dealerId;
-
-    if (currentUserRole !== 'SUPER_ADMIN' && employee.dealerId !== currentUserDealerId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    assertTenantOwnership(ctx, employee.dealerId, 'Çalışan');
 
     await prisma.employee.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} DELETE Error:`, error);
-    return NextResponse.json({ error: 'Çalışan silinemedi.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Çalışan silinemedi.' }, { status: error?.statusCode || 500 });
   }
 }
+

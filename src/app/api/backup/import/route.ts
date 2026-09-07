@@ -1,21 +1,19 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { logActivity } from '@/lib/logger';
+import { SECURITY_CONFIG } from '@/constants/security';
 import * as XLSX from 'xlsx';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const currentUserRole = (session.user as any)?.role;
-    const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
-    const currentUserName = session.user?.name || 'Yetkili';
+    const ctx = await getAuthenticatedContext();
+    const currentUserRole = ctx.role;
+    const currentUserDealerId = ctx.dealerId;
+    const currentUserName = ctx.userName;
+    const currentUserEmail = ctx.userEmail;
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -23,6 +21,14 @@ export async function POST(req: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: 'Lütfen bir dosya seçiniz.' }, { status: 400 });
+    }
+
+    // Dosya boyutu sınırı kontrolü (Azami 5 MB)
+    if (file.size > SECURITY_CONFIG.FILES.MAX_IMPORT_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: `Dosya boyutu çok büyük. Azami dosya boyutu: ${SECURITY_CONFIG.FILES.MAX_IMPORT_SIZE_BYTES / (1024 * 1024)} MB` },
+        { status: 400 }
+      );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -108,7 +114,7 @@ export async function POST(req: NextRequest) {
           dealerId: currentUserDealerId,
           action: 'Sistem Yedeği Geri Yüklendi',
           details: `${file.name} dosyasından ${restoredCount} kayıt sisteme aktarıldı.`,
-          userEmail: session.user?.email || '',
+          userEmail: currentUserEmail,
           userName: currentUserName,
         });
 
@@ -236,7 +242,7 @@ export async function POST(req: NextRequest) {
       dealerId: currentUserDealerId,
       action: 'Toplu Veri İçe Aktarıldı',
       details: `${file.name} dosyasından ${successCount} adet ${importType === 'stocks' ? 'ürün' : 'müşteri'} sisteme başarıyla yüklendi.`,
-      userEmail: session.user?.email || '',
+      userEmail: currentUserEmail,
       userName: currentUserName,
     });
 

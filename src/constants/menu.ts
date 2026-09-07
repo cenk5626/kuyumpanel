@@ -33,10 +33,22 @@ export const MENU_ITEMS = [
     icon: 'Truck',
   },
   {
+    id: 'purchases',
+    label: MESSAGES.MENU_PURCHASES,
+    href: ROUTES.PURCHASES,
+    icon: 'Boxes',
+  },
+  {
     id: 'customers',
     label: MESSAGES.MENU_CUSTOMERS,
     href: ROUTES.CUSTOMERS,
     icon: 'UserCheck',
+  },
+  {
+    id: 'loyalty',
+    label: 'Sadakat & RFM',
+    href: ROUTES.LOYALTY,
+    icon: 'HeartHandshake',
   },
   {
     id: 'installments',
@@ -51,10 +63,28 @@ export const MENU_ITEMS = [
     icon: 'ReceiptText',
   },
   {
+    id: 'expense-vouchers',
+    label: 'Gider Pusulası',
+    href: ROUTES.EXPENSE_VOUCHERS,
+    icon: 'FileText',
+  },
+  {
     id: 'workshop',
     label: MESSAGES.MENU_WORKSHOP,
     href: ROUTES.WORKSHOP,
     icon: 'Flame',
+  },
+  {
+    id: 'branches',
+    label: 'Şube Yönetimi',
+    href: ROUTES.BRANCHES,
+    icon: 'GitFork',
+  },
+  {
+    id: 'transfers',
+    label: 'Şube Transfer',
+    href: ROUTES.TRANSFERS,
+    icon: 'ArrowRightLeft',
   },
   {
     id: 'z-report',

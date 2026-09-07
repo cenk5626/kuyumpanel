@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getAuthenticatedContext, requirePermission } from '@/lib/security/auth-context';
+import { PERMISSIONS } from '@/constants/permissions';
 import { USER_ROLES } from '@/constants/roles';
+
+export const dynamic = 'force-dynamic';
 
 // API log başlığı
 const LOG_PREFIX = '[API Dealers]';
@@ -13,13 +16,9 @@ const LOG_PREFIX = '[API Dealers]';
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const userRole = (session.user as any).role;
-    const userDealerId = (session.user as any).dealerId;
+    const ctx = await getAuthenticatedContext();
+    const userRole = ctx.role;
+    const userDealerId = ctx.dealerId;
 
     if (userRole === USER_ROLES.SUPER_ADMIN) {
       const dealers = await prisma.dealer.findMany({
@@ -36,9 +35,9 @@ export async function GET() {
     }
 
     return NextResponse.json([]);
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} GET Error:`, error);
-    return NextResponse.json({ error: 'Bayi bilgileri alınamadı.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Bayi bilgileri alınamadı.' }, { status: error?.statusCode || 500 });
   }
 }
 
@@ -48,12 +47,9 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ctx = await getAuthenticatedContext();
+    const userRole = ctx.role;
 
-    const userRole = (session.user as any).role;
     if (userRole !== USER_ROLES.SUPER_ADMIN) {
       return NextResponse.json({ error: 'Bu işlem için yetkiniz yok.' }, { status: 403 });
     }
@@ -77,14 +73,15 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(dealer, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${LOG_PREFIX} POST Error:`, error);
     return NextResponse.json(
       {
-        error: 'Bayi oluşturulamadı.',
+        error: error?.message || 'Bayi oluşturulamadı.',
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: error?.statusCode || 500 }
     );
   }
 }
+
