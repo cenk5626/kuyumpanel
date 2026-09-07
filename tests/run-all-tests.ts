@@ -44,6 +44,7 @@ import { registerF29LoyaltyRfmSpecialDaysTests } from './tier1/f29_loyalty_rfm_s
 import { registerF30OfficialInvoiceExpenseVoucherTests } from './tier1/f30_official_invoice_expense_voucher.test';
 import { registerF31ServiceRepairWarrantyTests } from './tier1/f31_service_repair_warranty.test';
 import { registerF32CrmWhatsAppConsentTests } from './tier1/f32_crm_whatsapp_consent.test';
+import { registerF33PricingQuotationTests } from './tier1/f33_pricing_quotation.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -90,6 +91,7 @@ const FEATURE_NAMES: Record<number, string> = {
   30: 'Official Invoicing, e-Document Lifecycle & Expense Vouchers',
   31: 'Service, Repair & Warranty Management',
   32: 'CRM, Segmentation & WhatsApp Consent Management',
+  33: 'Advanced Pricing, Discount Limits & Quotation',
 };
 
 async function main() {
@@ -132,6 +134,7 @@ async function main() {
   registerF30OfficialInvoiceExpenseVoucherTests();
   registerF31ServiceRepairWarrantyTests();
   registerF32CrmWhatsAppConsentTests();
+  registerF33PricingQuotationTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();
@@ -161,7 +164,7 @@ async function main() {
 
   // Group by Feature
   const featureMatrix: Record<number, { featureName: string; tier1: number; tier2: number; tier3: number; tier4: number; passed: boolean }> = {};
-  for (let i = 1; i <= 32; i++) {
+  for (let i = 1; i <= 33; i++) {
     featureMatrix[i] = {
       featureName: FEATURE_NAMES[i] || `Feature ${i}`,
       tier1: 0,

@@ -39,4 +39,5 @@ export * from './loyalty';
 export * from './expense-voucher';
 export * from './service';
 export * from './crm';
+export * from './pricing';
 

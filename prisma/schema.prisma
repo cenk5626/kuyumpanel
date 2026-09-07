@@ -65,6 +65,7 @@ model Dealer {
   customerSegments     CustomerSegment[]
   contactConsents      ContactConsent[]
   campaigns            Campaign[]
+  quotes               Quote[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -438,6 +439,7 @@ model Customer {
   serviceOrders  ServiceOrder[]
   contactConsents ContactConsent[]
   campaignRecipients CampaignRecipient[]
+  quotes         Quote[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt @default(now())
 }
@@ -667,6 +669,7 @@ model Branch {
   cashDiscrepancyLogs  CashDiscrepancyLog[]
   expenseVouchers      ExpenseVoucher[]
   serviceOrders        ServiceOrder[]
+  quotes               Quote[]
   
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -1081,5 +1084,58 @@ model CampaignRecipient {
   errorMessage        String?
   createdAt           DateTime  @default(now())
 }
+
+// =============================================================
+// FAZ 7: Gelişmiş Fiyatlandırma, Özel İskonto Limitleri ve Teklif (Quotation)
+// =============================================================
+
+model Quote {
+  id                      String      @id @default(cuid())
+  dealerId                String
+  dealer                  Dealer      @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId                String?
+  branch                  Branch?     @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  quoteNumber             String      // Örn: "TKL-2026-0001"
+  customerId              String?
+  customer                Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName            String
+  customerPhone           String?
+  status                  String      @default("DRAFT") // "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "CONVERTED" | "EXPIRED" | "REJECTED"
+  validUntil              DateTime    // Teklif geçerlilik bitiş anı
+  baseGoldPrice           Float       // Teklif anındaki Has altın alış/satış referans kuru
+  maxGoldTolerancePercent Float       @default(1.5) // Kabul edilebilir max kur artış toleransı (%)
+  subtotalTl              Float
+  discountTl              Float       @default(0)
+  discountPercent         Float       @default(0)
+  totalTl                 Float
+  totalHas                Float       @default(0)
+  requiresApproval        Boolean     @default(false) // Yetki tavanı aşıldığında onay gerekir
+  approvedBy              String?
+  approvedAt              DateTime?
+  convertedTransactionId  String?     // Satışa dönüştürüldüyse oluşan transaction ID
+  convertedAt             DateTime?
+  notes                   String?
+  lines                   QuoteLine[]
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+
+  @@unique([dealerId, quoteNumber])
+}
+
+model QuoteLine {
+  id            String   @id @default(cuid())
+  quoteId       String
+  quote         Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  barcode       String?  // Varsa stok barkodu
+  title         String   // Ürün açıklaması
+  carat         Int      // Ayar (örn: 14, 22)
+  weight        Float    // Gramaj
+  laborCost     Float    @default(0) // Birim veya toplam işçilik
+  unitPrice     Float    // Birim satış fiyatı
+  totalPrice    Float    // Kalem toplam fiyatı (TL)
+  hasEquivalent Float    // Kalem has altın karşılığı (gr Has)
+  createdAt     DateTime @default(now())
+}
+
 
 

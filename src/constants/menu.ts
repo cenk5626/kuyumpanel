@@ -57,6 +57,12 @@ export const MENU_ITEMS = [
     icon: 'MessageSquareShare',
   },
   {
+    id: 'quotes',
+    label: 'Teklif & İskonto',
+    href: ROUTES.QUOTES,
+    icon: 'BadgePercent',
+  },
+  {
     id: 'installments',
     label: MESSAGES.MENU_INSTALLMENTS,
     href: ROUTES.INSTALLMENTS,
