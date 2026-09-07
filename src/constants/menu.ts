@@ -51,6 +51,12 @@ export const MENU_ITEMS = [
     icon: 'HeartHandshake',
   },
   {
+    id: 'crm',
+    label: 'CRM & Kampanyalar',
+    href: ROUTES.CRM,
+    icon: 'MessageSquareShare',
+  },
+  {
     id: 'installments',
     label: MESSAGES.MENU_INSTALLMENTS,
     href: ROUTES.INSTALLMENTS,

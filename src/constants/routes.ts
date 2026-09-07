@@ -68,6 +68,10 @@ export const ROUTES = {
   API_EXPENSE_VOUCHERS: '/api/expense-vouchers',
   SERVICES: '/services',
   API_SERVICES: '/api/service-orders',
+  CRM: '/crm',
+  API_CRM_CAMPAIGNS: '/api/crm/campaigns',
+  API_CRM_CONSENTS: '/api/crm/consents',
+  API_CRM_SEGMENTS: '/api/crm/segments',
 } as const;
 
 

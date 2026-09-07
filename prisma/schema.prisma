@@ -62,6 +62,9 @@ model Dealer {
   customerSpecialDayLogs CustomerSpecialDayLog[]
   expenseVouchers      ExpenseVoucher[]
   serviceOrders        ServiceOrder[]
+  customerSegments     CustomerSegment[]
+  contactConsents      ContactConsent[]
+  campaigns            Campaign[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -433,6 +436,8 @@ model Customer {
   loyaltyLogs    CustomerLoyaltyLog[]
   specialDayLogs CustomerSpecialDayLog[]
   serviceOrders  ServiceOrder[]
+  contactConsents ContactConsent[]
+  campaignRecipients CampaignRecipient[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt @default(now())
 }
@@ -1000,4 +1005,81 @@ model ServiceOrderEvent {
   performedBy          String?
   createdAt            DateTime               @default(now())
 }
+
+// =============================================================
+// FAZ 6: CRM, Segmentasyon & İzinli WhatsApp İletişimi (ETK / KVKK)
+// =============================================================
+
+model CustomerSegment {
+  id              String       @id @default(cuid())
+  dealerId        String
+  dealer          Dealer       @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  name            String       // Örn: "VIP Müşteriler", "Düğün & Çeyiz", "Has Yatırımcıları"
+  type            String       @default("CUSTOM") // "VIP" | "WEDDING" | "INVESTOR" | "DORMANT" | "CUSTOM"
+  description     String?
+  minSpendTl      Float?       @default(0)
+  maxRecencyDays  Int?
+  minTransactions Int?         @default(0)
+  campaigns       Campaign[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model ContactConsent {
+  id               String    @id @default(cuid())
+  dealerId         String
+  dealer           Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  phone            String    // İletişim numarası
+  status           String    @default("OPT_IN") // "OPT_IN" | "OPT_OUT" | "PENDING"
+  channel          String    @default("IN_STORE_FORM") // "IN_STORE_FORM" | "SMS_OTP" | "VERBAL_PHONE" | "DIGITAL_SIGNATURE"
+  consentDate      DateTime  @default(now())
+  revokedAt        DateTime?
+  ipAddress        String?
+  documentProofUrl String?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([dealerId, customerId, phone])
+}
+
+model Campaign {
+  id              String              @id @default(cuid())
+  dealerId        String
+  dealer          Dealer              @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  title           String              // Örn: "8 Mart Dünya Kadınlar Günü %15 Pırlanta İndirimi"
+  type            String              @default("DISCOUNT_COUPON") // "DISCOUNT_COUPON" | "SPECIAL_DAY_GREETING" | "NEW_COLLECTION" | "GOLD_PRICE_ALERT" | "LOYALTY_POINTS_REMINDER"
+  status          String              @default("DRAFT") // "DRAFT" | "SCHEDULED" | "ACTIVE" | "COMPLETED" | "CANCELLED"
+  messageTemplate String              // Dinamik şablon: "Sayın {{ad}}, mağazamızda geçerli {{indirim}} indirim fırsatı..."
+  segmentId       String?
+  segment         CustomerSegment?    @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  targetCount     Int                 @default(0)
+  sentCount       Int                 @default(0)
+  deliveredCount  Int                 @default(0)
+  optOutCount     Int                 @default(0)
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  recipients      CampaignRecipient[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model CampaignRecipient {
+  id                  String    @id @default(cuid())
+  campaignId          String
+  campaign            Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customerId          String
+  customer            Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  phone               String
+  personalizedMessage String
+  status              String    @default("PENDING") // "PENDING" | "SENT" | "FAILED" | "OPTED_OUT"
+  sentAt              DateTime?
+  clickedAt           DateTime?
+  errorMessage        String?
+  createdAt           DateTime  @default(now())
+}
+
 
