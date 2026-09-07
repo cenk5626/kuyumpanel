@@ -61,6 +61,7 @@ model Dealer {
   customerLoyaltyLogs  CustomerLoyaltyLog[]
   customerSpecialDayLogs CustomerSpecialDayLog[]
   expenseVouchers      ExpenseVoucher[]
+  serviceOrders        ServiceOrder[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -431,6 +432,7 @@ model Customer {
   deposits       CustomerDeposit[]
   loyaltyLogs    CustomerLoyaltyLog[]
   specialDayLogs CustomerSpecialDayLog[]
+  serviceOrders  ServiceOrder[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt @default(now())
 }
@@ -611,6 +613,7 @@ model WorkshopJob {
   deliveryDate           DateTime? // Termin Tarihi
   completedDate          DateTime? // Kapatılma Tarihi
   notes                  String?
+  serviceOrders          ServiceOrder[]
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 }
@@ -658,6 +661,7 @@ model Branch {
   fxExchanges          FxExchange[]
   cashDiscrepancyLogs  CashDiscrepancyLog[]
   expenseVouchers      ExpenseVoucher[]
+  serviceOrders        ServiceOrder[]
   
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -940,5 +944,60 @@ model ExpenseVoucherEvent {
   actorEmail        String?
   notes             String?
   createdAt         DateTime       @default(now())
+}
+
+// =============================================================
+// FAZ 5: Servis, Tamir & Garanti Yönetimi
+// =============================================================
+
+model ServiceOrder {
+  id                   String                 @id @default(cuid())
+  dealerId             String
+  dealer               Dealer                 @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId             String?
+  branch               Branch?                @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  serviceNumber        String                 // Örn: "SRV-2026-0001"
+  customerId           String?
+  customer             Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName         String
+  customerPhone        String
+  itemDescription      String                 // Örn: "14K Tektaş Pırlanta Yüzük"
+  barcode              String?                // Müşteri takısının varsa mevcut stok/barkod no
+  carat                Int?                   // 8, 14, 18, 22, 24
+  intakeWeight         Float                  // Teslim alınırken tartılan gramaj (gr)
+  targetWeight         Float?                 // İşlem sonrası beklenen gramaj (gr)
+  actualWeight         Float?                 // İşlem sonrası teslim edilen fiili gramaj (gr)
+  issueDescription     String                 // Müşteri şikayeti / talep (örn: "Taş mıhlama, boy daraltma, cila")
+  estimatedCostTl      Float                  @default(0) // Tahmini maliyet teklifi
+  finalCostTl          Float                  @default(0) // Kesinleşen tahsil edilecek tutar
+  isCustomerApproved   Boolean                @default(false) // Müşteri onay verdi mi?
+  customerApprovalDate DateTime?
+  workshopJobId        String?                // Atölye iş emri bağı
+  workshopJob          WorkshopJob?           @relation(fields: [workshopJobId], references: [id], onDelete: SetNull)
+  status               String                 @default("RECEIVED") // "RECEIVED" | "QUOTED" | "APPROVED" | "IN_WORKSHOP" | "READY" | "DELIVERED" | "CANCELLED"
+  promisedDate         DateTime               // Vaat edilen teslim tarihi
+  deliveredAt          DateTime?              // Fiili teslim tarihi
+  warrantyMonths       Int                    @default(6) // Tamir garanti süresi (ay)
+  warrantyExpiresAt    DateTime?
+  technicianNotes      String?
+  evidencePhotos       String?                // JSON dizisi URL'ler
+  createdById          String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  events               ServiceOrderEvent[]
+
+  @@unique([dealerId, serviceNumber])
+}
+
+model ServiceOrderEvent {
+  id                   String                 @id @default(cuid())
+  serviceOrderId       String
+  serviceOrder         ServiceOrder           @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  fromStatus           String?
+  toStatus             String
+  action               String                 // "RECEIVED" | "QUOTED" | "APPROVED" | "SENT_TO_WORKSHOP" | "MARKED_READY" | "DELIVERED" | "CANCELLED"
+  notes                String?
+  performedBy          String?
+  createdAt            DateTime               @default(now())
 }
 

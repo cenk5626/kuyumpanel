@@ -66,6 +66,8 @@ export const ROUTES = {
   API_SPECIAL_DAYS: '/api/customers/special-days',
   EXPENSE_VOUCHERS: '/expense-vouchers',
   API_EXPENSE_VOUCHERS: '/api/expense-vouchers',
+  SERVICES: '/services',
+  API_SERVICES: '/api/service-orders',
 } as const;
 
 

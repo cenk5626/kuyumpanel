@@ -42,6 +42,7 @@ import { registerF27PurchaseGoodsReceiptTests } from './tier1/f27_purchase_goods
 import { registerF28MultiCurrencyCashFxTests } from './tier1/f28_multicurrency_cash_fx.test';
 import { registerF29LoyaltyRfmSpecialDaysTests } from './tier1/f29_loyalty_rfm_special_days.test';
 import { registerF30OfficialInvoiceExpenseVoucherTests } from './tier1/f30_official_invoice_expense_voucher.test';
+import { registerF31ServiceRepairWarrantyTests } from './tier1/f31_service_repair_warranty.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -86,6 +87,7 @@ const FEATURE_NAMES: Record<number, string> = {
   28: 'Multi-Currency Cash Drawer, Forex Valuation & Discrepancies',
   29: 'Customer Loyalty, Points, RFM & Special Days',
   30: 'Official Invoicing, e-Document Lifecycle & Expense Vouchers',
+  31: 'Service, Repair & Warranty Management',
 };
 
 async function main() {
@@ -126,6 +128,7 @@ async function main() {
   registerF28MultiCurrencyCashFxTests();
   registerF29LoyaltyRfmSpecialDaysTests();
   registerF30OfficialInvoiceExpenseVoucherTests();
+  registerF31ServiceRepairWarrantyTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();
@@ -155,7 +158,7 @@ async function main() {
 
   // Group by Feature
   const featureMatrix: Record<number, { featureName: string; tier1: number; tier2: number; tier3: number; tier4: number; passed: boolean }> = {};
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 1; i <= 31; i++) {
     featureMatrix[i] = {
       featureName: FEATURE_NAMES[i] || `Feature ${i}`,
       tier1: 0,

@@ -75,6 +75,12 @@ export const MENU_ITEMS = [
     icon: 'Flame',
   },
   {
+    id: 'services',
+    label: 'Servis & Tamir',
+    href: ROUTES.SERVICES,
+    icon: 'Wrench',
+  },
+  {
     id: 'branches',
     label: 'Şube Yönetimi',
     href: ROUTES.BRANCHES,

@@ -37,4 +37,5 @@ export {
 } from './forex';
 export * from './loyalty';
 export * from './expense-voucher';
+export * from './service';
 
