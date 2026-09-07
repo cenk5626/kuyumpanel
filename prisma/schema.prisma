@@ -66,6 +66,7 @@ model Dealer {
   contactConsents      ContactConsent[]
   campaigns            Campaign[]
   quotes               Quote[]
+  demandForecastSettings DemandForecastSettings?
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -1136,6 +1137,24 @@ model QuoteLine {
   hasEquivalent Float    // Kalem has altın karşılığı (gr Has)
   createdAt     DateTime @default(now())
 }
+
+// =============================================================
+// FAZ 8: Yönetici Analitiği & Talep Tahmini Ayarları
+// =============================================================
+
+model DemandForecastSettings {
+  id                     String   @id @default(cuid())
+  dealerId               String   @unique
+  dealer                 Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  safetyStockDays        Int      @default(14)
+  leadTimeDays           Int      @default(7)
+  analysisPeriodDays     Int      @default(90)
+  deadStockThresholdDays Int      @default(180)
+  targetMarginPercent    Float    @default(15.0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
 
 
 

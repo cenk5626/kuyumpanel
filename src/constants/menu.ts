@@ -117,6 +117,12 @@ export const MENU_ITEMS = [
     icon: 'TrendingUp',
   },
   {
+    id: 'executive-analytics',
+    label: 'Yönetici & Tahmin',
+    href: ROUTES.EXECUTIVE_ANALYTICS,
+    icon: 'LineChart',
+  },
+  {
     id: 'stock-audit',
     label: MESSAGES.MENU_STOCK_AUDIT,
     href: ROUTES.STOCK_AUDIT,

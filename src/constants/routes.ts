@@ -74,6 +74,9 @@ export const ROUTES = {
   API_CRM_SEGMENTS: '/api/crm/segments',
   QUOTES: '/quotes',
   API_QUOTES: '/api/quotes',
+  EXECUTIVE_ANALYTICS: '/executive-analytics',
+  API_EXECUTIVE_ANALYTICS: '/api/analytics/executive',
+  API_DEMAND_FORECAST: '/api/analytics/demand-forecast',
 } as const;
 
 
