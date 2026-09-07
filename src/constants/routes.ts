@@ -77,6 +77,8 @@ export const ROUTES = {
   EXECUTIVE_ANALYTICS: '/executive-analytics',
   API_EXECUTIVE_ANALYTICS: '/api/analytics/executive',
   API_DEMAND_FORECAST: '/api/analytics/demand-forecast',
+  APPROVALS: '/approvals',
+  API_APPROVALS: '/api/approvals',
 } as const;
 
 

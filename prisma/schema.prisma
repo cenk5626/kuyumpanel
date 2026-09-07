@@ -67,6 +67,7 @@ model Dealer {
   campaigns            Campaign[]
   quotes               Quote[]
   demandForecastSettings DemandForecastSettings?
+  approvalRequests     ApprovalRequest[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -1155,6 +1156,44 @@ model DemandForecastSettings {
   updatedAt              DateTime @updatedAt
 }
 
+// =============================================================
+// FAZ 9: Çok Seviyeli Onay ve Denetim Akışları (Approval Engine)
+// =============================================================
 
+model ApprovalRequest {
+  id              String         @id @default(cuid())
+  dealerId        String
+  dealer          Dealer         @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  requestType     String         // "BALANCE_WRITEOFF" | "HIGH_DISCOUNT" | "CASH_OUTFLOW" | "VIRMAN" | "SCRAP_ADJUSTMENT"
+  status          String         @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"
+  requiredLevel   Int            @default(1) // 1 = ADMIN, 2 = SUPER_ADMIN
+  currentLevel    Int            @default(1)
+  title           String
+  description     String?
+  amount          Float?         // Varsa parasal veya has büyüklük
+  unit            String?        @default("TL") // "TL" | "HAS_GR" | "PERCENT"
+  payload         String?        // JSON metadata
+  requesterId     String
+  requesterName   String
+  requesterEmail  String
+  rejectionReason String?
+  resolvedAt      DateTime?
+  steps           ApprovalStep[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
 
-
+model ApprovalStep {
+  id             String          @id @default(cuid())
+  requestId      String
+  request        ApprovalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  stepLevel      Int             // 1, 2...
+  requiredRole   String          // "ADMIN" | "SUPER_ADMIN"
+  status         String          @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  approverId     String?
+  approverName   String?
+  approverEmail  String?
+  note           String?
+  actionAt       DateTime?
+  createdAt      DateTime        @default(now())
+}

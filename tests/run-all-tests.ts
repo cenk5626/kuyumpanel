@@ -46,6 +46,7 @@ import { registerF31ServiceRepairWarrantyTests } from './tier1/f31_service_repai
 import { registerF32CrmWhatsAppConsentTests } from './tier1/f32_crm_whatsapp_consent.test';
 import { registerF33PricingQuotationTests } from './tier1/f33_pricing_quotation.test';
 import { registerF34ExecutiveAnalyticsForecastingTests } from './tier1/f34_executive_analytics_forecasting.test';
+import { registerF35ApprovalEngineTests } from './tier1/f35_approval_engine.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -94,6 +95,7 @@ const FEATURE_NAMES: Record<number, string> = {
   32: 'CRM, Segmentation & WhatsApp Consent Management',
   33: 'Advanced Pricing, Discount Limits & Quotation',
   34: 'Executive Analytics, Turnover & Demand Forecasting',
+  35: 'Multi-Level Approval & Four-Eyes Principle',
 };
 
 async function main() {
@@ -138,6 +140,7 @@ async function main() {
   registerF32CrmWhatsAppConsentTests();
   registerF33PricingQuotationTests();
   registerF34ExecutiveAnalyticsForecastingTests();
+  registerF35ApprovalEngineTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();
@@ -167,7 +170,7 @@ async function main() {
 
   // Group by Feature
   const featureMatrix: Record<number, { featureName: string; tier1: number; tier2: number; tier3: number; tier4: number; passed: boolean }> = {};
-  for (let i = 1; i <= 34; i++) {
+  for (let i = 1; i <= 35; i++) {
     featureMatrix[i] = {
       featureName: FEATURE_NAMES[i] || `Feature ${i}`,
       tier1: 0,

@@ -123,6 +123,12 @@ export const MENU_ITEMS = [
     icon: 'LineChart',
   },
   {
+    id: 'approvals',
+    label: 'Onay & Yetki',
+    href: ROUTES.APPROVALS,
+    icon: 'ShieldCheck',
+  },
+  {
     id: 'stock-audit',
     label: MESSAGES.MENU_STOCK_AUDIT,
     href: ROUTES.STOCK_AUDIT,
