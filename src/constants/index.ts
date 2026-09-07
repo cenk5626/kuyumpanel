@@ -42,4 +42,5 @@ export * from './crm';
 export * from './pricing';
 export * from './executive-analytics';
 export * from './approval';
+export * from './rfid';
 

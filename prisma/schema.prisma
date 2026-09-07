@@ -68,6 +68,8 @@ model Dealer {
   quotes               Quote[]
   demandForecastSettings DemandForecastSettings?
   approvalRequests     ApprovalRequest[]
+  rfidTags             RfidTag[]
+  rfidStocktakeSessions RfidStocktakeSession[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -1196,4 +1198,67 @@ model ApprovalStep {
   note           String?
   actionAt       DateTime?
   createdAt      DateTime        @default(now())
+}
+
+// =============================================================
+// FAZ 10: RFID Destekli Vitrin ve Hızlı Sayım (RFID Stocktaking)
+// =============================================================
+
+model RfidTag {
+  id           String    @id @default(cuid())
+  dealerId     String
+  dealer       Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  epc          String    // 96-bit EPC Hex kodu
+  barcode      String    // Eşleşen ürün barkodu
+  location     String?   @default("VİTRİN_1") // Bulunduğu tabla/vitrin/kasa
+  status       String    @default("ACTIVE") // "ACTIVE" | "INACTIVE" | "LOST" | "DECOMMISSIONED"
+  lastReadAt   DateTime?
+  lastRssi     Float?    // Sinyal gücü dBm (-80 ~ -30)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([dealerId, epc])
+  @@index([dealerId, barcode])
+}
+
+model RfidStocktakeSession {
+  id              String               @id @default(cuid())
+  dealerId        String
+  dealer          Dealer               @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  sessionNumber   String               // Örn: "RFID-2026-0001"
+  location        String               // "TÜMÜ" | "VİTRİN_1" | "TABLA_A" vb.
+  status          String               @default("ACTIVE") // "ACTIVE" | "COMPLETED" | "CANCELLED"
+  expectedCount   Int                  @default(0)
+  scannedCount    Int                  @default(0)
+  matchedCount    Int                  @default(0)
+  missingCount    Int                  @default(0)
+  surplusCount    Int                  @default(0)
+  startedBy       String
+  completedBy     String?
+  startedAt       DateTime             @default(now())
+  completedAt     DateTime?
+  notes           String?
+  items           RfidStocktakeItem[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@unique([dealerId, sessionNumber])
+}
+
+model RfidStocktakeItem {
+  id             String               @id @default(cuid())
+  sessionId      String
+  session        RfidStocktakeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  epc            String
+  barcode        String?
+  title          String?
+  carat          Int?
+  weight         Float?
+  expectedLocation String?
+  actualLocation   String?
+  matchStatus    String               @default("MISSING") // "MATCHED" | "MISSING" | "SURPLUS"
+  readCount      Int                  @default(0)
+  rssi           Float?
+  scannedAt      DateTime?
+  createdAt      DateTime             @default(now())
 }

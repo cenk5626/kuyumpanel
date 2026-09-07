@@ -79,6 +79,9 @@ export const ROUTES = {
   API_DEMAND_FORECAST: '/api/analytics/demand-forecast',
   APPROVALS: '/approvals',
   API_APPROVALS: '/api/approvals',
+  RFID_STOCKTAKE: '/rfid-stocktake',
+  API_RFID_SESSIONS: '/api/rfid/sessions',
+  API_RFID_TAGS: '/api/rfid/tags',
 } as const;
 
 

@@ -135,6 +135,12 @@ export const MENU_ITEMS = [
     icon: 'ClipboardCheck',
   },
   {
+    id: 'rfid-stocktake',
+    label: 'RFID Vitrin Sayımı',
+    href: ROUTES.RFID_STOCKTAKE,
+    icon: 'Radio',
+  },
+  {
     id: 'data-hub',
     label: MESSAGES.MENU_DATA_HUB,
     href: ROUTES.DATA_HUB,
