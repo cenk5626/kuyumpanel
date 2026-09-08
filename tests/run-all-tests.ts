@@ -50,6 +50,7 @@ import { registerF35ApprovalEngineTests } from './tier1/f35_approval_engine.test
 import { registerF36RfidStocktakeTests } from './tier1/f36_rfid_stocktake.test';
 import { registerF37OmnichannelEcommerceTests } from './tier1/f37_omnichannel_ecommerce.test';
 import { registerF38ComplianceMasakAmlTests } from './tier1/f38_compliance_masak_aml.test';
+import { registerF39OpenBankingPosSettlementTests } from './tier1/f39_open_banking_pos_settlement.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -102,6 +103,7 @@ const FEATURE_NAMES: Record<number, string> = {
   36: 'RFID UHF Stocktaking & Tag Reconciliation',
   37: 'Omnichannel E-Commerce & Oversell Prevention',
   38: 'MASAK & AML Compliance Management',
+  39: 'Open Banking & POS Settlement Reconciliation',
 };
 
 async function main() {
@@ -150,6 +152,7 @@ async function main() {
   registerF36RfidStocktakeTests();
   registerF37OmnichannelEcommerceTests();
   registerF38ComplianceMasakAmlTests();
+  registerF39OpenBankingPosSettlementTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();
@@ -179,7 +182,7 @@ async function main() {
 
   // Group by Feature
   const featureMatrix: Record<number, { featureName: string; tier1: number; tier2: number; tier3: number; tier4: number; passed: boolean }> = {};
-  for (let i = 1; i <= 38; i++) {
+  for (let i = 1; i <= 39; i++) {
     featureMatrix[i] = {
       featureName: FEATURE_NAMES[i] || `Feature ${i}`,
       tier1: 0,

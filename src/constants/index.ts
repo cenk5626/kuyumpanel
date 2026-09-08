@@ -45,4 +45,5 @@ export * from './approval';
 export * from './rfid';
 export * from './omnichannel';
 export * from './compliance';
+export * from './banking';
 

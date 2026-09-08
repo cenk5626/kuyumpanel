@@ -153,6 +153,12 @@ export const MENU_ITEMS = [
     icon: 'ShieldAlert',
   },
   {
+    id: 'banking',
+    label: MESSAGES.MENU_BANKING,
+    href: ROUTES.BANKING,
+    icon: 'Landmark',
+  },
+  {
     id: 'data-hub',
     label: MESSAGES.MENU_DATA_HUB,
     href: ROUTES.DATA_HUB,

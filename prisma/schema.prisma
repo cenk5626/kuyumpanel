@@ -75,6 +75,10 @@ model Dealer {
   complianceCases      ComplianceCase[]
   amlRiskRules         AmlRiskRule[]
   customerRiskProfiles CustomerRiskProfile[]
+  bankAccounts         BankAccount[]
+  posTerminals         PosTerminal[]
+  bankTransactions     BankTransaction[]
+  posSettlements       PosSettlement[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -1399,4 +1403,99 @@ model ComplianceCase {
   @@index([dealerId, status])
   @@index([dealerId, riskLevel])
 }
+
+// =============================================================
+// FAZ 3B: Banka, POS & Açık Bankacılık Mutabakatı
+// =============================================================
+
+model BankAccount {
+  id                String            @id @default(cuid())
+  dealerId          String
+  dealer            Dealer            @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  bankName          String            // "Ziraat Bankası", "Garanti BBVA", "Kuveyt Türk", "İş Bankası"
+  accountName       String            // "Ana Şube Vadesiz", "Altın Depo Hesabı"
+  accountType       String            @default("VADESIZ_TL") // "VADESIZ_TL" | "VADESIZ_USD" | "VADESIZ_EUR" | "ALTIN_HESABI"
+  currency          String            @default("TL") // "TL" | "USD" | "EUR" | "HAS"
+  iban              String
+  accountNumber     String?
+  branchCode        String?
+  balance           Float             @default(0) // TL tutarı veya gr Has
+  integrationType   String            @default("MANUAL") // "MANUAL" | "OPEN_BANKING_API" | "STATEMENT_IMPORT"
+  apiClientId       String?
+  apiEncryptedToken String?
+  lastSyncedAt      DateTime?
+  isActive          Boolean           @default(true)
+  posTerminals      PosTerminal[]
+  transactions      BankTransaction[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([dealerId, iban])
+}
+
+model PosTerminal {
+  id              String          @id @default(cuid())
+  dealerId        String
+  dealer          Dealer          @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  bankAccountId   String
+  bankAccount     BankAccount     @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  name            String          // "Garanti Yazar Kasa POS", "Ziraat Mobil POS"
+  terminalId      String          // TID (Terminal ID)
+  merchantId      String?         // MID (Üye İşyeri No)
+  commissionRate  Float           @default(1.90) // Tek çekim komisyon oranı (%)
+  blockingDays    Int             @default(1)    // Valör / Bloke gün sayısı (1: ertesi gün, 30: 30 gün)
+  isActive        Boolean         @default(true)
+  settlements     PosSettlement[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([dealerId, terminalId])
+}
+
+model BankTransaction {
+  id                   String       @id @default(cuid())
+  dealerId             String
+  dealer               Dealer       @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  bankAccountId        String
+  bankAccount          BankAccount  @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  externalTxId         String?      // Banka referans no
+  amount               Float        // Tutar (TL/Döviz/gr Has)
+  direction            String       // "INFLOW" (Giriş / Alacak) | "OUTFLOW" (Çıkış / Borç)
+  type                 String       @default("HAVALE_EFT") // "HAVALE_EFT" | "POS_SETTLEMENT" | "EXPENSE_FEE" | "CASH_DEPOSIT" | "CASH_WITHDRAWAL"
+  description          String
+  senderReceiverName   String?
+  senderReceiverIban   String?
+  matchStatus          String       @default("UNMATCHED") // "UNMATCHED" | "MATCHED" | "SUGGESTED"
+  matchedTransactionId String?      // KuyumPanel Transaction ID
+  matchedAt            DateTime?
+  transactionDate      DateTime     @default(now())
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([dealerId, matchStatus])
+  @@index([dealerId, transactionDate])
+}
+
+model PosSettlement {
+  id               String      @id @default(cuid())
+  dealerId         String
+  dealer           Dealer      @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  posTerminalId    String
+  posTerminal      PosTerminal @relation(fields: [posTerminalId], references: [id], onDelete: Cascade)
+  settlementDate   DateTime    @default(now())
+  maturityDate     DateTime    // Valör tarihi (Hesaba geçeceği gün)
+  grossAmount      Float       // Brüt POS Çekimi TL
+  commissionAmount Float       // Banka Komisyon Kesintisi TL
+  netAmount        Float       // Net Hesaba Geçecek Tutar TL
+  status           String      @default("BLOCKED") // "BLOCKED" (Blokede) | "SETTLED" (Hesaba Geçti) | "DISCREPANCY"
+  settledAt        DateTime?
+  referenceNo      String?
+  notes            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([dealerId, status])
+  @@index([dealerId, maturityDate])
+}
+
 

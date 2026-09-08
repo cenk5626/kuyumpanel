@@ -89,6 +89,12 @@ export const ROUTES = {
   API_COMPLIANCE_CASES: '/api/compliance/cases',
   API_COMPLIANCE_RULES: '/api/compliance/rules',
   API_COMPLIANCE_ASSESS: '/api/compliance/assess',
+  BANKING: '/banking',
+  API_BANK_ACCOUNTS: '/api/banking/accounts',
+  API_POS_TERMINALS: '/api/banking/pos',
+  API_BANK_TRANSACTIONS: '/api/banking/transactions',
+  API_POS_SETTLEMENTS: '/api/banking/settlements',
+  API_BANK_SYNC: '/api/banking/sync',
 } as const;
 
 
