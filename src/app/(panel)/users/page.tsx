@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { USER_ROLES } from '@/constants/roles';
+import { ALL_PAGE_IDS } from '@/constants/page-permissions';
 import UsersClient from './UsersClient';
 
 export const dynamic = 'force-dynamic';
@@ -104,7 +105,7 @@ export default async function UsersPage() {
       name: u.name,
       email: u.email,
       role: u.role,
-      permissions: u.permissions || '["dashboard","prices","stocks","transactions","suppliers","price-check","users"]',
+      permissions: u.permissions || JSON.stringify(ALL_PAGE_IDS),
       dealerId: u.dealerId,
       dealerName: u.dealer?.name ?? 'Merkez',
       createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),

@@ -4,6 +4,7 @@ import { hash } from 'bcryptjs';
 import { getAuthenticatedContext, requirePermission } from '@/lib/security/auth-context';
 import { PERMISSIONS } from '@/constants/permissions';
 import { USER_ROLES } from '@/constants/roles';
+import { ALL_PAGE_IDS } from '@/constants/page-permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
 
   const hashedPassword = await hash(password, SALT_ROUNDS);
 
-  const defaultPerms = '["dashboard","prices","stocks","transactions","suppliers","price-check","users"]';
+  const defaultPerms = JSON.stringify(ALL_PAGE_IDS);
 
   const user = await prisma.user.create({
     data: {
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
       email,
       password: hashedPassword,
       role: targetRole,
-      permissions: Array.isArray(permissions) ? JSON.stringify(permissions) : defaultPerms,
+      permissions: Array.isArray(permissions) ? JSON.stringify(permissions) : (typeof permissions === 'string' ? permissions : defaultPerms),
       dealerId: targetDealerId || null,
     },
     select: {
@@ -146,6 +147,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
     }
 
+    // Super Admin yetkilerini sadece Super Admin düzenleyebilir
+    if (targetUser.role === USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.SUPER_ADMIN) {
+      return NextResponse.json({ error: 'Süper Yönetici yetkilerini yalnızca Süper Yöneticiler değiştirebilir.' }, { status: 403 });
+    }
+
     // Admin sadece kendi bayisinin kullanıcılarını düzenleyebilir
     if (currentUserRole === USER_ROLES.ADMIN && targetUser.dealerId !== currentUserDealerId) {
       return NextResponse.json({ error: 'Bu kullanıcıyı düzenleme yetkiniz yok.' }, { status: 403 });
@@ -174,7 +180,11 @@ export async function PUT(req: NextRequest) {
     const updateData: Record<string, any> = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (Array.isArray(permissions)) updateData.permissions = JSON.stringify(permissions);
+    if (Array.isArray(permissions)) {
+      updateData.permissions = JSON.stringify(permissions);
+    } else if (typeof permissions === 'string') {
+      updateData.permissions = permissions;
+    }
     
     if (currentUserRole === USER_ROLES.SUPER_ADMIN) {
       if (role) updateData.role = role;

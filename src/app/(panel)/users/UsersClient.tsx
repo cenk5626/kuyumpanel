@@ -3,12 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, Building2, Users, Shield, CheckSquare, Square } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Building2, Users, Shield, ShieldCheck, CheckSquare, Square, KeyRound } from 'lucide-react';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { THEME, ANIM } from '@/constants/theme';
 import { USER_ROLES } from '@/constants/roles';
+import {
+  SYSTEM_PAGES,
+  ALL_PAGE_IDS,
+  PERMISSION_PRESETS,
+  PAGE_CATEGORIES,
+} from '@/constants/page-permissions';
 import HeaderActions from '@/components/HeaderActions';
+import UserPermissionsModal from '@/components/users/UserPermissionsModal';
 
 interface User {
   id: string;
@@ -21,17 +28,12 @@ interface User {
   createdAt: string;
 }
 
-const AVAILABLE_PAGES = [
-  { id: 'dashboard', label: '📊 Dashboard (Ana Sayfa)', desc: 'Genel bakış & istatistikler' },
-  { id: 'prices', label: '📈 Canlı Fiyat Ekranı', desc: 'Canlı altın ve ziynet fiyatları' },
-  { id: 'stocks', label: '📦 Stok Takip', desc: 'Barkodlu takı ve stok yönetimi' },
-  { id: 'transactions', label: '🔄 Alış / Satış (POS)', desc: 'Perakende & sarrafiye alış satış' },
-  { id: 'suppliers', label: '🚚 Toptancı & Mutabakat', desc: 'Mal alımı ve cari hesap takibi' },
-  { id: 'customers', label: '👤 Müşteriler & Borç Takip', desc: 'Müşteri rehberi ve veresiye takibi' },
-  { id: 'logs', label: '📜 İşlem Logları', desc: 'Sistem denetim & işlem geçmişi (Sadece Admin)' },
-  { id: 'price-check', label: '🏷️ Fiyat Gör Kiosk', desc: 'Müşteri fiyat sorgulama ekranı' },
-  { id: 'users', label: '👥 Kullanıcı Yönetimi', desc: 'Kullanıcı tanımlama ve izinler' },
-];
+const AVAILABLE_PAGES = SYSTEM_PAGES.map((p) => ({
+  id: p.id,
+  label: p.name,
+  desc: p.description,
+  category: p.category,
+}));
 
 interface Employee {
   id: string;
@@ -88,8 +90,12 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
     password: '',
     role: USER_ROLES.ADMIN as string,
     dealerId: '',
-    permissions: AVAILABLE_PAGES.map(p => p.id),
+    permissions: ALL_PAGE_IDS,
   });
+
+  // Dedicated Permissions modal states
+  const [permissionsModalUser, setPermissionsModalUser] = useState<User | null>(null);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 
   // Employee form modal states
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
@@ -115,10 +121,43 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
       password: '',
       role: USER_ROLES.ADMIN,
       dealerId: '',
-      permissions: AVAILABLE_PAGES.map(p => p.id),
+      permissions: ALL_PAGE_IDS,
     });
     setEditingUser(null);
     setError('');
+  };
+
+  const openPermissionsModal = (user: User) => {
+    setPermissionsModalUser(user);
+    setShowPermissionsModal(true);
+  };
+
+  const handleSavePermissions = async (userId: string, newPermissions: string[]) => {
+    const res = await fetch(ROUTES.API_USERS, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: userId,
+        permissions: newPermissions,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Yetkiler güncellenirken sunucu hatası oluştu.');
+    }
+
+    // Tablodaki kullanıcı verisini anında güncelle
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.id === userId
+          ? {
+              ...u,
+              permissions: JSON.stringify(newPermissions),
+            }
+          : u
+      )
+    );
+    router.refresh();
   };
 
   const resetEmployeeForm = () => {
@@ -158,12 +197,12 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
   const openEditUser = (user: User) => {
     setEditingUser(user);
 
-    let perms = AVAILABLE_PAGES.map(p => p.id);
+    let perms: string[] = ALL_PAGE_IDS;
     if (user.permissions) {
       try {
         perms = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
       } catch (e) {
-        perms = AVAILABLE_PAGES.map(p => p.id);
+        perms = ALL_PAGE_IDS;
       }
     }
 
@@ -478,27 +517,32 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                         </td>
                         <td className={THEME.TABLE.TD}>
                           {user.role === USER_ROLES.SUPER_ADMIN ? (
-                            <span className="text-[11px] font-bold text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-full">
-                              Tüm Sayfalar (Tam Yetki)
+                            <span className="text-[11px] font-bold text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm">
+                              👑 Tüm Sayfalar ({SYSTEM_PAGES.length}/{SYSTEM_PAGES.length} Yetkili)
                             </span>
                           ) : (
-                            <div className="flex items-center gap-1 flex-wrap max-w-[220px]">
-                              {(() => {
-                                let perms: string[] = AVAILABLE_PAGES.map(p => p.id);
-                                if (user.permissions) {
-                                  try {
-                                    perms = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
-                                  } catch (e) {
-                                    perms = AVAILABLE_PAGES.map(p => p.id);
-                                  }
+                            (() => {
+                              let perms: string[] = ALL_PAGE_IDS;
+                              if (user.permissions) {
+                                try {
+                                  perms = typeof user.permissions === 'string' ? JSON.parse(user.permissions) : user.permissions;
+                                } catch (e) {
+                                  perms = ALL_PAGE_IDS;
                                 }
-                                return perms.map(pId => (
-                                  <span key={pId} className="text-[10px] font-semibold bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded border border-gray-700/60">
-                                    {AVAILABLE_PAGES.find(p => p.id === pId)?.label.split(' ')[1] || pId}
-                                  </span>
-                                ));
-                              })()}
-                            </div>
+                              }
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => openPermissionsModal(user)}
+                                  className="group inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/90 hover:bg-amber-500/15 text-slate-200 hover:text-amber-300 border border-slate-700/70 hover:border-amber-500/40 transition-all cursor-pointer shadow-sm"
+                                  title="Sayfa Erişim Yetkilerini Yönet"
+                                >
+                                  <ShieldCheck size={14} className="text-amber-400 group-hover:scale-110 transition-transform" />
+                                  <span>{perms.length} / {SYSTEM_PAGES.length} Sayfa Yetkili</span>
+                                  <span className="text-[10px] text-amber-400 font-mono underline ml-0.5 group-hover:text-amber-300">Yönet</span>
+                                </button>
+                              );
+                            })()
                           )}
                         </td>
                         <td className={THEME.TABLE.TD}>
@@ -507,7 +551,14 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                           </span>
                         </td>
                         <td className={THEME.TABLE.TD}>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => openPermissionsModal(user)}
+                              className="p-1.5 rounded-lg text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all hover:scale-105"
+                              title="Sayfa Erişim Yetkilerini Yönet (Ayrı Yetkilendirme)"
+                            >
+                              <ShieldCheck size={16} />
+                            </button>
                             <button onClick={() => openEditUser(user)} className={THEME.BTN_ICON} title="Düzenle">
                               <Pencil size={16} />
                             </button>
@@ -735,36 +786,53 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                   </select>
                 </div>
 
-                {/* SAYFA ERİŞİM İZİNLERİ (CHECKBOX GRUBU) */}
-                <div className="bg-gray-950/60 p-4 rounded-xl border border-gray-800 space-y-3">
-                  <div className="flex items-center justify-between border-b border-gray-800/80 pb-2">
+                {/* SAYFA ERİŞİM İZİNLERİ (33 SAYFA KAPSAMI & HIZLI ŞABLONLAR) */}
+                <div className="bg-gray-950/70 p-4 rounded-xl border border-gray-800 space-y-3">
+                  <div className="flex items-center justify-between border-b border-gray-800/80 pb-2 flex-wrap gap-2">
                     <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Shield size={14} /> Sayfa Erişim İzinleri
+                      <ShieldCheck size={14} /> Sayfa Erişim Yetkileri ({userFormData.permissions.length}/{SYSTEM_PAGES.length})
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const allSelected = userFormData.permissions.length === AVAILABLE_PAGES.length;
-                        setUserFormData({
-                          ...userFormData,
-                          permissions: allSelected ? [] : AVAILABLE_PAGES.map(p => p.id)
-                        });
-                      }}
-                      className="text-[10px] text-gray-400 hover:text-white underline font-medium"
-                    >
-                      {userFormData.permissions.length === AVAILABLE_PAGES.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
-                    </button>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setUserFormData({ ...userFormData, permissions: ALL_PAGE_IDS })}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-slate-700 font-medium transition-all"
+                      >
+                        Tümü
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserFormData({ ...userFormData, permissions: [] })}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 font-medium transition-all"
+                      >
+                        Kaldır
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserFormData({ ...userFormData, permissions: [...PERMISSION_PRESETS.CASHIER.pages] })}
+                        className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium transition-all"
+                      >
+                        Kasiyer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserFormData({ ...userFormData, permissions: [...PERMISSION_PRESETS.ACCOUNTING.pages] })}
+                        className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium transition-all"
+                      >
+                        Muhasebe
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                    {AVAILABLE_PAGES.map(page => {
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                    {SYSTEM_PAGES.map((page) => {
                       const isChecked = userFormData.permissions.includes(page.id);
                       return (
                         <label
                           key={page.id}
-                          className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all select-none ${
+                          className={`flex items-start gap-2.5 p-2 rounded-lg border cursor-pointer transition-all select-none ${
                             isChecked
-                              ? 'bg-yellow-500/10 border-yellow-500/40 text-white'
+                              ? 'bg-yellow-500/10 border-yellow-500/40 text-white shadow-sm ring-1 ring-yellow-500/20'
                               : 'bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-700'
                           }`}
                         >
@@ -773,15 +841,15 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                             checked={isChecked}
                             onChange={() => {
                               const nextPerms = isChecked
-                                ? userFormData.permissions.filter(id => id !== page.id)
+                                ? userFormData.permissions.filter((id) => id !== page.id)
                                 : [...userFormData.permissions, page.id];
                               setUserFormData({ ...userFormData, permissions: nextPerms });
                             }}
-                            className="w-4 h-4 rounded border-gray-700 text-yellow-500 focus:ring-yellow-500/30 accent-yellow-500 cursor-pointer"
+                            className="w-4 h-4 mt-0.5 rounded border-gray-700 text-yellow-500 focus:ring-yellow-500/30 accent-yellow-500 cursor-pointer"
                           />
-                          <div>
-                            <span className="text-xs font-bold block">{page.label}</span>
-                            <span className="text-[10px] text-gray-500 block leading-tight">{page.desc}</span>
+                          <div className="min-w-0">
+                            <span className="text-xs font-bold block truncate">{page.name}</span>
+                            <span className="text-[10px] text-gray-500 block leading-tight truncate">{page.description}</span>
                           </div>
                         </label>
                       );
@@ -930,6 +998,18 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
           </div>
         )}
       </AnimatePresence>
+
+      {/* ─── DEDICATED GRANULAR SAYFA YETKİLENDİRME MODALI ─── */}
+      <UserPermissionsModal
+        isOpen={showPermissionsModal}
+        onClose={() => {
+          setShowPermissionsModal(false);
+          setPermissionsModalUser(null);
+        }}
+        user={permissionsModalUser}
+        onSave={handleSavePermissions}
+        isCurrentUserSuperAdmin={isSuperAdmin}
+      />
     </>
   );
 }

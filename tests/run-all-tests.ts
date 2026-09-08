@@ -51,6 +51,7 @@ import { registerF36RfidStocktakeTests } from './tier1/f36_rfid_stocktake.test';
 import { registerF37OmnichannelEcommerceTests } from './tier1/f37_omnichannel_ecommerce.test';
 import { registerF38ComplianceMasakAmlTests } from './tier1/f38_compliance_masak_aml.test';
 import { registerF39OpenBankingPosSettlementTests } from './tier1/f39_open_banking_pos_settlement.test';
+import { registerF40UserPagePermissionsTests } from './tier1/f40_user_page_permissions.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -104,6 +105,7 @@ const FEATURE_NAMES: Record<number, string> = {
   37: 'Omnichannel E-Commerce & Oversell Prevention',
   38: 'MASAK & AML Compliance Management',
   39: 'Open Banking & POS Settlement Reconciliation',
+  40: 'Granular Page Authorization & User Permissions',
 };
 
 async function main() {
@@ -153,6 +155,7 @@ async function main() {
   registerF37OmnichannelEcommerceTests();
   registerF38ComplianceMasakAmlTests();
   registerF39OpenBankingPosSettlementTests();
+  registerF40UserPagePermissionsTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();

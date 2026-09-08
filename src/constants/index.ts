@@ -46,4 +46,5 @@ export * from './rfid';
 export * from './omnichannel';
 export * from './compliance';
 export * from './banking';
+export * from './page-permissions';
 
