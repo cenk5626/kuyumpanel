@@ -70,6 +70,8 @@ model Dealer {
   approvalRequests     ApprovalRequest[]
   rfidTags             RfidTag[]
   rfidStocktakeSessions RfidStocktakeSession[]
+  salesChannels        SalesChannel[]
+  externalOrders       ExternalOrder[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -1261,4 +1263,61 @@ model RfidStocktakeItem {
   rssi           Float?
   scannedAt      DateTime?
   createdAt      DateTime             @default(now())
+}
+
+// =============================================================
+// FAZ 11: E-Ticaret ve Çoklu Kanal Satış (Omnichannel Hub)
+// =============================================================
+
+model SalesChannel {
+  id                 String           @id @default(cuid())
+  dealerId           String
+  dealer             Dealer           @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  name               String           // "Trendyol", "Hepsiburada", "Shopify" vb.
+  channelType        String           // "TRENDYOL" | "HEPSIBURADA" | "SHOPIFY" | "WOOCOMMERCE" | "CUSTOM_WEB"
+  apiKey             String?
+  apiSecret          String?
+  merchantId         String?
+  isActive           Boolean          @default(true)
+  autoPriceSync      Boolean          @default(true) // Canlı kur artışında otomatik fiyat güncelleme
+  priceMarkupPercent Float            @default(0) // Pazaryeri komisyon farkı (%)
+  lastSyncAt         DateTime?
+  orders             ExternalOrder[]
+  syncLogs           ChannelSyncLog[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@unique([dealerId, name])
+}
+
+model ExternalOrder {
+  id             String        @id @default(cuid())
+  dealerId       String
+  dealer         Dealer        @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  channelId      String
+  channel        SalesChannel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  orderNumber    String        // Örn: "TY-94827104"
+  customerName   String
+  customerPhone  String?
+  totalAmount    Float
+  status         String        @default("NEW") // "NEW" | "PROCESSING" | "SHIPPED" | "CANCELLED" | "RETURNED"
+  itemsJson      String        // JSON: [{ barcode, title, quantity, price }]
+  cargoCompany   String?
+  trackingNumber String?
+  orderedAt      DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([dealerId, orderNumber])
+}
+
+model ChannelSyncLog {
+  id         String       @id @default(cuid())
+  channelId  String
+  channel    SalesChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  syncType   String       // "STOCK_SYNC" | "PRICE_SYNC" | "ORDER_FETCH"
+  status     String       @default("SUCCESS") // "SUCCESS" | "ERROR" | "PARTIAL"
+  itemCount  Int          @default(0)
+  details    String?
+  createdAt  DateTime     @default(now())
 }

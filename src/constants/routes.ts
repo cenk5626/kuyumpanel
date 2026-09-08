@@ -82,6 +82,9 @@ export const ROUTES = {
   RFID_STOCKTAKE: '/rfid-stocktake',
   API_RFID_SESSIONS: '/api/rfid/sessions',
   API_RFID_TAGS: '/api/rfid/tags',
+  CHANNELS: '/channels',
+  API_CHANNELS: '/api/channels',
+  API_CHANNEL_ORDERS: '/api/channels/orders',
 } as const;
 
 

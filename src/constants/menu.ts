@@ -141,6 +141,12 @@ export const MENU_ITEMS = [
     icon: 'Radio',
   },
   {
+    id: 'channels',
+    label: 'Pazaryeri & E-Ticaret',
+    href: ROUTES.CHANNELS,
+    icon: 'Globe',
+  },
+  {
     id: 'data-hub',
     label: MESSAGES.MENU_DATA_HUB,
     href: ROUTES.DATA_HUB,

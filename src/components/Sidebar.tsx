@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History, Building, TrendingUp, ClipboardCheck, FileSpreadsheet, BellRing, Bot, Settings, CalendarClock, ReceiptText, Flame, GitFork, ArrowRightLeft, Boxes, HeartHandshake, FileText, Wrench, MessageSquareShare, BadgePercent, LineChart, ShieldCheck, Radio } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History, Building, TrendingUp, ClipboardCheck, FileSpreadsheet, BellRing, Bot, Settings, CalendarClock, ReceiptText, Flame, GitFork, ArrowRightLeft, Boxes, HeartHandshake, FileText, Wrench, MessageSquareShare, BadgePercent, LineChart, ShieldCheck, Radio, Globe } from 'lucide-react';
 import { MENU_ITEMS } from '@/constants/menu';
 import { MESSAGES } from '@/constants/messages';
 import { THEME } from '@/constants/theme';
@@ -41,6 +41,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; size?: n
   LineChart,
   ShieldCheck,
   Radio,
+  Globe,
 };
 
 interface SidebarProps {
@@ -62,12 +63,12 @@ export default function Sidebar({
   const role = (session?.user as any)?.role;
   const userPermissionsRaw = (session?.user as any)?.permissions;
 
-  let allowedPermissions: string[] = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'purchases', 'customers', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
+  let allowedPermissions: string[] = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'purchases', 'customers', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'channels', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
   if (role !== 'SUPER_ADMIN' && userPermissionsRaw) {
     try {
       allowedPermissions = typeof userPermissionsRaw === 'string' ? JSON.parse(userPermissionsRaw) : userPermissionsRaw;
     } catch (e) {
-      allowedPermissions = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'purchases', 'customers', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
+      allowedPermissions = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'purchases', 'customers', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'channels', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
     }
   }
 
