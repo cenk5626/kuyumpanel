@@ -14,12 +14,12 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const ctx = await getAuthenticatedContext();
     const dealerId = ctx.dealerId;
-    const { id } = params;
+    const { id } = await params;
 
     const complianceCase = await prisma.complianceCase.findFirst({
       where: { id, dealerId },
@@ -51,12 +51,12 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const ctx = await getAuthenticatedContext();
     const dealerId = ctx.dealerId;
-    const { id } = params;
+    const { id } = await params;
 
     const existingCase = await prisma.complianceCase.findFirst({
       where: { id, dealerId },
@@ -124,12 +124,12 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const ctx = await getAuthenticatedContext();
     const dealerId = ctx.dealerId;
-    const { id } = params;
+    const { id } = await params;
 
     const existingCase = await prisma.complianceCase.findFirst({
       where: { id, dealerId },
