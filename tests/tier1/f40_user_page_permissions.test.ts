@@ -6,6 +6,8 @@ import {
   PAGE_CATEGORY_KEYS,
   PERMISSION_PRESETS,
   PageCategoryKey,
+  ACTION_PERMISSIONS,
+  ALL_ACTION_IDS,
 } from '../../src/constants/page-permissions';
 import { USER_ROLES } from '../../src/constants/roles';
 
@@ -191,6 +193,53 @@ export function registerF40UserPagePermissionsTests() {
       expect(safeParse(undefined)).toEqual(ALL_PAGE_IDS);
       expect(safeParse('invalid-json')).toEqual(ALL_PAGE_IDS);
       expect(safeParse('["dashboard","prices"]')).toEqual(['dashboard', 'prices']);
+    });
+
+    test('40.8 Should define all 10 critical operational action permissions with valid risk levels', () => {
+      expect(ACTION_PERMISSIONS.length).toBe(10);
+      expect(ALL_ACTION_IDS.length).toBe(10);
+
+      const uniqueActionIds = new Set(ACTION_PERMISSIONS.map((a) => a.id));
+      expect(uniqueActionIds.size).toBe(10);
+
+      const expectedActions = [
+        'action:prices_manage',
+        'action:discount_apply',
+        'action:view_costs',
+        'action:stocks_delete',
+        'action:transactions_cancel',
+        'action:cash_close',
+        'action:cash_outflow',
+        'action:customer_deposits',
+        'action:invoices_issue',
+        'action:compliance_approve',
+      ];
+
+      for (const act of expectedActions) {
+        expect(uniqueActionIds.has(act)).toBe(true);
+      }
+
+      // Validate metadata and risk levels
+      const validRisks = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+      for (const act of ACTION_PERMISSIONS) {
+        expect(act.name.length).toBeGreaterThan(0);
+        expect(act.description.length).toBeGreaterThan(0);
+        expect(act.category.length).toBeGreaterThan(0);
+        expect(validRisks).toContain(act.riskLevel);
+      }
+    });
+
+    test('40.9 Segregation and combination of pages and action permissions', () => {
+      const combined = ['dashboard', 'stocks', 'action:discount_apply', 'action:cash_close'];
+
+      const pages = combined.filter((p) => !p.startsWith('action:'));
+      const actions = combined.filter((p) => p.startsWith('action:'));
+
+      expect(pages).toEqual(['dashboard', 'stocks']);
+      expect(actions).toEqual(['action:discount_apply', 'action:cash_close']);
+
+      const merged = [...pages, ...actions];
+      expect(merged).toEqual(combined);
     });
   });
 }

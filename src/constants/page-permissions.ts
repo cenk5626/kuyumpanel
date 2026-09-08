@@ -385,3 +385,97 @@ export const PERMISSION_PRESETS = {
 } as const;
 
 export type PermissionPresetKey = keyof typeof PERMISSION_PRESETS;
+
+export interface ActionPermissionMeta {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+}
+
+export const ACTION_PERMISSIONS: ActionPermissionMeta[] = [
+  {
+    id: 'action:prices_manage',
+    name: 'Kâr Marjı & Kur Yönetimi',
+    description: 'Canlı altın ve döviz alış/satış kâr marjlarını belirleme ve fiyat sabitleme',
+    category: 'Fiyat & Satış',
+    icon: 'Activity',
+    riskLevel: 'HIGH',
+  },
+  {
+    id: 'action:discount_apply',
+    name: 'Özel İskonto Tanımlama',
+    description: 'Satışlarda liste fiyatı altında özel yetkili iskonto veya ikram uygulayabilme',
+    category: 'Fiyat & Satış',
+    icon: 'BadgePercent',
+    riskLevel: 'MEDIUM',
+  },
+  {
+    id: 'action:view_costs',
+    name: 'Maliyet & Alış Fiyatlarını Görme',
+    description: 'Ürünlerin ve hurdaların alış maliyetlerini, işçilik tutarını ve net kârı görme',
+    category: 'Stok & Maliyet',
+    icon: 'TrendingUp',
+    riskLevel: 'HIGH',
+  },
+  {
+    id: 'action:stocks_delete',
+    name: 'Stok Kartı Silme',
+    description: 'Envanterden fiziki takı/barkod veya ziynet stok kartını sistemden silebilme',
+    category: 'Stok & Maliyet',
+    icon: 'Package',
+    riskLevel: 'CRITICAL',
+  },
+  {
+    id: 'action:transactions_cancel',
+    name: 'Satış İptali & İade Onayı',
+    description: 'Tamamlanmış perakende satış fişini veya hurda alım işlemini iptal edebilme',
+    category: 'Kasa & POS',
+    icon: 'ArrowLeftRight',
+    riskLevel: 'CRITICAL',
+  },
+  {
+    id: 'action:cash_close',
+    name: 'Kasa Kapatma & Z-Raporu',
+    description: 'Gün sonu Z-Raporunu mühürleme, kasa devrini kesinleştirme ve mutabakat',
+    category: 'Kasa & POS',
+    icon: 'Building',
+    riskLevel: 'HIGH',
+  },
+  {
+    id: 'action:cash_outflow',
+    name: 'Kasadan Harici Nakit Çıkışı',
+    description: 'Kuyumcu kasasından masraf, avans veya harici ödeme çıkarma yetkisi',
+    category: 'Kasa & POS',
+    icon: 'Landmark',
+    riskLevel: 'CRITICAL',
+  },
+  {
+    id: 'action:customer_deposits',
+    name: 'Emanet Altın Kasası Yönetimi',
+    description: 'Müşterilerin bıraktığı fiziki emanet altınları teslim alma ve iade etme',
+    category: 'Cari & Müşteri',
+    icon: 'UserCheck',
+    riskLevel: 'HIGH',
+  },
+  {
+    id: 'action:invoices_issue',
+    name: 'Resmî Fatura Kesme & İptal',
+    description: 'KDV Kanunu 23/e özel matrahlı e-Arşiv faturası kesme veya GİB iptali',
+    category: 'Maliye & Muhasebe',
+    icon: 'ReceiptText',
+    riskLevel: 'HIGH',
+  },
+  {
+    id: 'action:compliance_approve',
+    name: 'MASAK & Risk Onayı',
+    description: 'Kimlik tespit eşiğini aşan veya riskli işlemlere yönetici onayı verme',
+    category: 'Maliye & Uyum',
+    icon: 'ShieldAlert',
+    riskLevel: 'CRITICAL',
+  },
+];
+
+export const ALL_ACTION_IDS = ACTION_PERMISSIONS.map((a) => a.id);
