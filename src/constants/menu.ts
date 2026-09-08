@@ -147,6 +147,12 @@ export const MENU_ITEMS = [
     icon: 'Globe',
   },
   {
+    id: 'compliance',
+    label: MESSAGES.MENU_COMPLIANCE,
+    href: ROUTES.COMPLIANCE,
+    icon: 'ShieldAlert',
+  },
+  {
     id: 'data-hub',
     label: MESSAGES.MENU_DATA_HUB,
     href: ROUTES.DATA_HUB,

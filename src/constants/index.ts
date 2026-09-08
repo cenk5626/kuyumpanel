@@ -44,4 +44,5 @@ export * from './executive-analytics';
 export * from './approval';
 export * from './rfid';
 export * from './omnichannel';
+export * from './compliance';
 

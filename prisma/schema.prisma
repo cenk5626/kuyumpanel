@@ -72,6 +72,9 @@ model Dealer {
   rfidStocktakeSessions RfidStocktakeSession[]
   salesChannels        SalesChannel[]
   externalOrders       ExternalOrder[]
+  complianceCases      ComplianceCase[]
+  amlRiskRules         AmlRiskRule[]
+  customerRiskProfiles CustomerRiskProfile[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -446,6 +449,8 @@ model Customer {
   contactConsents ContactConsent[]
   campaignRecipients CampaignRecipient[]
   quotes         Quote[]
+  riskProfile    CustomerRiskProfile?
+  complianceCases ComplianceCase[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt @default(now())
 }
@@ -1321,3 +1326,77 @@ model ChannelSyncLog {
   details    String?
   createdAt  DateTime     @default(now())
 }
+
+// =============================================================
+// FAZ 12: Uyum, Risk ve Şüpheli İşlem Yönetimi (MASAK / AML Compliance)
+// 5549 Sayılı Kanun & Suç Gelirlerinin Aklanmasının Önlenmesi
+// =============================================================
+
+model CustomerRiskProfile {
+  id               String    @id @default(cuid())
+  customerId       String    @unique
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  dealerId         String
+  dealer           Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  riskScore        Int       @default(10) // 0-100 arası AML risk puanı
+  riskLevel        String    @default("LOW") // "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  isPep            Boolean   @default(false) // Siyasi Nüfuz Sahibi Kişi (PEP)
+  pepDetails       String?   // PEP unvanı, görevi, ilişkisi
+  occupation       String?   // Meslek
+  sourceOfFunds    String?   // Fon/Gelir kaynağı (Maaş, Ticaret, Miras vb.)
+  idVerified       Boolean   @default(false) // Kimlik belgesi teyit edildi mi?
+  idDocumentType   String?   // "TCKN" | "PASSPORT" | "BLUE_CARD" | "TAX_NO"
+  idDocumentNumber String?
+  notes            String?
+  lastAssessedAt   DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([dealerId, riskLevel])
+}
+
+model AmlRiskRule {
+  id              String   @id @default(cuid())
+  dealerId        String
+  dealer          Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  ruleCode        String   // "KYC_SINGLE_TX" | "DAILY_STRUCTURING" | "PEP_HIGH_VALUE" | "HIGH_RISK_MANUAL"
+  name            String   // Kural adı
+  thresholdAmount Float    // Eşik tutarı (örn: 185000 TL)
+  timeWindowHours Int      @default(24) // Zaman penceresi (saat)
+  riskLevel       String   @default("HIGH") // "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  isActive        Boolean  @default(true)
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([dealerId, ruleCode])
+}
+
+model ComplianceCase {
+  id                 String    @id @default(cuid())
+  caseNumber         String    // Örn: "MASAK-2026-0001"
+  dealerId           String
+  dealer             Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId         String?
+  customer           Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName       String
+  customerTcNo       String?
+  customerPhone      String?
+  riskLevel          String    @default("HIGH") // "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  status             String    @default("OPEN") // "OPEN" | "UNDER_REVIEW" | "REPORTED_TO_MASAK" | "DISMISSED"
+  triggerType        String    // "KYC_THRESHOLD_EXCEEDED" | "SMURFING_DETECTED" | "PEP_TRANSACTION" | "MANUAL_SUSPICION"
+  detectedAmount     Float     // Tetikleyen tutar TL
+  description        String    // Olay özeti
+  investigationNotes String?   // Uyum sorumlusunun inceleme notları
+  sarDraft           String?   // MASAK ŞİB (Şüpheli İşlem Bildirimi) metin taslağı
+  reportedToMasakAt  DateTime? // MASAK'a resmi bildirim yapılma tarihi
+  reportedBy         String?   // Bildirimi yapan yetkili
+  reviewedBy         String?   // İnceleyen uyum sorumlusu
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([dealerId, caseNumber])
+  @@index([dealerId, status])
+  @@index([dealerId, riskLevel])
+}
+

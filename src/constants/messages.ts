@@ -65,6 +65,7 @@ export const MESSAGES = {
   MENU_Z_REPORT: 'Kasa & Z-Raporu',
   MENU_LOGS: 'İşlem Logları',
   MENU_PRICE_CHECK: 'Fiyat Gör Kiosk',
+  MENU_COMPLIANCE: 'MASAK & Uyum',
   MENU_LOGOUT: 'Çıkış Yap',
 
   // General

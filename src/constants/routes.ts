@@ -85,6 +85,10 @@ export const ROUTES = {
   CHANNELS: '/channels',
   API_CHANNELS: '/api/channels',
   API_CHANNEL_ORDERS: '/api/channels/orders',
+  COMPLIANCE: '/compliance',
+  API_COMPLIANCE_CASES: '/api/compliance/cases',
+  API_COMPLIANCE_RULES: '/api/compliance/rules',
+  API_COMPLIANCE_ASSESS: '/api/compliance/assess',
 } as const;
 
 
