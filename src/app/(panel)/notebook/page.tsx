@@ -1,18 +1,35 @@
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import { NOTEBOOK_STATUS, NOTEBOOK_VISIBILITY } from '@/constants/notebook';
 import NotebookClient from './NotebookClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NotebookPage() {
+  let session = null;
   try {
-    const ctx = await getAuthenticatedContext();
-    const dealerId = ctx.dealerId;
-    const currentUserId = ctx.userId;
-    const currentUserEmail = ctx.userEmail || '';
+    session = await auth();
+  } catch (e) {
+    console.error('[NotebookPage] Auth error:', e);
+  }
 
-    const [entries, customers, suppliers, branches] = await Promise.all([
+  if (!session || !session.user) {
+    redirect('/login');
+  }
+
+  const currentUserRole = (session.user as any)?.role;
+  const dealerId = (session.user as any)?.dealerId || 'merkez';
+  const currentUserId = (session.user as any)?.id || '';
+  const currentUserEmail = (session.user as any)?.email || '';
+
+  let safeEntries: any[] = [];
+  let customers: any[] = [];
+  let suppliers: any[] = [];
+  let branches: any[] = [];
+
+  try {
+    const [entries, custs, supps, brs] = await Promise.all([
       prisma.jewelerNotebookEntry.findMany({
         where: {
           dealerId,
@@ -33,46 +50,48 @@ export default async function NotebookPage() {
           { createdAt: 'desc' },
         ],
         take: 200,
+      }).catch((err) => {
+        console.warn('[NotebookPage] entries query fallback:', err.message);
+        return [];
       }),
       prisma.customer.findMany({
         where: { dealerId },
         select: { id: true, name: true },
         orderBy: { name: 'asc' },
         take: 100,
-      }),
+      }).catch(() => []),
       prisma.supplier.findMany({
         where: { dealerId },
         select: { id: true, name: true },
         orderBy: { name: 'asc' },
         take: 100,
-      }),
+      }).catch(() => []),
       prisma.branch.findMany({
         where: { dealerId },
         select: { id: true, name: true, code: true },
-      }),
+      }).catch(() => []),
     ]);
 
-    const safeEntries = entries.map((entry) => ({
+    customers = custs || [];
+    suppliers = supps || [];
+    branches = brs || [];
+
+    safeEntries = (entries || []).map((entry) => ({
       ...entry,
       reminderAt: entry.reminderAt instanceof Date ? entry.reminderAt.toISOString() : (entry.reminderAt ? new Date(entry.reminderAt).toISOString() : null),
       createdAt: entry.createdAt instanceof Date ? entry.createdAt.toISOString() : new Date(entry.createdAt).toISOString(),
       updatedAt: entry.updatedAt instanceof Date ? entry.updatedAt.toISOString() : new Date(entry.updatedAt).toISOString(),
     }));
-
-    return (
-      <NotebookClient
-        initialEntries={safeEntries}
-        customers={customers}
-        suppliers={suppliers}
-        branches={branches}
-      />
-    );
   } catch (error) {
-    console.error('[NotebookPage] Server error:', error);
-    return (
-      <div className="p-8 text-center text-red-500">
-        Kuyumcu defteri notları yüklenirken bir hata oluştu.
-      </div>
-    );
+    console.error('[NotebookPage] Data fetch error:', error);
   }
+
+  return (
+    <NotebookClient
+      initialEntries={safeEntries}
+      customers={customers}
+      suppliers={suppliers}
+      branches={branches}
+    />
+  );
 }

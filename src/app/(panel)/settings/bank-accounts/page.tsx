@@ -1,17 +1,37 @@
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import BankAccountsClient from './BankAccountsClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BankAccountsPage() {
+  let session = null;
   try {
-    const ctx = await getAuthenticatedContext();
-    const dealerId = ctx.dealerId;
+    session = await auth();
+  } catch (e) {
+    console.error('[BankAccountsPage] Auth error:', e);
+  }
 
-    const [accounts, branches] = await Promise.all([
+  if (!session || !session.user) {
+    redirect('/login');
+  }
+
+  const currentUserRole = (session.user as any)?.role;
+  const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
+
+  let whereClause: any = {};
+  if (currentUserRole !== 'SUPER_ADMIN') {
+    whereClause.dealerId = currentUserDealerId;
+  }
+
+  let safeAccounts: any[] = [];
+  let branches: any[] = [];
+
+  try {
+    const [accounts, brs] = await Promise.all([
       prisma.businessBankAccount.findMany({
-        where: { dealerId },
+        where: whereClause,
         select: {
           id: true,
           bankName: true,
@@ -29,31 +49,30 @@ export default async function BankAccountsPage() {
           { isDefault: 'desc' },
           { createdAt: 'asc' },
         ],
+      }).catch((err) => {
+        console.warn('[BankAccountsPage] accounts query fallback:', err.message);
+        return [];
       }),
       prisma.branch.findMany({
-        where: { dealerId },
+        where: whereClause,
         select: { id: true, name: true, code: true },
-      }),
+      }).catch(() => []),
     ]);
 
-    const safeAccounts = accounts.map((a) => ({
+    branches = brs || [];
+    safeAccounts = (accounts || []).map((a) => ({
       ...a,
       createdAt: a.createdAt instanceof Date ? a.createdAt.toISOString() : new Date(a.createdAt).toISOString(),
       updatedAt: a.updatedAt instanceof Date ? a.updatedAt.toISOString() : new Date(a.updatedAt).toISOString(),
     }));
-
-    return (
-      <BankAccountsClient
-        initialAccounts={safeAccounts}
-        branches={branches}
-      />
-    );
   } catch (error) {
-    console.error('[BankAccountsPage] Server error:', error);
-    return (
-      <div className="p-8 text-center text-red-500">
-        Banka hesapları yüklenirken bir hata oluştu.
-      </div>
-    );
+    console.error('[BankAccountsPage] Data fetch error:', error);
   }
+
+  return (
+    <BankAccountsClient
+      initialAccounts={safeAccounts}
+      branches={branches}
+    />
+  );
 }

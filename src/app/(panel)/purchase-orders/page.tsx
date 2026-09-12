@@ -1,17 +1,38 @@
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import PurchaseOrdersClient from './PurchaseOrdersClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PurchaseOrdersPage() {
+  let session = null;
   try {
-    const ctx = await getAuthenticatedContext();
-    const dealerId = ctx.dealerId;
+    session = await auth();
+  } catch (e) {
+    console.error('[PurchaseOrdersPage] Auth error:', e);
+  }
 
-    const [orders, suppliers, branches] = await Promise.all([
+  if (!session || !session.user) {
+    redirect('/login');
+  }
+
+  const currentUserRole = (session.user as any)?.role;
+  const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
+
+  let whereClause: any = {};
+  if (currentUserRole !== 'SUPER_ADMIN') {
+    whereClause.dealerId = currentUserDealerId;
+  }
+
+  let safeOrders: any[] = [];
+  let suppliers: any[] = [];
+  let branches: any[] = [];
+
+  try {
+    const [orders, supps, brs] = await Promise.all([
       prisma.purchaseOrder.findMany({
-        where: { dealerId },
+        where: whereClause,
         include: {
           supplier: {
             select: { id: true, name: true, phone: true, hasBalance: true, tlBalance: true },
@@ -27,19 +48,25 @@ export default async function PurchaseOrdersPage() {
         },
         orderBy: { createdAt: 'desc' },
         take: 100,
+      }).catch((err) => {
+        console.warn('[PurchaseOrdersPage] orders query fallback:', err.message);
+        return [];
       }),
       prisma.supplier.findMany({
-        where: { dealerId },
+        where: whereClause,
         select: { id: true, name: true, phone: true, hasBalance: true, tlBalance: true },
         orderBy: { name: 'asc' },
-      }),
+      }).catch(() => []),
       prisma.branch.findMany({
-        where: { dealerId },
+        where: whereClause,
         select: { id: true, name: true, code: true },
-      }),
+      }).catch(() => []),
     ]);
 
-    const safeOrders = orders.map((o) => ({
+    suppliers = supps || [];
+    branches = brs || [];
+
+    safeOrders = (orders || []).map((o) => ({
       ...o,
       orderDate: o.orderDate instanceof Date ? o.orderDate.toISOString() : new Date(o.orderDate).toISOString(),
       expectedDeliveryDate: o.expectedDeliveryDate
@@ -52,34 +79,29 @@ export default async function PurchaseOrdersPage() {
       cancelledAt: o.cancelledAt ? (o.cancelledAt instanceof Date ? o.cancelledAt.toISOString() : new Date(o.cancelledAt).toISOString()) : null,
       createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : new Date(o.createdAt).toISOString(),
       updatedAt: o.updatedAt instanceof Date ? o.updatedAt.toISOString() : new Date(o.updatedAt).toISOString(),
-      lines: o.lines.map((l) => ({
+      lines: (o.lines || []).map((l) => ({
         ...l,
         createdAt: l.createdAt instanceof Date ? l.createdAt.toISOString() : new Date(l.createdAt).toISOString(),
         updatedAt: l.updatedAt instanceof Date ? l.updatedAt.toISOString() : new Date(l.updatedAt).toISOString(),
       })),
-      messages: o.messages.map((m) => ({
+      messages: (o.messages || []).map((m) => ({
         ...m,
         sentAt: m.sentAt instanceof Date ? m.sentAt.toISOString() : new Date(m.sentAt).toISOString(),
       })),
-      receipts: o.receipts.map((r) => ({
+      receipts: (o.receipts || []).map((r) => ({
         ...r,
         receiptDate: r.receiptDate instanceof Date ? r.receiptDate.toISOString() : new Date(r.receiptDate).toISOString(),
       })),
     }));
-
-    return (
-      <PurchaseOrdersClient
-        initialOrders={safeOrders}
-        suppliers={suppliers}
-        branches={branches}
-      />
-    );
   } catch (error) {
-    console.error('[PurchaseOrdersPage] Server error:', error);
-    return (
-      <div className="p-8 text-center text-red-500">
-        Toptancı siparişleri yüklenirken bir hata oluştu.
-      </div>
-    );
+    console.error('[PurchaseOrdersPage] Data fetch error:', error);
   }
+
+  return (
+    <PurchaseOrdersClient
+      initialOrders={safeOrders}
+      suppliers={suppliers}
+      branches={branches}
+    />
+  );
 }
