@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
-import HeaderActions from '@/components/HeaderActions';
 import * as XLSX from 'xlsx';
 
 export default function DataHubClient() {
@@ -144,10 +143,9 @@ export default function DataHubClient() {
             </div>
             <div>
               <h1 className={THEME.HEADER_TITLE}>{MESSAGES.DATA_HUB_TITLE}</h1>
-              <p className="text-gray-400 text-xs mt-0.5">{MESSAGES.DATA_HUB_SUBTITLE}</p>
+              <p className="text-slate-400 text-xs mt-0.5">{MESSAGES.DATA_HUB_SUBTITLE}</p>
             </div>
           </div>
-          <HeaderActions />
         </div>
       </header>
 
@@ -168,19 +166,19 @@ export default function DataHubClient() {
                 <Package size={20} />
               </div>
               <h4 className="text-sm font-bold text-white">Stok Envanteri</h4>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400">
                 Tüm barkodlu takılar, ayarlar, gramajlar, maliyetler ve pırlanta özellikleri.
               </p>
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => handleExport('stocks', 'xlsx')}
-                  className="flex-1 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-yellow-500/10"
+                  className="flex-1 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-yellow-500/10"
                 >
                   <FileDown size={14} /> Excel (.xlsx)
                 </button>
                 <button
                   onClick={() => handleExport('stocks', 'csv')}
-                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-xl transition-all"
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all"
                 >
                   CSV
                 </button>
@@ -193,7 +191,7 @@ export default function DataHubClient() {
                 <Users size={20} />
               </div>
               <h4 className="text-sm font-bold text-white">Müşteri Rehberi</h4>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400">
                 Müşteri iletişim bilgileri, Has ve TL borç/alacak bakiyeleri ve veresiye limitleri.
               </p>
               <div className="flex gap-2 pt-2">
@@ -205,7 +203,7 @@ export default function DataHubClient() {
                 </button>
                 <button
                   onClick={() => handleExport('customers', 'csv')}
-                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-xl transition-all"
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all"
                 >
                   CSV
                 </button>
@@ -218,19 +216,19 @@ export default function DataHubClient() {
                 <Truck size={20} />
               </div>
               <h4 className="text-sm font-bold text-white">Toptancı / Atölye</h4>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400">
                 Toptancı listesi, Has altın ve TL borç bakiyeleri, virman kayıtları.
               </p>
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => handleExport('suppliers', 'xlsx')}
-                  className="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-500/10"
+                  className="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-500/10"
                 >
                   <FileDown size={14} /> Excel (.xlsx)
                 </button>
                 <button
                   onClick={() => handleExport('suppliers', 'csv')}
-                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-xl transition-all"
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all"
                 >
                   CSV
                 </button>
@@ -243,7 +241,7 @@ export default function DataHubClient() {
                 <Building size={20} />
               </div>
               <h4 className="text-sm font-bold text-white">İşlem & Kasa Geçmişi</h4>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400">
                 Alış/satış geçmişi, kâr marjları, personel kayıtları ve ödeme yöntemleri.
               </p>
               <div className="flex gap-2 pt-2">
@@ -255,7 +253,7 @@ export default function DataHubClient() {
                 </button>
                 <button
                   onClick={() => handleExport('transactions', 'csv')}
-                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-xl transition-all"
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all"
                 >
                   CSV
                 </button>
@@ -268,7 +266,7 @@ export default function DataHubClient() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sol Kolon (7 Col): Dosya Yükleme Formu */}
           <div className={`${THEME.GLASS_CARD} p-6 lg:col-span-7 space-y-5`}>
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-sm font-black text-white flex items-center gap-2">
                 <Upload size={18} className="text-yellow-400" />
                 2. Excel / CSV ile Toplu Veri Yükleme (Import)
@@ -276,14 +274,14 @@ export default function DataHubClient() {
             </div>
 
             {/* Yükleme Türü Seçici */}
-            <div className="flex bg-gray-950 p-1 rounded-2xl border border-gray-800">
+            <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
               <button
                 type="button"
                 onClick={() => setImportType('stocks')}
                 className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
                   importType === 'stocks'
-                    ? 'bg-yellow-500 text-gray-950 shadow-md'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-yellow-500 text-slate-950 shadow-md'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Toplu Ürün / Stok
@@ -293,8 +291,8 @@ export default function DataHubClient() {
                 onClick={() => setImportType('customers')}
                 className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
                   importType === 'customers'
-                    ? 'bg-yellow-500 text-gray-950 shadow-md'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-yellow-500 text-slate-950 shadow-md'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Toplu Müşteri Rehberi
@@ -303,7 +301,7 @@ export default function DataHubClient() {
 
             <form onSubmit={handleImportSubmit} className="space-y-4">
               {/* Sürükle Bırak Dosya Seçim Alanı */}
-              <div className="p-8 border-2 border-dashed border-gray-800 hover:border-yellow-500/50 rounded-2xl bg-gray-950/40 text-center transition-colors">
+              <div className="p-8 border-2 border-dashed border-slate-800 hover:border-yellow-500/50 rounded-2xl bg-slate-950/40 text-center transition-colors">
                 <FileSpreadsheet size={36} className="mx-auto text-yellow-500/60 mb-3" />
                 <label className="block text-sm font-bold text-white cursor-pointer hover:text-yellow-400">
                   {selectedFile ? selectedFile.name : 'Excel veya CSV Dosyası Seçin'}
@@ -314,7 +312,7 @@ export default function DataHubClient() {
                     className="hidden"
                   />
                 </label>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   .xlsx, .xls veya .csv formatında dosyaları yükleyebilirsiniz.
                 </p>
               </div>
@@ -336,7 +334,7 @@ export default function DataHubClient() {
               <button
                 type="submit"
                 disabled={uploading || !selectedFile}
-                className="w-full py-3.5 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-gray-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md shadow-yellow-500/20"
+                className="w-full py-3.5 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-slate-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md shadow-yellow-500/20"
               >
                 {uploading ? (
                   <>
@@ -358,21 +356,21 @@ export default function DataHubClient() {
               <h4 className="text-xs font-black text-yellow-400 uppercase tracking-wider flex items-center gap-2">
                 <Sparkles size={16} /> Örnek Excel Şablonları
               </h4>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400">
                 Verilerinizi hazırlarken doğru sütun isimlerini kullanmak için hazır şablonları indirip doldurabilirsiniz:
               </p>
 
               <div className="space-y-2">
                 <button
                   onClick={() => handleDownloadTemplate('stocks')}
-                  className="w-full py-2.5 px-3 bg-gray-950 hover:bg-gray-800 border border-gray-800 text-gray-200 text-xs font-bold rounded-xl flex items-center justify-between transition-colors"
+                  className="w-full py-2.5 px-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold rounded-xl flex items-center justify-between transition-colors"
                 >
                   <span>📦 Örnek Stok Şablonu (.xlsx)</span>
                   <Download size={14} className="text-yellow-400" />
                 </button>
                 <button
                   onClick={() => handleDownloadTemplate('customers')}
-                  className="w-full py-2.5 px-3 bg-gray-950 hover:bg-gray-800 border border-gray-800 text-gray-200 text-xs font-bold rounded-xl flex items-center justify-between transition-colors"
+                  className="w-full py-2.5 px-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold rounded-xl flex items-center justify-between transition-colors"
                 >
                   <span>👤 Örnek Müşteri Şablonu (.xlsx)</span>
                   <Download size={14} className="text-yellow-400" />
@@ -386,7 +384,7 @@ export default function DataHubClient() {
                 <Database size={20} />
                 <h4 className="text-xs font-black uppercase tracking-wider">Tam Sistem Veritabanı Yedeği</h4>
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-400">
                 Tüm stokları, müşterileri, toptancıları, kasa oturumlarını ve logları içeren tam bir JSON yedeği indirin.
               </p>
               <button

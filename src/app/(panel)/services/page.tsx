@@ -23,6 +23,7 @@ export default async function ServicesPage() {
           branch: { select: { id: true, name: true, code: true } },
           workshopJob: { select: { id: true, jobNo: true, workshopName: true } },
           events: { orderBy: { createdAt: 'desc' }, take: 5 },
+          photos: { select: { id: true, fileName: true, mimeType: true, fileSize: true, photoType: true, storageReference: true, createdAt: true } },
         },
         orderBy: { createdAt: 'desc' },
         take: 100,
@@ -83,6 +84,14 @@ export default async function ServicesPage() {
           ? e.createdAt instanceof Date
             ? e.createdAt.toISOString()
             : new Date(e.createdAt).toISOString()
+          : new Date().toISOString(),
+      })),
+      photos: (ord.photos || []).map((p) => ({
+        ...p,
+        createdAt: p.createdAt
+          ? p.createdAt instanceof Date
+            ? p.createdAt.toISOString()
+            : new Date(p.createdAt).toISOString()
           : new Date().toISOString(),
       })),
     }));

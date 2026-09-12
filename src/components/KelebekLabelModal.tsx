@@ -188,10 +188,10 @@ export default function KelebekLabelModal({
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden my-auto"
+          className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden my-auto"
         >
           {/* Modal Header */}
-          <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800 bg-gray-950/60">
+          <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-950/60">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
                 <Printer className="text-yellow-400" size={20} />
@@ -203,7 +203,7 @@ export default function KelebekLabelModal({
                     {item.barcode}
                   </span>
                 </h2>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-slate-400">
                   {item.title} • {item.carat} Ayar • {item.weight.toFixed(2)} gr
                 </p>
               </div>
@@ -212,7 +212,7 @@ export default function KelebekLabelModal({
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -225,8 +225,8 @@ export default function KelebekLabelModal({
             <div className="lg:col-span-5 space-y-4">
               
               {/* Şablon Seçici */}
-              <div className="bg-gray-950/50 border border-gray-800/80 rounded-xl p-4 space-y-3">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="bg-slate-950/50 border border-slate-800/80 rounded-xl p-4 space-y-3">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Layers size={14} className="text-yellow-400" /> Etiket Şablonu
                 </label>
                 <div className="grid grid-cols-1 gap-2">
@@ -237,11 +237,11 @@ export default function KelebekLabelModal({
                       className={`px-3 py-2.5 rounded-lg text-left text-xs font-semibold flex items-center justify-between transition-all ${
                         selectedTemplate === value
                           ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 shadow-sm'
-                          : 'bg-gray-900/60 text-gray-400 hover:text-gray-200 border border-gray-800 hover:border-gray-700'
+                          : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700'
                       }`}
                     >
                       <span>{LABEL_TEMPLATE_LABELS[value]}</span>
-                      <span className="font-mono text-[10px] text-gray-500">
+                      <span className="font-mono text-[10px] text-slate-500">
                         {LABEL_DIMENSIONS[value].totalWidthMm}x{LABEL_DIMENSIONS[value].heightMm}mm
                       </span>
                     </button>
@@ -250,52 +250,52 @@ export default function KelebekLabelModal({
               </div>
 
               {/* Baskı Seçenekleri */}
-              <div className="bg-gray-950/50 border border-gray-800/80 rounded-xl p-4 space-y-3">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="bg-slate-950/50 border border-slate-800/80 rounded-xl p-4 space-y-3">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Sliders size={14} className="text-yellow-400" /> Baskı Parametreleri
                 </label>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] text-gray-400 block mb-1">Kopya Adedi</label>
+                    <label className="text-[11px] text-slate-400 block mb-1">Kopya Adedi</label>
                     <input
                       type="number"
                       min={1}
                       max={99}
                       value={printCopies}
                       onChange={e => setPrintCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-yellow-500"
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-yellow-500"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-gray-400 block mb-1">Mağaza Başlığı</label>
+                    <label className="text-[11px] text-slate-400 block mb-1">Mağaza Başlığı</label>
                     <input
                       type="text"
                       maxLength={18}
                       value={storeName}
                       onChange={e => setStoreName(e.target.value)}
                       placeholder="Mağaza Adı"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:border-yellow-500"
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:border-yellow-500"
                     />
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-gray-800/60 flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-gray-300">
+                <div className="pt-2 border-t border-slate-800/60 flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-300">
                     <input
                       type="checkbox"
                       checked={showPrice}
                       onChange={e => setShowPrice(e.target.checked)}
-                      className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                      className="rounded bg-slate-800 border-slate-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
                     />
                     Fiyat Göster (TL)
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-gray-300">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-300">
                     <input
                       type="checkbox"
                       checked={showMilyem}
                       onChange={e => setShowMilyem(e.target.checked)}
-                      className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                      className="rounded bg-slate-800 border-slate-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
                     />
                     Milyem Kodu Göster
                   </label>
@@ -303,13 +303,13 @@ export default function KelebekLabelModal({
               </div>
 
               {/* Çıktı Modu Sekmesi */}
-              <div className="flex bg-gray-950 p-1 rounded-xl border border-gray-800">
+              <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
                 <button
                   onClick={() => setActiveTab('preview')}
                   className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                     activeTab === 'preview'
                       ? 'bg-yellow-500 text-black shadow-md'
-                      : 'text-gray-400 hover:text-white'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <Eye size={14} /> Canlı Önizleme
@@ -319,7 +319,7 @@ export default function KelebekLabelModal({
                   className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                     activeTab === 'zpl'
                       ? 'bg-yellow-500 text-black shadow-md'
-                      : 'text-gray-400 hover:text-white'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <FileCode size={14} /> ZPL II Kodu
@@ -332,10 +332,10 @@ export default function KelebekLabelModal({
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
               
               {activeTab === 'preview' ? (
-                <div className="bg-gray-950/80 border border-gray-800 rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px] relative overflow-hidden">
+                <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px] relative overflow-hidden">
                   
                   {/* Milimetre Ölçek / Etiket Başlığı */}
-                  <div className="w-full flex items-center justify-between text-xs text-gray-400 mb-4 pb-2 border-b border-gray-800/80">
+                  <div className="w-full flex items-center justify-between text-xs text-slate-400 mb-4 pb-2 border-b border-slate-800/80">
                     <span className="font-semibold">{currentDim.name}</span>
                     <span className="font-mono text-yellow-400 font-bold">
                       {currentDim.totalWidthMm} mm × {currentDim.heightMm} mm (Standart)
@@ -343,7 +343,7 @@ export default function KelebekLabelModal({
                   </div>
 
                   {/* Gerçek Vektörel Etiket Önizleme Kartı */}
-                  <div className="p-5 bg-white rounded-lg shadow-2xl border border-gray-300 flex items-center justify-center max-w-full overflow-x-auto">
+                  <div className="p-5 bg-white rounded-lg shadow-2xl border border-slate-300 flex items-center justify-center max-w-full overflow-x-auto">
                     <div 
                       className="w-full select-none"
                       style={{ maxWidth: `${Math.min(500, currentDim.totalWidthMm * 6.5)}px` }}
@@ -353,7 +353,7 @@ export default function KelebekLabelModal({
 
                   {/* Kanat Bilgilendirme Notu */}
                   {currentDim.hasBridge && (
-                    <div className="mt-4 text-[11px] text-gray-400 flex items-center gap-2 bg-gray-900/60 px-3 py-1.5 rounded-lg border border-gray-800">
+                    <div className="mt-4 text-[11px] text-slate-400 flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
                       <Info size={13} className="text-yellow-400 shrink-0" />
                       <span>
                         Sol Kanat: <strong>{currentDim.leftWingWidthMm}mm</strong> • 
@@ -365,15 +365,15 @@ export default function KelebekLabelModal({
                 </div>
               ) : (
                 /* ZPL II KODU GÖRÜNÜMÜ */
-                <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 flex flex-col min-h-[300px]">
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-800">
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col min-h-[300px]">
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-300">ZPL II Yazıcı Çözünürlüğü:</span>
-                      <div className="flex gap-1 bg-gray-900 p-0.5 rounded-lg border border-gray-800">
+                      <span className="text-xs font-bold text-slate-300">ZPL II Yazıcı Çözünürlüğü:</span>
+                      <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
                         <button
                           onClick={() => setSelectedDpi(LABEL_DPI.DPI_203)}
                           className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-colors ${
-                            selectedDpi === LABEL_DPI.DPI_203 ? 'bg-yellow-500 text-black' : 'text-gray-400 hover:text-white'
+                            selectedDpi === LABEL_DPI.DPI_203 ? 'bg-yellow-500 text-black' : 'text-slate-400 hover:text-white'
                           }`}
                         >
                           203 DPI (8 dot/mm)
@@ -381,7 +381,7 @@ export default function KelebekLabelModal({
                         <button
                           onClick={() => setSelectedDpi(LABEL_DPI.DPI_300)}
                           className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-colors ${
-                            selectedDpi === LABEL_DPI.DPI_300 ? 'bg-yellow-500 text-black' : 'text-gray-400 hover:text-white'
+                            selectedDpi === LABEL_DPI.DPI_300 ? 'bg-yellow-500 text-black' : 'text-slate-400 hover:text-white'
                           }`}
                         >
                           300 DPI (12 dot/mm)
@@ -392,14 +392,14 @@ export default function KelebekLabelModal({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handleCopyZPL}
-                        className="px-2.5 py-1 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
                       >
                         {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                         {copied ? 'Kopyalandı!' : 'Kopyala'}
                       </button>
                       <button
                         onClick={handleDownloadZPL}
-                        className="px-2.5 py-1 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
                       >
                         <Download size={12} />
                         .zpl İndir
@@ -407,20 +407,20 @@ export default function KelebekLabelModal({
                     </div>
                   </div>
 
-                  <pre className="flex-1 bg-black/60 p-3 rounded-lg font-mono text-[11px] text-emerald-400 overflow-x-auto whitespace-pre-wrap border border-gray-850 select-all leading-relaxed">
+                  <pre className="flex-1 bg-black/60 p-3 rounded-lg font-mono text-[11px] text-emerald-400 overflow-x-auto whitespace-pre-wrap border border-slate-850 select-all leading-relaxed">
                     {zplCode}
                   </pre>
-                  <p className="text-[10px] text-gray-500 mt-2">
+                  <p className="text-[10px] text-slate-500 mt-2">
                     * Bu ZPL komutlarını Zebra Designer, Argox Print Utility veya ağ termal yazıcınıza doğrudan RAW port (9100) üzerinden gönderebilirsiniz.
                   </p>
                 </div>
               )}
 
               {/* Alt Eylem Butonları */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white bg-gray-800/80 hover:bg-gray-800 transition-colors"
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors"
                 >
                   Kapat
                 </button>

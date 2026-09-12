@@ -238,10 +238,10 @@ export default function BatchLabelPrintModal({
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]"
+          className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]"
         >
           {/* Modal Header */}
-          <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800 bg-gray-950/70 shrink-0">
+          <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-950/70 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
                 <Printer className="text-yellow-400" size={20} />
@@ -253,7 +253,7 @@ export default function BatchLabelPrintModal({
                     {totalLabelsCount} Etiket
                   </span>
                 </h2>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-slate-400">
                   {totalItemsCount} Farklı Ürün • Toplam {totalWeight.toFixed(2)} gr Altın
                 </p>
               </div>
@@ -262,7 +262,7 @@ export default function BatchLabelPrintModal({
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -276,14 +276,14 @@ export default function BatchLabelPrintModal({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               
               {/* Şablon Seçimi (5 col) */}
-              <div className="md:col-span-5 bg-gray-950/50 border border-gray-800 rounded-xl p-3.5 space-y-2">
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="md:col-span-5 bg-slate-950/50 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Layers size={13} className="text-yellow-400" /> Rulo Etiket Şablonu
                 </label>
                 <select
                   value={selectedTemplate}
                   onChange={e => setSelectedTemplate(e.target.value as LabelTemplate)}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs font-semibold focus:outline-none focus:border-yellow-500"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs font-semibold focus:outline-none focus:border-yellow-500"
                 >
                   {Object.entries(LABEL_TEMPLATES).map(([key, value]) => (
                     <option key={key} value={value}>
@@ -294,9 +294,9 @@ export default function BatchLabelPrintModal({
               </div>
 
               {/* Baskı Parametreleri (7 col) */}
-              <div className="md:col-span-7 bg-gray-950/50 border border-gray-800 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+              <div className="md:col-span-7 bg-slate-950/50 border border-slate-800 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex-1 min-w-[140px]">
-                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                     Mağaza Adı
                   </label>
                   <input
@@ -305,26 +305,26 @@ export default function BatchLabelPrintModal({
                     value={storeName}
                     onChange={e => setStoreName(e.target.value)}
                     placeholder="Mağaza Başlığı"
-                    className="w-full px-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs focus:outline-none focus:border-yellow-500"
+                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:border-yellow-500"
                   />
                 </div>
 
                 <div className="flex items-center gap-4 pt-4">
-                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-gray-300 select-none">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300 select-none">
                     <input
                       type="checkbox"
                       checked={showPrice}
                       onChange={e => setShowPrice(e.target.checked)}
-                      className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                      className="rounded bg-slate-800 border-slate-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
                     />
                     Fiyat (TL)
                   </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-gray-300 select-none">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300 select-none">
                     <input
                       type="checkbox"
                       checked={showMilyem}
                       onChange={e => setShowMilyem(e.target.checked)}
-                      className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                      className="rounded bg-slate-800 border-slate-700 text-yellow-500 focus:ring-0 w-4 h-4 cursor-pointer"
                     />
                     Milyem
                   </label>
@@ -334,11 +334,11 @@ export default function BatchLabelPrintModal({
             </div>
 
             {/* Çıktı Modu Sekmeleri */}
-            <div className="flex bg-gray-950 p-1 rounded-xl border border-gray-800 max-w-md">
+            <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 max-w-md">
               <button
                 onClick={() => setActiveTab('preview')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  activeTab === 'preview' ? 'bg-yellow-500 text-black shadow-md' : 'text-gray-400 hover:text-white'
+                  activeTab === 'preview' ? 'bg-yellow-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Eye size={13} /> Liste & Canlı Önizleme ({batchList.length})
@@ -346,7 +346,7 @@ export default function BatchLabelPrintModal({
               <button
                 onClick={() => setActiveTab('zpl')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  activeTab === 'zpl' ? 'bg-yellow-500 text-black shadow-md' : 'text-gray-400 hover:text-white'
+                  activeTab === 'zpl' ? 'bg-yellow-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <FileCode size={13} /> Toplu ZPL II Akışı
@@ -357,12 +357,12 @@ export default function BatchLabelPrintModal({
             {activeTab === 'preview' ? (
               <div className="space-y-4">
                 {batchList.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 bg-gray-950/40 rounded-xl border border-gray-800">
+                  <div className="text-center py-12 text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800">
                     Baskı listesinde ürün bulunmamaktadır.
                   </div>
                 ) : (
-                  <div className="border border-gray-800 rounded-xl overflow-hidden bg-gray-950/40">
-                    <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-800/60">
+                  <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/40">
+                    <div className="max-h-[360px] overflow-y-auto divide-y divide-slate-800/60">
                       {batchList.map((item, index) => {
                         const singleLabelData: LabelProductData = {
                           barcode: item.barcode,
@@ -395,14 +395,14 @@ export default function BatchLabelPrintModal({
                                   {item.title}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-gray-400 mt-0.5">
+                              <p className="text-[11px] text-slate-400 mt-0.5">
                                 {item.carat} Ayar • {item.weight.toFixed(2)} gr
                                 {item.sellingMilyem ? ` • Satış Milyemi: ${item.sellingMilyem}` : ''}
                               </p>
                             </div>
 
                             {/* Orta: Küçük Vektör Önizleme */}
-                            <div className="bg-white p-1 rounded border border-gray-300 shadow-sm shrink-0 w-64 h-12 flex items-center justify-center overflow-hidden">
+                            <div className="bg-white p-1 rounded border border-slate-300 shadow-sm shrink-0 w-64 h-12 flex items-center justify-center overflow-hidden">
                               <div 
                                 className="w-full select-none"
                                 dangerouslySetInnerHTML={{ __html: svgPreview }} 
@@ -411,8 +411,8 @@ export default function BatchLabelPrintModal({
 
                             {/* Sağ: Kopya Sayacı ve Sil Butonu */}
                             <div className="flex items-center gap-3 shrink-0">
-                              <div className="flex items-center gap-1.5 bg-gray-900 border border-gray-750 px-2 py-1 rounded-lg">
-                                <span className="text-[11px] text-gray-400">Adet:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-750 px-2 py-1 rounded-lg">
+                                <span className="text-[11px] text-slate-400">Adet:</span>
                                 <input
                                   type="number"
                                   min={1}
@@ -425,7 +425,7 @@ export default function BatchLabelPrintModal({
 
                               <button
                                 onClick={() => handleRemoveItem(item.id)}
-                                className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                                 title="Listeden Çıkar"
                               >
                                 <Trash2 size={15} />
@@ -440,15 +440,15 @@ export default function BatchLabelPrintModal({
               </div>
             ) : (
               /* TAB 2: TOPLU ZPL II AKIŞI */
-              <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-gray-800">
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-300">Yazıcı DPI:</span>
-                    <div className="flex gap-1 bg-gray-900 p-0.5 rounded-lg border border-gray-800">
+                    <span className="text-xs font-bold text-slate-300">Yazıcı DPI:</span>
+                    <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
                       <button
                         onClick={() => setSelectedDpi(LABEL_DPI.DPI_203)}
                         className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
-                          selectedDpi === LABEL_DPI.DPI_203 ? 'bg-yellow-500 text-black' : 'text-gray-400'
+                          selectedDpi === LABEL_DPI.DPI_203 ? 'bg-yellow-500 text-black' : 'text-slate-400'
                         }`}
                       >
                         203 DPI
@@ -456,7 +456,7 @@ export default function BatchLabelPrintModal({
                       <button
                         onClick={() => setSelectedDpi(LABEL_DPI.DPI_300)}
                         className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
-                          selectedDpi === LABEL_DPI.DPI_300 ? 'bg-yellow-500 text-black' : 'text-gray-400'
+                          selectedDpi === LABEL_DPI.DPI_300 ? 'bg-yellow-500 text-black' : 'text-slate-400'
                         }`}
                       >
                         300 DPI
@@ -467,14 +467,14 @@ export default function BatchLabelPrintModal({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleCopyZPL}
-                      className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
                     >
                       {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                       {copied ? 'Kopyalandı!' : 'Toplu ZPL Kopyala'}
                     </button>
                     <button
                       onClick={handleDownloadZPL}
-                      className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
                     >
                       <Download size={13} />
                       .zpl İndir
@@ -482,7 +482,7 @@ export default function BatchLabelPrintModal({
                   </div>
                 </div>
 
-                <pre className="max-h-[300px] bg-black/60 p-3 rounded-lg font-mono text-[11px] text-emerald-400 overflow-y-auto whitespace-pre border border-gray-850 select-all">
+                <pre className="max-h-[300px] bg-black/60 p-3 rounded-lg font-mono text-[11px] text-emerald-400 overflow-y-auto whitespace-pre border border-slate-850 select-all">
                   {batchZplCode}
                 </pre>
               </div>
@@ -491,8 +491,8 @@ export default function BatchLabelPrintModal({
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 py-4 border-t border-gray-800 bg-gray-950/70 flex items-center justify-between shrink-0">
-            <div className="text-xs text-gray-400 flex items-center gap-2">
+          <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/70 flex items-center justify-between shrink-0">
+            <div className="text-xs text-slate-400 flex items-center gap-2">
               <Info size={14} className="text-yellow-400" />
               <span>
                 Toplam <strong>{totalLabelsCount} adet</strong> etiket rulo baskıya gönderilecek.
@@ -502,7 +502,7 @@ export default function BatchLabelPrintModal({
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white bg-gray-800/80 hover:bg-gray-800 transition-colors"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors"
               >
                 Vazgeç
               </button>

@@ -120,7 +120,7 @@ export function TurnoverBadge({
     [TURNOVER_CATEGORIES.HAREKETSIZ]: {
       label: 'Ölü / Hareketsiz',
       icon: PauseCircle,
-      classes: 'bg-gray-800/80 text-gray-400 border border-gray-700 font-medium',
+      classes: 'bg-slate-800/80 text-slate-400 border border-slate-700 font-medium',
     },
   }[category];
 

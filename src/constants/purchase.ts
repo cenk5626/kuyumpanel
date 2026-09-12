@@ -49,12 +49,12 @@ export const PO_STATUS_LABELS: Record<PurchaseOrderStatus, { label: string; colo
   [PO_STATUS.ORDERED]: { label: 'Sipariş Verildi', color: 'text-blue-500', bg: 'bg-blue-500/10' },
   [PO_STATUS.PARTIALLY_RECEIVED]: { label: 'Kısmi Kabul', color: 'text-purple-500', bg: 'bg-purple-500/10' },
   [PO_STATUS.RECEIVED]: { label: 'Tamamlandı (Kabul Edildi)', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  [PO_STATUS.CANCELLED]: { label: 'İptal Edildi', color: 'text-zinc-400', bg: 'bg-zinc-500/10' },
+  [PO_STATUS.CANCELLED]: { label: 'İptal Edildi', color: 'text-slate-400', bg: 'bg-slate-500/10' },
 };
 
 export const PO_LINE_STATUS_LABELS: Record<PurchaseOrderLineStatus, { label: string; color: string; bg: string }> = {
   [PO_LINE_STATUS.PENDING]: { label: 'Bekliyor', color: 'text-amber-500', bg: 'bg-amber-500/10' },
   [PO_LINE_STATUS.PARTIALLY_RECEIVED]: { label: 'Kısmi Teslim', color: 'text-purple-500', bg: 'bg-purple-500/10' },
   [PO_LINE_STATUS.COMPLETED]: { label: 'Eksiksiz Teslim', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  [PO_LINE_STATUS.CANCELLED]: { label: 'İptal', color: 'text-zinc-400', bg: 'bg-zinc-500/10' },
+  [PO_LINE_STATUS.CANCELLED]: { label: 'İptal', color: 'text-slate-400', bg: 'bg-slate-500/10' },
 };

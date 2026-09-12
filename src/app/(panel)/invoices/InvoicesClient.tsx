@@ -30,6 +30,9 @@ import {
 } from '@/constants/invoice';
 import { CARAT_MILYEM_MAP } from '@/constants/workshop';
 import ScaleButton from '@/components/ScaleButton';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
 import { calculateSpecialMatrixInvoice, SpecialMatrixItemInput } from '@/lib/invoice/special-matrix';
 
 interface InvoiceItem {
@@ -207,7 +210,15 @@ export default function InvoicesClient({
       inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (inv.customerTaxId && inv.customerTaxId.includes(searchQuery));
 
-    const matchesType = typeFilter === 'ALL' || inv.type === typeFilter;
+    let matchesType = true;
+    if (typeFilter === 'ALL') {
+      matchesType = true;
+    } else if (typeFilter === 'BILGI_FISI') {
+      matchesType = inv.documentType === INVOICE_DOCUMENT_TYPES.BILGI_FISI;
+    } else {
+      matchesType = inv.type === typeFilter;
+    }
+
     const matchesDocType = docTypeFilter === 'ALL' || inv.documentType === docTypeFilter;
 
     return matchesSearch && matchesType && matchesDocType;
@@ -220,102 +231,101 @@ export default function InvoicesClient({
   const totalGrand = invoices.reduce((s, i) => s + (i.grandTotal || 0), 0);
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1920px] mx-auto space-y-6">
-      {/* Üst Başlık & Açıklama */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-amber-500/20 pb-5">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-              <ReceiptText className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Özel Matrahlı Fatura & e-Arşiv
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                3065 sayılı KDV Kanunu Madde 23/e: Külçe bedeli KDV istisnası, yalnızca işçilik matrahına %20 KDV.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setIsNewModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Yeni Fatura Düzenle</span>
-        </button>
-      </div>
+    <div className="space-y-6">
+      {/* Üst Başlık & Aksiyonlar */}
+      <PageHeader
+        icon={<ReceiptText className="w-6 h-6 text-amber-500" />}
+        title="Özel Matrahlı Fatura & e-Arşiv"
+        subtitle="3065 sayılı KDV Kanunu Madde 23/e: Külçe bedeli KDV istisnası, yalnızca işçilik matrahına %20 KDV."
+        badges={[
+          { label: `${invoices.length} Kayıtlı Belge`, variant: 'gold' },
+          { label: 'KDV Madde 23/e Uyumlu', variant: 'success' },
+        ]}
+        actions={
+          <button
+            onClick={() => setIsNewModalOpen(true)}
+            className={`${THEME.BTN_PRIMARY} min-h-[44px] flex items-center justify-center gap-2`}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Yeni Fatura Düzenle</span>
+          </button>
+        }
+      />
 
       {/* KPI Kartları */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Toplam Belge</span>
-            <FileText className="w-4 h-4 text-blue-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            {invoices.length}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Düzenlenen Fatura</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Külçe İstisna Bedeli</span>
-            <Coins className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 font-mono">
-            {totalGoldCost.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺
-          </div>
-          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">%0 KDV İstisnası</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>İşçilik Matrahı</span>
-            <DollarSign className="w-4 h-4 text-purple-500" />
-          </div>
-          <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
-            {totalLaborCost.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Vergiye Tabi Tutar</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Tahakkuk Eden KDV</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-            {totalKdv.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">%20 KDV Tutarı</div>
-        </div>
-
-        <div className="col-span-2 lg:col-span-1 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent bg-white dark:bg-slate-900 p-4 rounded-2xl border border-amber-500/30 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Genel Toplam Ciro</span>
-            <TrendingUp className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-amber-400 font-mono">
-            {totalGrand.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺
-          </div>
-          <div className="text-[10px] text-amber-600 dark:text-amber-400/80 mt-1 font-semibold">Tüm Belgeler</div>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <StatCard
+          title="Toplam Belge"
+          value={invoices.length}
+          icon={FileText}
+          iconColor="blue"
+          subtitle="Düzenlenen Fatura"
+        />
+        <StatCard
+          title="Külçe İstisna Bedeli"
+          value={`${totalGoldCost.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺`}
+          icon={Coins}
+          iconColor="gold"
+          subtitle="%0 KDV İstisnası"
+        />
+        <StatCard
+          title="İşçilik Matrahı"
+          value={`${totalLaborCost.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺`}
+          icon={DollarSign}
+          iconColor="purple"
+          subtitle="Vergiye Tabi Tutar"
+        />
+        <StatCard
+          title="Tahakkuk Eden KDV"
+          value={`${totalKdv.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺`}
+          icon={ShieldCheck}
+          iconColor="emerald"
+          subtitle="%20 KDV Tutarı"
+        />
+        <StatCard
+          title="Genel Toplam Ciro"
+          value={`${totalGrand.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺`}
+          icon={TrendingUp}
+          iconColor="gold"
+          subtitle="Tüm Belgeler"
+          className="col-span-2 sm:col-span-1 border-amber-500/30"
+        />
       </div>
+
+      {/* LuxuryTabs Segment Kontrolü */}
+      <LuxuryTabs
+        tabs={[
+          { id: 'ALL', label: 'Tüm Faturalar', count: invoices.length },
+          {
+            id: INVOICE_TYPES.OZEL_MATRAH,
+            label: 'Özel Matrah (23/e)',
+            count: invoices.filter((i) => i.type === INVOICE_TYPES.OZEL_MATRAH).length,
+          },
+          {
+            id: INVOICE_TYPES.STANDART,
+            label: 'Standart Fatura',
+            count: invoices.filter((i) => i.type === INVOICE_TYPES.STANDART).length,
+          },
+          {
+            id: 'BILGI_FISI',
+            label: 'Bilgi Fişleri',
+            count: invoices.filter((i) => i.documentType === INVOICE_DOCUMENT_TYPES.BILGI_FISI).length,
+          },
+        ]}
+        activeTab={typeFilter}
+        onChange={setTypeFilter}
+      />
 
       {/* Arama & Filtreleme Çubuğu */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-amber-500/20">
-        <div className="relative w-full sm:w-80">
+        <div className="relative w-full sm:flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Fatura no, müşteri adı veya TCKN ara..."
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500"
+            className="w-full pl-9 pr-3 py-2.5 min-h-[44px] bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500"
           />
         </div>
 
@@ -323,22 +333,12 @@ export default function InvoicesClient({
           <select
             value={docTypeFilter}
             onChange={(e) => setDocTypeFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 focus:outline-none"
+            className="px-3 py-2.5 min-h-[44px] bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 focus:outline-none"
           >
             <option value="ALL">Tüm Belge Türleri</option>
             <option value={INVOICE_DOCUMENT_TYPES.E_ARSIV}>e-Arşiv Fatura</option>
             <option value={INVOICE_DOCUMENT_TYPES.E_FATURA}>e-Fatura</option>
             <option value={INVOICE_DOCUMENT_TYPES.BILGI_FISI}>Bilgi Fişi</option>
-          </select>
-
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 focus:outline-none"
-          >
-            <option value="ALL">Tüm Matrah Şekilleri</option>
-            <option value={INVOICE_TYPES.OZEL_MATRAH}>Özel Matrah (23/e)</option>
-            <option value={INVOICE_TYPES.STANDART}>Standart Fatura</option>
           </select>
         </div>
       </div>

@@ -79,6 +79,11 @@ model Dealer {
   posTerminals         PosTerminal[]
   bankTransactions     BankTransaction[]
   posSettlements       PosSettlement[]
+  priceSnapshots       PriceSnapshot[]
+  milyemSnapshots      MilyemSnapshot[]
+  businessBankAccounts BusinessBankAccount[]
+  customerIdentities   CustomerIdentity[]
+  notebookEntries      JewelerNotebookEntry[]
 
   // AI Patron Asistanı Ayarları (BYOK - Bring Your Own Key)
   aiProvider           String?                  @default("GEMINI") // "GEMINI" | "OPENAI"
@@ -379,6 +384,7 @@ model Supplier {
   transactions SupplierTransaction[]
   purchaseOrders PurchaseOrder[]
   goodsReceipts  GoodsReceipt[]
+  notebookEntries JewelerNotebookEntry[]
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt @default(now())
 }
@@ -455,6 +461,8 @@ model Customer {
   quotes         Quote[]
   riskProfile    CustomerRiskProfile?
   complianceCases ComplianceCase[]
+  customerIdentities CustomerIdentity[]
+  notebookEntries JewelerNotebookEntry[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt @default(now())
 }
@@ -636,6 +644,7 @@ model WorkshopJob {
   completedDate          DateTime? // Kapatılma Tarihi
   notes                  String?
   serviceOrders          ServiceOrder[]
+  notebookEntries        JewelerNotebookEntry[]
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 }
@@ -685,6 +694,8 @@ model Branch {
   expenseVouchers      ExpenseVoucher[]
   serviceOrders        ServiceOrder[]
   quotes               Quote[]
+  businessBankAccounts BusinessBankAccount[]
+  notebookEntries      JewelerNotebookEntry[]
   
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -754,8 +765,13 @@ model PurchaseOrder {
   totalEstimatedTl     Float               @default(0) // Tahmini TL bedeli / işçilik
   notes                String?
   createdBy            String?
+  approvedBy           String?
+  sentAt               DateTime?
+  receivedAt           DateTime?
+  cancelledAt          DateTime?
   lines                PurchaseOrderLine[]
   receipts             GoodsReceipt[]
+  messages             PurchaseOrderMessage[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 
@@ -1008,6 +1024,8 @@ model ServiceOrder {
   createdAt            DateTime               @default(now())
   updatedAt            DateTime               @updatedAt
   events               ServiceOrderEvent[]
+  photos               ServiceOrderPhoto[]
+  notebookEntries      JewelerNotebookEntry[]
 
   @@unique([dealerId, serviceNumber])
 }
@@ -1497,5 +1515,202 @@ model PosSettlement {
   @@index([dealerId, status])
   @@index([dealerId, maturityDate])
 }
+
+// =============================================================
+// FAZ 41: Geçmiş Kurlar ve Milyem Geçmişi Modelleri
+// =============================================================
+
+model PriceSnapshot {
+  id             String              @id @default(cuid())
+  dealerId       String
+  dealer         Dealer              @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  capturedAt     DateTime            @default(now())
+  captureSlotKey String              // "2026-09-09-17-00" (Europe/Istanbul 30 dk slot)
+  source         String              @default("ALTIS") // "ALTIS" | "HAREM" | "MANUAL" | "SYSTEM"
+  status         String              @default("SUCCESS") // "SUCCESS" | "FAILED" | "PARTIAL"
+  errorMessage   String?
+  items          PriceSnapshotItem[]
+  createdAt      DateTime            @default(now())
+
+  @@unique([dealerId, captureSlotKey])
+  @@index([dealerId, capturedAt])
+}
+
+model PriceSnapshotItem {
+  id                String        @id @default(cuid())
+  snapshotId        String
+  snapshot          PriceSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  productCode       String        // Örn: "HAS_ALTIN", "USD", "EUR", "CEYREK_YENI"
+  label             String        // Örn: "Has Altın (Gr)", "Amerikan Doları"
+  bid               Float         // Alış Fiyatı (TL)
+  ask               Float         // Satış Fiyatı (TL)
+  currency          String        @default("TL")
+  source            String?
+  providerUpdatedAt DateTime?
+  createdAt         DateTime      @default(now())
+
+  @@index([snapshotId, productCode])
+}
+
+model MilyemSnapshot {
+  id             String               @id @default(cuid())
+  dealerId       String
+  dealer         Dealer               @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  capturedAt     DateTime             @default(now())
+  captureSlotKey String               // "2026-09-09-17-00"
+  source         String               @default("SYSTEM") // "SYSTEM" | "MANUAL"
+  items          MilyemSnapshotItem[]
+  createdAt      DateTime             @default(now())
+
+  @@unique([dealerId, captureSlotKey])
+  @@index([dealerId, capturedAt])
+}
+
+model MilyemSnapshotItem {
+  id         String         @id @default(cuid())
+  snapshotId String
+  snapshot   MilyemSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  code       String         // "mil24Ayar", "mil22Ayar", "mil14Ayar", "milAdanaBurma", "milAjda"
+  label      String         // "24 Ayar (Has)", "22 Ayar Bilezik", vb.
+  value      Float          // 995, 916, 585, vb.
+  unit       String         @default("milyem")
+  createdAt  DateTime       @default(now())
+
+  @@index([snapshotId, code])
+}
+
+// =============================================================
+// FAZ 42: Toptancı Siparişi Mesajlaşma Modeli
+// =============================================================
+
+model PurchaseOrderMessage {
+  id                  String        @id @default(cuid())
+  purchaseOrderId     String
+  purchaseOrder       PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  provider            String        @default("WEB_INTENT") // "WEB_INTENT" | "CLOUD_API" | "GATEWAY"
+  recipientPhone      String
+  messageBodySnapshot String        // Gönderilen metnin o anki kopyası
+  status              String        @default("SENT") // "SENT" | "FAILED" | "QUEUED"
+  externalMessageId   String?
+  sentAt              DateTime      @default(now())
+  deliveredAt         DateTime?
+  errorCode           String?
+  safeErrorMessage    String?
+
+  @@index([purchaseOrderId])
+}
+
+// =============================================================
+// FAZ 43: İşletme IBAN Kayıt Yönetimi Modeli
+// =============================================================
+
+model BusinessBankAccount {
+  id                 String   @id @default(cuid())
+  dealerId           String
+  dealer             Dealer   @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId           String?
+  branch             Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  bankName           String   // Örn: "Ziraat Bankası", "Garanti BBVA", "İş Bankası"
+  accountHolderName  String   // Hesap sahibi / Unvan
+  currency           String   @default("TRY") // "TRY" | "USD" | "EUR" | "XAU"
+  encryptedIban      String   // AES-256-GCM ile şifreli tam IBAN
+  ibanFingerprint    String   // HMAC/SHA256 tekillik özeti
+  maskedIban         String   // "TR** **** **** **12 34"
+  isActive           Boolean  @default(true)
+  isDefault          Boolean  @default(false)
+  note               String?
+  createdBy          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([dealerId, ibanFingerprint])
+  @@index([dealerId, isActive])
+}
+
+// =============================================================
+// FAZ 44: Müşteri Kimlik Havuzu Modeli (TCKN Vault)
+// =============================================================
+
+model CustomerIdentity {
+  id                           String    @id @default(cuid())
+  dealerId                     String
+  dealer                       Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  customerId                   String?
+  customer                     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  firstName                    String
+  lastName                     String
+  encryptedTcNo                String    // AES-256-GCM şifreli TCKN
+  tcNoFingerprint              String    // HMAC tekillik özeti
+  maskedTcNo                   String    // "123*****89"
+  purpose                      String    // "FATURA_DUZENLEME" | "MASAK_AML" | "YUKSEK_TUTARLI_ISLEM" | "EMANET_TESLIM" | "GENEL"
+  legalBasisOrConsentReference String?   // Dayanak belge / Rıza metni referansı
+  collectedAt                  DateTime  @default(now())
+  retentionUntil               DateTime  // Saklama son tarihi (örn: +10 yıl)
+  status                       String    @default("ACTIVE") // "ACTIVE" | "EXPIRED" | "DESTROYED"
+  createdBy                    String?
+  updatedBy                    String?
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+
+  @@unique([dealerId, tcNoFingerprint])
+  @@index([dealerId, status])
+  @@index([dealerId, customerId])
+}
+
+// =============================================================
+// FAZ 45: Kuyumcu Defteri & Operasyonel Notlar Modeli
+// =============================================================
+
+model JewelerNotebookEntry {
+  id                   String        @id @default(cuid())
+  dealerId             String
+  dealer               Dealer        @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  branchId             String?
+  branch               Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  category             String        @default("GENERAL") // "GENERAL" | "CUSTOMER" | "SUPPLIER" | "WORKSHOP" | "SERVICE" | "PRICE" | "REMINDER" | "PRIVATE"
+  title                String
+  content              String        // Markdown / Düz metin (HTML sanitize)
+  visibility           String        @default("DEALER") // "PRIVATE" | "BRANCH" | "DEALER"
+  linkedCustomerId     String?
+  linkedCustomer       Customer?     @relation(fields: [linkedCustomerId], references: [id], onDelete: SetNull)
+  linkedSupplierId     String?
+  linkedSupplier       Supplier?     @relation(fields: [linkedSupplierId], references: [id], onDelete: SetNull)
+  linkedWorkshopJobId  String?
+  linkedWorkshopJob    WorkshopJob?  @relation(fields: [linkedWorkshopJobId], references: [id], onDelete: SetNull)
+  linkedServiceOrderId String?
+  linkedServiceOrder   ServiceOrder? @relation(fields: [linkedServiceOrderId], references: [id], onDelete: SetNull)
+  reminderAt           DateTime?     // Hatırlatma zamanı
+  isPinned             Boolean       @default(false)
+  status               String        @default("ACTIVE") // "ACTIVE" | "ARCHIVED"
+  createdBy            String        // Oluşturan kullanıcı ID / email
+  updatedBy            String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([dealerId, category])
+  @@index([dealerId, visibility])
+  @@index([dealerId, isPinned])
+  @@index([dealerId, reminderAt])
+}
+
+// =============================================================
+// FAZ 46: Servis & Tamirat Fotoğrafları Modeli
+// =============================================================
+
+model ServiceOrderPhoto {
+  id               String       @id @default(cuid())
+  serviceOrderId   String
+  serviceOrder     ServiceOrder @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  storageReference String       // Güvenli yerel dosya yolu veya veri referansı
+  fileName         String
+  mimeType         String       // "image/jpeg" | "image/png" | "image/webp"
+  fileSize         Int          // Bayt cinsinden boyut
+  photoType        String       @default("INTAKE") // "INTAKE" | "IN_PROGRESS" | "COMPLETED" | "DEFECT"
+  uploadedBy       String?
+  createdAt        DateTime     @default(now())
+
+  @@index([serviceOrderId])
+}
+
 
 

@@ -17,7 +17,6 @@ import {
   Trash2,
   Scan,
   Loader2,
-  FileText,
   AlertCircle,
 } from 'lucide-react';
 import {
@@ -26,6 +25,10 @@ import {
   TransferStatus,
   TRANSFER_LIMITS,
 } from '@/constants/branch';
+import { THEME } from '@/constants/theme';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
 import TransferPrintModal from './TransferPrintModal';
 
 interface TransferLine {
@@ -125,12 +128,12 @@ export default function TransfersClient({
 
   // Status Filter Tabs
   const tabs = [
-    { id: 'ALL', label: 'Tüm Transferler' },
-    { id: TRANSFER_STATUS.DRAFT, label: 'Taslak' },
-    { id: TRANSFER_STATUS.APPROVED, label: 'Onaylanan' },
-    { id: TRANSFER_STATUS.SHIPPED, label: 'Yolda (Sevk)' },
-    { id: TRANSFER_STATUS.RECEIVED, label: 'Teslim Alınan' },
-    { id: 'CANCELLED_OR_REJECTED', label: 'İptal / Red' },
+    { id: 'ALL', label: 'Tüm Transferler', count: transfers.length },
+    { id: TRANSFER_STATUS.DRAFT, label: 'Taslak', count: transfers.filter((t) => t.status === TRANSFER_STATUS.DRAFT).length },
+    { id: TRANSFER_STATUS.APPROVED, label: 'Onaylanan', count: transfers.filter((t) => t.status === TRANSFER_STATUS.APPROVED).length },
+    { id: TRANSFER_STATUS.SHIPPED, label: 'Yolda (Sevk)', count: transfers.filter((t) => t.status === TRANSFER_STATUS.SHIPPED).length },
+    { id: TRANSFER_STATUS.RECEIVED, label: 'Teslim Alınan', count: transfers.filter((t) => t.status === TRANSFER_STATUS.RECEIVED).length },
+    { id: 'CANCELLED_OR_REJECTED', label: 'İptal / Red', count: transfers.filter((t) => t.status === TRANSFER_STATUS.CANCELLED || t.status === TRANSFER_STATUS.REJECTED).length },
   ];
 
   const filteredTransfers = transfers.filter((t) => {
@@ -186,7 +189,6 @@ export default function TransfersClient({
       setBarcodeInput('');
       setErrorMessage(null);
     } else {
-      // Barkod bulunamadıysa serbest giriş imkanı sun
       setSelectedLines((prev) => [
         ...prev,
         {
@@ -313,27 +315,27 @@ export default function TransfersClient({
   return (
     <div className="space-y-6">
       {/* Üst Başlık & Aksiyon Butonu */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <ArrowRightLeft className="w-7 h-7 text-amber-500" />
-            Şubeler Arası Transfer
-          </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Şubeler arasında kontrollü, barkodlu ürün ve stok transferi takip sistemi
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            setIsCreateModalOpen(true);
-            setErrorMessage(null);
-          }}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-zinc-950 font-semibold shadow-lg shadow-amber-500/20 transition-all text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Yeni Transfer Başlat
-        </button>
-      </div>
+      <PageHeader
+        title="Şubeler Arası Transfer"
+        subtitle="Şubeler arasında kontrollü, barkodlu ürün ve stok transferi takip sistemi"
+        icon={ArrowRightLeft}
+        badges={[
+          { label: `${pendingApprovalCount} Onay Bekliyor`, variant: pendingApprovalCount > 0 ? 'warning' : 'neutral' },
+          { label: `${inTransitCount} Yolda`, variant: inTransitCount > 0 ? 'info' : 'neutral' },
+        ]}
+        actions={
+          <button
+            onClick={() => {
+              setIsCreateModalOpen(true);
+              setErrorMessage(null);
+            }}
+            className={`${THEME.BTN_PRIMARY} min-h-[44px] flex items-center justify-center gap-2`}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Yeni Transfer Başlat</span>
+          </button>
+        }
+      />
 
       {/* Başarı Bildirimi */}
       {successMessage && (
@@ -345,160 +347,133 @@ export default function TransfersClient({
 
       {/* KPI Kartları */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Onay Bekleyen
-            </span>
-            <Clock className="w-5 h-5 text-amber-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">
-            {pendingApprovalCount}
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Taslak transfer sayısı</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Yoldaki Sevkiyat
-            </span>
-            <Truck className="w-5 h-5 text-purple-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{inTransitCount}</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Teslimat bekleyen ürünler</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Tamamlanan
-            </span>
-            <PackageCheck className="w-5 h-5 text-emerald-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{completedCount}</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Başarıyla teslim alınanlar</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Toplam Transfer
-            </span>
-            <ArrowRightLeft className="w-5 h-5 text-blue-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{totalCount}</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Tüm şube hareketleri</p>
-        </div>
+        <StatCard
+          title="Onay Bekleyen"
+          value={pendingApprovalCount}
+          subtitle="Taslak transfer sayısı"
+          icon={Clock}
+          iconColor="gold"
+        />
+        <StatCard
+          title="Yoldaki Sevkiyat"
+          value={inTransitCount}
+          subtitle="Teslimat bekleyen ürünler"
+          icon={Truck}
+          iconColor="purple"
+        />
+        <StatCard
+          title="Tamamlanan"
+          value={completedCount}
+          subtitle="Başarıyla teslim alınanlar"
+          icon={PackageCheck}
+          iconColor="emerald"
+        />
+        <StatCard
+          title="Toplam Transfer"
+          value={totalCount}
+          subtitle="Tüm şube hareketleri"
+          icon={ArrowRightLeft}
+          iconColor="blue"
+        />
       </div>
 
       {/* Filtre Sekmeleri & Arama */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/10'
-                  : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <LuxuryTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
         <div className="relative w-full md:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             placeholder="No, şube, barkod ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            className={`w-full pl-10 pr-4 min-h-[44px] ${THEME.INPUT}`}
           />
         </div>
       </div>
 
       {/* Transfer Listesi Tablosu */}
-      <div className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+      <div className={THEME.TABLE.CONTAINER}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 text-zinc-500 dark:text-zinc-400 font-semibold uppercase tracking-wider">
+            <thead className={THEME.TABLE.HEADER}>
               <tr>
-                <th className="py-3 px-4">Transfer No</th>
-                <th className="py-3 px-4">Çıkış (Kaynak)</th>
-                <th className="py-3 px-4">Varış (Hedef)</th>
-                <th className="py-3 px-4 text-center">Kalem / Adet</th>
-                <th className="py-3 px-4 text-right">Toplam Gram</th>
-                <th className="py-3 px-4">Durum</th>
-                <th className="py-3 px-4">Tarih</th>
-                <th className="py-3 px-4 text-right">İşlemler</th>
+                <th className={THEME.TABLE.TH}>Transfer No</th>
+                <th className={THEME.TABLE.TH}>Çıkış (Kaynak)</th>
+                <th className={THEME.TABLE.TH}>Varış (Hedef)</th>
+                <th className={`${THEME.TABLE.TH} text-center`}>Kalem / Adet</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>Toplam Gram</th>
+                <th className={THEME.TABLE.TH}>Durum</th>
+                <th className={THEME.TABLE.TH}>Tarih</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>İşlemler</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {filteredTransfers.map((tr) => {
                 const isExpanded = expandedTransferId === tr.id;
                 const statusMeta =
                   TRANSFER_STATUS_LABELS[tr.status as TransferStatus] || {
                     label: tr.status,
-                    color: 'text-zinc-500',
-                    bg: 'bg-zinc-500/10',
+                    color: 'text-slate-500',
+                    bg: 'bg-slate-500/10',
                   };
                 const totalWeight = tr.lines.reduce((acc, l) => acc + (l.weight || 0), 0);
                 const totalQty = tr.lines.reduce((acc, l) => acc + (l.quantity || 1), 0);
 
                 return (
                   <React.Fragment key={tr.id}>
-                    <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                    <tr className={THEME.TABLE.ROW}>
+                      <td className={`${THEME.TABLE.TD} font-mono font-bold text-slate-900 dark:text-slate-100`}>
                         {tr.transferNumber}
                       </td>
-                      <td className="py-3.5 px-4 font-medium text-zinc-800 dark:text-zinc-200">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 mr-1.5 border border-zinc-200 dark:border-zinc-700">
+                      <td className={`${THEME.TABLE.TD} font-medium text-slate-800 dark:text-slate-200`}>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 mr-1.5 border border-slate-200 dark:border-slate-700">
                           {tr.fromBranch.code}
                         </span>
                         {tr.fromBranch.name}
                       </td>
-                      <td className="py-3.5 px-4 font-medium text-zinc-800 dark:text-zinc-200">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 mr-1.5 border border-zinc-200 dark:border-zinc-700">
+                      <td className={`${THEME.TABLE.TD} font-medium text-slate-800 dark:text-slate-200`}>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 mr-1.5 border border-slate-200 dark:border-slate-700">
                           {tr.toBranch.code}
                         </span>
                         {tr.toBranch.name}
                       </td>
-                      <td className="py-3.5 px-4 text-center font-semibold text-zinc-700 dark:text-zinc-300">
+                      <td className={`${THEME.TABLE.TD} text-center font-semibold text-slate-700 dark:text-slate-300`}>
                         {tr.lines.length} Kalem / {totalQty} Adet
                       </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                      <td className={`${THEME.TABLE.TD} text-right font-mono font-bold text-slate-900 dark:text-slate-100`}>
                         {totalWeight.toFixed(2)} gr
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className={THEME.TABLE.TD}>
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${statusMeta.color} ${statusMeta.bg}`}
                         >
                           {statusMeta.label}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-zinc-500 dark:text-zinc-400">
+                      <td className={`${THEME.TABLE.TD} text-slate-500 dark:text-slate-400`}>
                         {new Date(tr.createdAt).toLocaleDateString('tr-TR')}
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className={`${THEME.TABLE.TD} text-right`}>
                         <div className="flex items-center justify-end gap-1.5">
                           {/* Durum İlerletme Butonları */}
                           {tr.status === TRANSFER_STATUS.DRAFT && (
                             <>
                               <button
                                 onClick={() => handleStatusAction(tr.id, 'APPROVE')}
-                                className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white font-semibold transition-colors"
+                                className="min-h-[36px] px-3 py-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white font-semibold transition-colors flex items-center justify-center text-xs"
                                 title="Transferi Onayla"
                               >
                                 Onayla
                               </button>
                               <button
                                 onClick={() => handleDeleteTransfer(tr)}
-                                className="p-1 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                className="min-h-[36px] min-w-[36px] p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors flex items-center justify-center"
                                 title="Taslağı Sil"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -509,7 +484,7 @@ export default function TransfersClient({
                           {tr.status === TRANSFER_STATUS.APPROVED && (
                             <button
                               onClick={() => handleStatusAction(tr.id, 'SHIP')}
-                              className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500 hover:text-white font-semibold transition-colors flex items-center gap-1"
+                              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500 hover:text-white font-semibold transition-colors flex items-center justify-center gap-1 text-xs"
                               title="Ürünleri Sevk Et"
                             >
                               <Truck className="w-3.5 h-3.5" />
@@ -524,7 +499,7 @@ export default function TransfersClient({
                                   setSelectedTransferForAction(tr);
                                   setIsReceivingModalOpen(true);
                                 }}
-                                className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white font-semibold transition-colors flex items-center gap-1"
+                                className="min-h-[36px] px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white font-semibold transition-colors flex items-center justify-center gap-1 text-xs"
                                 title="Teslim Al ve Stoğa Geçir"
                               >
                                 <PackageCheck className="w-3.5 h-3.5" />
@@ -532,7 +507,7 @@ export default function TransfersClient({
                               </button>
                               <button
                                 onClick={() => handleStatusAction(tr.id, 'REJECT')}
-                                className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white text-[11px] font-semibold transition-colors"
+                                className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white text-[11px] font-semibold transition-colors flex items-center justify-center"
                                 title="Reddet ve Geri Gönder"
                               >
                                 Reddet
@@ -543,7 +518,7 @@ export default function TransfersClient({
                           {/* Sevk İrsaliyesi Yazdır */}
                           <button
                             onClick={() => setPrintTransfer(tr)}
-                            className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                            className="min-h-[36px] min-w-[36px] p-2 rounded-xl text-slate-500 hover:text-amber-500 hover:bg-amber-500/10 transition-colors flex items-center justify-center"
                             title="Sevk İrsaliyesi Yazdır"
                           >
                             <Printer className="w-4 h-4" />
@@ -554,7 +529,7 @@ export default function TransfersClient({
                             onClick={() =>
                               setExpandedTransferId(isExpanded ? null : tr.id)
                             }
-                            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                            className="min-h-[36px] min-w-[36px] p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center justify-center"
                           >
                             {isExpanded ? (
                               <ChevronUp className="w-4 h-4" />
@@ -568,18 +543,18 @@ export default function TransfersClient({
 
                     {/* Genişletilmiş Detay Satırı */}
                     {isExpanded && (
-                      <tr className="bg-zinc-50/80 dark:bg-zinc-950/40">
+                      <tr className="bg-slate-50/80 dark:bg-slate-950/40">
                         <td colSpan={8} className="p-4">
                           <div className="space-y-3">
-                            <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                               <div>
-                                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                                <span className="font-semibold text-slate-800 dark:text-slate-200">
                                   Talep Eden:
                                 </span>{' '}
                                 {tr.requestedBy}
                                 {tr.approvedBy && (
                                   <span className="ml-3">
-                                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                                    <span className="font-semibold text-slate-800 dark:text-slate-200">
                                       Onaylayan:
                                     </span>{' '}
                                     {tr.approvedBy}
@@ -604,9 +579,9 @@ export default function TransfersClient({
                             )}
 
                             {/* Kalemler Tablosu */}
-                            <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+                            <div className="border border-slate-200 dark:border-amber-500/20 rounded-xl overflow-hidden">
                               <table className="w-full text-left text-xs">
-                                <thead className="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 font-semibold">
+                                <thead className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-semibold">
                                   <tr>
                                     <th className="py-2 px-3">Barkod</th>
                                     <th className="py-2 px-3">Ürün Tanımı</th>
@@ -615,22 +590,22 @@ export default function TransfersClient({
                                     <th className="py-2 px-3 text-center">Miktar</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                                   {tr.lines.map((line) => (
-                                    <tr key={line.id}>
-                                      <td className="py-2 px-3 font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                                    <tr key={line.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                      <td className="py-2 px-3 font-mono font-bold text-slate-900 dark:text-slate-100">
                                         {line.barcode}
                                       </td>
-                                      <td className="py-2 px-3 text-zinc-700 dark:text-zinc-300">
+                                      <td className="py-2 px-3 text-slate-700 dark:text-slate-300">
                                         {line.productTitle}
                                       </td>
-                                      <td className="py-2 px-3 text-center text-zinc-500">
+                                      <td className="py-2 px-3 text-center text-slate-500">
                                         {line.carat ? `${line.carat}K` : '-'}
                                       </td>
-                                      <td className="py-2 px-3 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                                         {Number(line.weight || 0).toFixed(2)} gr
                                       </td>
-                                      <td className="py-2 px-3 text-center text-zinc-700 dark:text-zinc-300">
+                                      <td className="py-2 px-3 text-center text-slate-700 dark:text-slate-300">
                                         {line.quantity} Adet
                                       </td>
                                     </tr>
@@ -648,10 +623,10 @@ export default function TransfersClient({
 
               {filteredTransfers.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center text-zinc-400">
-                    <ArrowRightLeft className="w-12 h-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-3" />
-                    <p className="text-base font-semibold">Transfer kaydı bulunamadı.</p>
-                    <p className="text-xs text-zinc-500 mt-1">
+                  <td colSpan={8} className="py-16 text-center text-slate-400 dark:text-slate-500">
+                    <ArrowRightLeft className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
+                    <p className="text-base font-semibold text-slate-700 dark:text-slate-300">Transfer kaydı bulunamadı.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       Yeni bir transfer talebi başlatarak ürünleri şubeler arasında sevk edebilirsiniz.
                     </p>
                   </td>
@@ -665,15 +640,15 @@ export default function TransfersClient({
       {/* Yeni Transfer Oluşturma Modalı */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden animate-in zoom-in-95 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-amber-500/20 shadow-2xl overflow-hidden animate-in zoom-in-95 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-amber-500/20 flex-shrink-0">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <ArrowRightLeft className="w-5 h-5 text-amber-500" />
                 Yeni Şubeler Arası Transfer Talebi
               </h2>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -690,13 +665,13 @@ export default function TransfersClient({
               {/* Kaynak ve Hedef Şube */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Çıkış Şubesi (Kaynak) *
                   </label>
                   <select
                     value={fromBranchId}
                     onChange={(e) => setFromBranchId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-100"
+                    className={`w-full ${THEME.INPUT}`}
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -707,13 +682,13 @@ export default function TransfersClient({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Varış Şubesi (Hedef) *
                   </label>
                   <select
                     value={toBranchId}
                     onChange={(e) => setToBranchId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-100"
+                    className={`w-full ${THEME.INPUT}`}
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id} disabled={b.id === fromBranchId}>
@@ -725,13 +700,13 @@ export default function TransfersClient({
               </div>
 
               {/* Barkod Okutma & Ekleme */}
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-3">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-amber-500/20 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Scan className="w-4 h-4 text-amber-500" />
                     Barkod ile Ürün Ekle
                   </span>
-                  <span className="text-[11px] text-zinc-400">
+                  <span className="text-[11px] text-slate-400">
                     Mevcut Stoktan veya Manuel Barkod
                   </span>
                 </div>
@@ -747,12 +722,12 @@ export default function TransfersClient({
                         handleAddBarcode(barcodeInput);
                       }
                     }}
-                    className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono"
+                    className={`flex-1 min-h-[44px] font-mono ${THEME.INPUT}`}
                   />
                   <button
                     type="button"
                     onClick={() => handleAddBarcode(barcodeInput)}
-                    className="px-4 py-2 rounded-xl bg-zinc-800 dark:bg-zinc-700 text-zinc-100 text-xs font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-600 transition-colors"
+                    className="min-h-[44px] px-4 rounded-xl bg-slate-800 dark:bg-slate-700 text-slate-100 text-xs font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
                   >
                     Ekle
                   </button>
@@ -762,7 +737,7 @@ export default function TransfersClient({
               {/* Eklenen Kalemler Tablosu */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Transfer Edilecek Ürünler ({selectedLines.length})
                   </span>
                   {selectedLines.length > 0 && (
@@ -773,31 +748,31 @@ export default function TransfersClient({
                 </div>
 
                 {selectedLines.length === 0 ? (
-                  <div className="py-8 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-400 text-xs">
+                  <div className="py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 text-xs">
                     Henüz transfer kalemi eklenmedi. Yukarıdaki barkod alanından okutunuz.
                   </div>
                 ) : (
-                  <div className="max-h-48 overflow-y-auto border border-zinc-200 dark:border-zinc-800 rounded-xl divide-y divide-zinc-100 dark:divide-zinc-800">
+                  <div className="max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-xl divide-y divide-slate-100 dark:divide-slate-800">
                     {selectedLines.map((line, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-2.5 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                        className="flex items-center justify-between p-2.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50"
                       >
                         <div>
-                          <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100 mr-2">
+                          <span className="font-mono font-bold text-slate-900 dark:text-slate-100 mr-2">
                             {line.barcode}
                           </span>
-                          <span className="text-zinc-700 dark:text-zinc-300">{line.productTitle}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{line.productTitle}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                          <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                             {line.weight.toFixed(2)} gr
                           </span>
-                          <span className="text-zinc-500">{line.carat}K</span>
+                          <span className="text-slate-500">{line.carat}K</span>
                           <button
                             type="button"
                             onClick={() => handleRemoveLine(idx)}
-                            className="p-1 rounded hover:text-rose-500 transition-colors"
+                            className="min-h-[44px] min-w-[44px] p-1 rounded hover:text-rose-500 transition-colors flex items-center justify-center"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -810,7 +785,7 @@ export default function TransfersClient({
 
               {/* Transfer Notu */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Sevk Açıklaması / Notu
                 </label>
                 <textarea
@@ -819,24 +794,24 @@ export default function TransfersClient({
                   value={transferNotes}
                   onChange={(e) => setTransferNotes(e.target.value)}
                   placeholder="Örn: Vitrin yenileme için 14K bilezik transferi..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 resize-none"
+                  className={`w-full resize-none ${THEME.INPUT}`}
                 />
               </div>
 
               {/* Butonlar */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
                   disabled={isLoading}
-                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  className={`${THEME.BTN_SECONDARY} min-h-[44px]`}
                 >
                   Vazgeç
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading || selectedLines.length === 0}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-semibold shadow-md shadow-amber-500/20 transition-all disabled:opacity-50"
+                  className={`${THEME.BTN_PRIMARY} min-h-[44px] flex items-center gap-2`}
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Transfer Talebi Oluştur
@@ -850,19 +825,19 @@ export default function TransfersClient({
       {/* Teslim Alma & Mutabakat Modalı */}
       {isReceivingModalOpen && selectedTransferForAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl p-6 animate-in zoom-in-95 space-y-4">
-            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-amber-500/20 shadow-2xl p-6 animate-in zoom-in-95 space-y-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <PackageCheck className="w-5 h-5 text-emerald-500" />
               Sevkiyatı Teslim Al
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               <strong>{selectedTransferForAction.transferNumber}</strong> nolu transfer kapsamındaki{' '}
               {selectedTransferForAction.lines.length} adet ürün, hedef şubenin (
               {selectedTransferForAction.toBranch.name}) aktif stoğuna geçirilecektir.
             </p>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Eksik / Hasar / Sayım Farkı Notu (Varsa)
               </label>
               <textarea
@@ -870,7 +845,7 @@ export default function TransfersClient({
                 value={actionDiscrepancyNotes}
                 onChange={(e) => setActionDiscrepancyNotes(e.target.value)}
                 placeholder="Örn: Tüm ürünler eksiksiz teslim alındı..."
-                className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 resize-none"
+                className={`w-full resize-none ${THEME.INPUT}`}
               />
             </div>
 
@@ -881,7 +856,7 @@ export default function TransfersClient({
                   setIsReceivingModalOpen(false);
                   setSelectedTransferForAction(null);
                 }}
-                className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                className={`${THEME.BTN_SECONDARY} min-h-[44px]`}
               >
                 Vazgeç
               </button>
@@ -895,7 +870,7 @@ export default function TransfersClient({
                     actionDiscrepancyNotes
                   )
                 }
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50"
+                className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-semibold shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Teslimatı Onayla ve Stoğa Al

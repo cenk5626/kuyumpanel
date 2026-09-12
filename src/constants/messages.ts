@@ -23,6 +23,7 @@ export const MESSAGES = {
   STAT_ACTIVE_TODAY: 'Bugün Aktif',
   STAT_SYSTEM_STATUS: 'Sistem Durumu',
   STAT_SYSTEM_ONLINE: 'Çevrimiçi',
+  HEADER_ONLINE_STATUS: 'Canlı Kuyumculuk Otomasyonu',
 
   // Users
   USERS_TITLE: 'Kullanıcı Yönetimi',

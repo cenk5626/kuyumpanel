@@ -35,6 +35,6 @@ export const TRANSFER_STATUS_LABELS: Record<TransferStatus, { label: string; col
   [TRANSFER_STATUS.APPROVED]: { label: 'Onaylandı', color: 'text-blue-500', bg: 'bg-blue-500/10' },
   [TRANSFER_STATUS.SHIPPED]: { label: 'Sevk Edildi (Yolda)', color: 'text-purple-500', bg: 'bg-purple-500/10' },
   [TRANSFER_STATUS.RECEIVED]: { label: 'Teslim Alındı', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  [TRANSFER_STATUS.CANCELLED]: { label: 'İptal Edildi', color: 'text-zinc-400', bg: 'bg-zinc-500/10' },
+  [TRANSFER_STATUS.CANCELLED]: { label: 'İptal Edildi', color: 'text-slate-400', bg: 'bg-slate-500/10' },
   [TRANSFER_STATUS.REJECTED]: { label: 'Reddedildi', color: 'text-rose-500', bg: 'bg-rose-500/10' },
 };

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { SessionProvider } from 'next-auth/react';
 import { Menu } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import HeaderActions from '@/components/HeaderActions';
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
+import { MENU_ITEMS } from '@/constants/menu';
 import { ThemeProvider } from '@/context/ThemeContext';
 
 export default function PanelLayout({
@@ -16,6 +18,12 @@ export default function PanelLayout({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const activeItem = useMemo(() => {
+    if (!pathname) return null;
+    return MENU_ITEMS.find((item) => item.href === pathname || (item.href !== '/' && pathname.startsWith(item.href)));
+  }, [pathname]);
 
   return (
     <ThemeProvider>
@@ -35,28 +43,58 @@ export default function PanelLayout({
               isCollapsed ? 'md:ml-16 ml-0' : 'md:ml-64 ml-0'
             }`}
           >
-            {/* Mobil Üst Çubuk (Sadece < md ekranlarda) */}
-            <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200 dark:border-amber-500/15 sticky top-0 z-30 shadow-xs dark:shadow-md">
+            {/* Kalıcı Global Üst Çubuk (Hem Masaüstü Hem Mobil) */}
+            <header className={THEME.TOPBAR}>
               <div className="flex items-center gap-3">
+                {/* Mobil Menü Açma Butonu */}
                 <button
                   type="button"
                   onClick={() => setIsMobileOpen(true)}
-                  className="p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  className="md:hidden p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                   aria-label="Menüyü Aç"
                 >
                   <Menu size={22} />
                 </button>
-                <span className="font-extrabold text-base bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 dark:from-amber-300 dark:via-yellow-400 dark:to-amber-500 bg-clip-text text-transparent tracking-tight">
-                  {MESSAGES.APP_NAME}
-                </span>
-              </div>
-              <HeaderActions />
-            </div>
 
-            {/* Sayfa İçeriği */}
-            <div className="flex-1 w-full min-w-0">
+                {/* Mobil Logo & Aktif Sayfa Başlığı */}
+                <div className="md:hidden flex items-center gap-1.5 min-w-0">
+                  <span className="font-extrabold text-base bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 dark:from-amber-300 dark:via-yellow-400 dark:to-amber-500 bg-clip-text text-transparent tracking-tight flex-shrink-0">
+                    {MESSAGES.APP_NAME}
+                  </span>
+                  {activeItem && (
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
+                      / {activeItem.label}
+                    </span>
+                  )}
+                </div>
+
+                {/* Masaüstü Sol Bilgi: Canlı Sistem Durum Rozeti & Breadcrumb Navigasyon */}
+                <div className="hidden md:flex items-center gap-2.5">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>{MESSAGES.HEADER_ONLINE_STATUS}</span>
+                  </div>
+
+                  {activeItem && (
+                    <>
+                      <span className="text-slate-300 dark:text-slate-700">/</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800/90 text-slate-800 dark:text-amber-300 border border-slate-200 dark:border-amber-500/20 shadow-xs">
+                        <span className="text-slate-400 dark:text-slate-500 font-medium">Modül:</span>
+                        <span className="text-amber-700 dark:text-yellow-400">{activeItem.label}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Sağ Aksiyonlar (Alarmlar, Karanlık/Aydınlık Mod, Çıkış Butonu) */}
+              <HeaderActions />
+            </header>
+
+            {/* Sayfa İçeriği (Responsive Padding ve Kenar Çubuğu Boşluğu) */}
+            <main className={THEME.MAIN_WRAPPER}>
               {children}
-            </div>
+            </main>
           </div>
         </div>
       </SessionProvider>

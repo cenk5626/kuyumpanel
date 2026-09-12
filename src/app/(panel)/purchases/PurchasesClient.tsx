@@ -36,6 +36,10 @@ import {
   calculateHasEquivalent,
   calculateWeightVariance,
 } from '@/lib/purchase/variance-calculator';
+import { THEME } from '@/constants/theme';
+import PageHeader from '@/components/PageHeader';
+import LuxuryTabs from '@/components/LuxuryTabs';
+import StatCard from '@/components/StatCard';
 import ReceiptPrintModal from './ReceiptPrintModal';
 
 interface Supplier {
@@ -404,683 +408,643 @@ export default function PurchasesClient({
 
   return (
     <div className="space-y-6">
-      {/* Başlık ve Butonlar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Boxes className="w-7 h-7 text-amber-500" />
-            Tedarik Siparişi & Mal Kabul
-          </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Toptancı siparişleri, terazi tartımlı mal kabul, Has ve maliyet farkı mutabakatı
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setIsReceiptModalOpen(true);
-              setErrorMessage(null);
-              setReceiptPoId('');
-              setReceiptLines([]);
-            }}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-semibold text-xs transition-colors shadow-sm"
-          >
-            <Scale className="w-4 h-4 text-amber-400" />
-            Mal Kabul Girişi
-          </button>
-          <button
-            onClick={() => {
-              setIsOrderModalOpen(true);
-              setErrorMessage(null);
-            }}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-zinc-950 font-semibold shadow-lg shadow-amber-500/20 transition-all text-xs"
-          >
-            <Plus className="w-4 h-4" />
-            Yeni Tedarik Siparişi
-          </button>
-        </div>
-      </div>
+      {/* Üst Başlık & Aksiyonlar (Luxury Jewelry Design System) */}
+      <PageHeader
+        icon={<Boxes className="w-6 h-6 text-amber-500 animate-pulse" />}
+        title="Tedarik Siparişi & Mal Kabul"
+        subtitle="Toptancı siparişleri, terazi tartımlı mal kabul, Has ve maliyet farkı mutabakatı"
+        badges={[
+          { label: `${pendingOrdersCount} Açık Sipariş`, variant: 'gold' },
+          { label: 'Terazi & Has Mutabakatı Aktif', variant: 'success' },
+        ]}
+        actions={
+          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+            <button
+              onClick={() => {
+                setIsReceiptModalOpen(true);
+                setErrorMessage(null);
+                setReceiptPoId('');
+                setReceiptLines([]);
+              }}
+              className={THEME.BTN_SECONDARY}
+            >
+              <Scale className="w-4 h-4 text-amber-500 mr-2" />
+              Mal Kabul Girişi
+            </button>
+            <button
+              onClick={() => {
+                setIsOrderModalOpen(true);
+                setErrorMessage(null);
+              }}
+              className={THEME.BTN_PRIMARY}
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              Yeni Tedarik Siparişi
+            </button>
+          </div>
+        }
+      />
 
       {/* Başarı Bildirimi */}
       {successMessage && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs sm:text-sm font-bold flex items-center gap-2 animate-in fade-in">
+          <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-500" />
           {successMessage}
         </div>
       )}
 
-      {/* KPI Kartları */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Açık Siparişler
-            </span>
-            <Clock className="w-5 h-5 text-amber-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{pendingOrdersCount}</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Teslimat bekleyen sipariş</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Bekleyen Gramaj
-            </span>
-            <Truck className="w-5 h-5 text-blue-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">
-            {totalPendingWeight.toFixed(1)} gr
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Yoldaki tahmini altın</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Kabul Edilen Toplam
-            </span>
-            <PackageCheck className="w-5 h-5 text-emerald-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">
-            {totalReceiptWeight.toFixed(1)} gr
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            {receipts.length} mal kabul makbuzu
-          </p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              Cari Has Borçlanması
-            </span>
-            <Boxes className="w-5 h-5 text-purple-500" />
-          </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">
-            {totalReceiptHas.toFixed(2)} Has
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Toptancıya işlenen saf altın</p>
-        </div>
-      </div>
-
-      {/* Ana Sekmeler & Arama */}
+      {/* 2'Lİ ANA TAB SEÇİCİ & ARAMA ÇUBUĞU */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-2 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 w-fit">
-          <button
-            onClick={() => setActiveMainTab('ORDERS')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeMainTab === 'ORDERS'
-                ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
-            }`}
-          >
-            Tedarik Siparişleri ({orders.length})
-          </button>
-          <button
-            onClick={() => setActiveMainTab('RECEIPTS')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeMainTab === 'RECEIPTS'
-                ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
-            }`}
-          >
-            Mal Kabul Makbuzları ({receipts.length})
-          </button>
-        </div>
+        <LuxuryTabs
+          tabs={[
+            { id: 'ORDERS', label: '1. Tedarik Siparişleri', icon: <Boxes className="w-4 h-4" />, count: orders.length },
+            { id: 'RECEIPTS', label: '2. Terazi Mal Kabul & Mutabakat', icon: <PackageCheck className="w-4 h-4" />, count: receipts.length },
+          ]}
+          activeTab={activeMainTab}
+          onChange={(tab) => setActiveMainTab(tab as 'ORDERS' | 'RECEIPTS')}
+        />
 
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="No, toptancı veya ürün ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            className={`${THEME.INPUT} pl-10`}
           />
         </div>
       </div>
 
+      {/* KPI İstatistik Kartları */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Açık Siparişler"
+          value={pendingOrdersCount}
+          subtitle="Teslimat bekleyen sipariş"
+          icon={<Clock className="w-5 h-5 text-amber-500" />}
+        />
+        <StatCard
+          label="Bekleyen Gramaj"
+          value={`${totalPendingWeight.toFixed(1)} gr`}
+          subtitle="Yoldaki tahmini altın"
+          icon={<Truck className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard
+          label="Kabul Edilen Toplam"
+          value={`${totalReceiptWeight.toFixed(1)} gr`}
+          subtitle={`${receipts.length} mal kabul makbuzu`}
+          icon={<PackageCheck className="w-5 h-5 text-emerald-500" />}
+        />
+        <StatCard
+          label="Cari Has Borçlanması"
+          value={`${totalReceiptHas.toFixed(2)} Has`}
+          subtitle="Toptancıya işlenen saf altın"
+          icon={<Scale className="w-5 h-5 text-purple-500" />}
+        />
+      </div>
+
       {/* 1. SEKMELİ GÖRÜNÜM: Tedarik Siparişleri */}
       {activeMainTab === 'ORDERS' && (
-        <div className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 text-zinc-500 dark:text-zinc-400 font-semibold uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Sipariş No</th>
-                  <th className="py-3 px-4">Toptancı (Tedarikçi)</th>
-                  <th className="py-3 px-4">Şube</th>
-                  <th className="py-3 px-4 text-center">Kalem</th>
-                  <th className="py-3 px-4 text-right">Tahmini Gramaj</th>
-                  <th className="py-3 px-4 text-right">Tahmini Has</th>
-                  <th className="py-3 px-4">Durum</th>
-                  <th className="py-3 px-4">Teslimat Tarihi</th>
-                  <th className="py-3 px-4 text-right">İşlemler</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {filteredOrders.map((order) => {
-                  const isExpanded = expandedId === order.id;
-                  const statusMeta =
-                    PO_STATUS_LABELS[order.status as PurchaseOrderStatus] || {
-                      label: order.status,
-                      color: 'text-zinc-500',
-                      bg: 'bg-zinc-500/10',
-                    };
+        <div className={THEME.TABLE.WRAPPER}>
+          <table className={THEME.TABLE.MAIN}>
+            <thead className={THEME.TABLE.THEAD}>
+              <tr>
+                <th className={THEME.TABLE.TH}>Sipariş No</th>
+                <th className={THEME.TABLE.TH}>Toptancı (Tedarikçi)</th>
+                <th className={THEME.TABLE.TH}>Şube</th>
+                <th className={`${THEME.TABLE.TH} text-center`}>Kalem</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>Tahmini Gramaj</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>Tahmini Has</th>
+                <th className={THEME.TABLE.TH}>Durum</th>
+                <th className={THEME.TABLE.TH}>Teslimat Tarihi</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody className={THEME.TABLE.TBODY}>
+              {filteredOrders.map((order) => {
+                const isExpanded = expandedId === order.id;
+                const statusMeta =
+                  PO_STATUS_LABELS[order.status as PurchaseOrderStatus] || {
+                    label: order.status,
+                    color: 'text-slate-500',
+                    bg: 'bg-slate-500/10',
+                  };
 
-                  return (
-                    <React.Fragment key={order.id}>
-                      <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                          {order.orderNumber}
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-zinc-800 dark:text-zinc-200">
-                          {order.supplier.name}
-                        </td>
-                        <td className="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">
-                          {order.branch ? order.branch.name : 'Merkez'}
-                        </td>
-                        <td className="py-3.5 px-4 text-center font-medium text-zinc-700 dark:text-zinc-300">
-                          {order.lines.length} Kalem
-                        </td>
-                        <td className="py-3.5 px-4 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                          {order.totalEstimatedWeight.toFixed(2)} gr
-                        </td>
-                        <td className="py-3.5 px-4 text-right font-mono font-bold text-amber-600">
-                          {order.totalEstimatedHas.toFixed(3)} Has
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${statusMeta.color} ${statusMeta.bg}`}
+                return (
+                  <React.Fragment key={order.id}>
+                    <tr className={THEME.TABLE.TR}>
+                      <td className={`${THEME.TABLE.TD} font-mono font-bold text-slate-900 dark:text-white`}>
+                        {order.orderNumber}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} font-bold text-slate-800 dark:text-slate-200`}>
+                        {order.supplier.name}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-slate-600 dark:text-slate-300`}>
+                        {order.branch ? order.branch.name : 'Merkez'}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-center font-medium text-slate-700 dark:text-slate-300`}>
+                        {order.lines.length} Kalem
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-right font-mono font-bold text-slate-900 dark:text-white`}>
+                        {order.totalEstimatedWeight.toFixed(2)} gr
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-right font-mono font-black text-amber-600 dark:text-amber-400`}>
+                        {order.totalEstimatedHas.toFixed(3)} Has
+                      </td>
+                      <td className={THEME.TABLE.TD}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold border border-current/20 ${statusMeta.color} ${statusMeta.bg}`}
+                        >
+                          {statusMeta.label}
+                        </span>
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-slate-500 dark:text-slate-400 font-mono`}>
+                        {order.expectedDeliveryDate
+                          ? new Date(order.expectedDeliveryDate).toLocaleDateString('tr-TR')
+                          : 'Belirtilmedi'}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-right`}>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {order.status !== PO_STATUS.RECEIVED && (
+                            <button
+                              onClick={() => {
+                                handleSelectPoForReceipt(order.id);
+                                setIsReceiptModalOpen(true);
+                              }}
+                              className="px-3 py-2 rounded-xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white font-bold transition-all flex items-center gap-1.5 min-h-[44px]"
+                              title="Bu Siparişi Mal Kabul Et"
+                            >
+                              <Scale className="w-4 h-4" />
+                              Mal Kabul
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteOrder(order)}
+                            className="p-2.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                            title="Siparişi Sil"
                           >
-                            {statusMeta.label}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-zinc-500 dark:text-zinc-400">
-                          {order.expectedDeliveryDate
-                            ? new Date(order.expectedDeliveryDate).toLocaleDateString('tr-TR')
-                            : 'Belirtilmedi'}
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {order.status !== PO_STATUS.RECEIVED && (
-                              <button
-                                onClick={() => {
-                                  handleSelectPoForReceipt(order.id);
-                                  setIsReceiptModalOpen(true);
-                                }}
-                                className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white font-semibold transition-colors flex items-center gap-1"
-                                title="Bu Siparişi Mal Kabul Et"
-                              >
-                                <Scale className="w-3.5 h-3.5" />
-                                Mal Kabul
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteOrder(order)}
-                              className="p-1 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors"
-                              title="Siparişi Sil"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setExpandedId(isExpanded ? null : order.id)}
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
-                            >
-                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                            className="p-2.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                          >
+                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Genişletilmiş Kalem Detayı */}
+                    {isExpanded && (
+                      <tr className="bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800">
+                        <td colSpan={9} className="p-4 sm:p-5">
+                          <div className="space-y-3">
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              <strong className="text-slate-700 dark:text-slate-300">Sipariş Oluşturan:</strong> {order.createdBy || 'Yetkili'}
+                              {order.notes && (
+                                <span className="ml-4">
+                                  <strong className="text-slate-700 dark:text-slate-300">Not:</strong> {order.notes}
+                                </span>
+                              )}
+                            </div>
+                            <div className="border border-slate-200 dark:border-amber-500/15 rounded-xl overflow-hidden shadow-xs">
+                              <table className="w-full text-left text-xs">
+                                <thead className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-amber-400/90 font-bold uppercase text-[10px]">
+                                  <tr>
+                                    <th className="py-2.5 px-3">Kategori</th>
+                                    <th className="py-2.5 px-3">Tanım</th>
+                                    <th className="py-2.5 px-3 text-center">Ayar</th>
+                                    <th className="py-2.5 px-3 text-right">Sipariş Gram</th>
+                                    <th className="py-2.5 px-3 text-right">Gelen Gram</th>
+                                    <th className="py-2.5 px-3 text-right">İşçilik / Gr</th>
+                                    <th className="py-2.5 px-3 text-center">Durum</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900/50">
+                                  {order.lines.map((l) => (
+                                    <tr key={l.id} className="hover:bg-amber-500/[0.03]">
+                                      <td className="py-2 px-3 font-semibold text-slate-700 dark:text-slate-300">
+                                        {PRODUCT_CATEGORIES[l.productCategory as keyof typeof PRODUCT_CATEGORIES] || l.productCategory}
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-800 dark:text-slate-200">{l.description}</td>
+                                      <td className="py-2 px-3 text-center font-bold text-amber-600">{l.carat}K</td>
+                                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
+                                        {l.orderedWeight.toFixed(2)} gr
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                                        {l.receivedWeight.toFixed(2)} gr
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono text-slate-700 dark:text-slate-300">
+                                        {l.laborCostPerGram > 0 ? `${l.laborCostPerGram} ${l.laborCurrency}` : '-'}
+                                      </td>
+                                      <td className="py-2 px-3 text-center">
+                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                          {l.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         </td>
                       </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
 
-                      {/* Genişletilmiş Kalem Detayı */}
-                      {isExpanded && (
-                        <tr className="bg-zinc-50/80 dark:bg-zinc-950/40">
-                          <td colSpan={9} className="p-4">
-                            <div className="space-y-3">
-                              <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                                <strong>Sipariş Oluşturan:</strong> {order.createdBy || 'Yetkili'}
-                                {order.notes && (
-                                  <span className="ml-4">
-                                    <strong>Not:</strong> {order.notes}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
-                                <table className="w-full text-left text-xs">
-                                  <thead className="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 font-semibold">
-                                    <tr>
-                                      <th className="py-2 px-3">Kategori</th>
-                                      <th className="py-2 px-3">Tanım</th>
-                                      <th className="py-2 px-3 text-center">Ayar</th>
-                                      <th className="py-2 px-3 text-right">Sipariş Gram</th>
-                                      <th className="py-2 px-3 text-right">Gelen Gram</th>
-                                      <th className="py-2 px-3 text-right">İşçilik / Gr</th>
-                                      <th className="py-2 px-3 text-center">Durum</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                                    {order.lines.map((l) => (
-                                      <tr key={l.id}>
-                                        <td className="py-2 px-3 font-semibold text-zinc-700 dark:text-zinc-300">
-                                          {PRODUCT_CATEGORIES[l.productCategory as keyof typeof PRODUCT_CATEGORIES] || l.productCategory}
-                                        </td>
-                                        <td className="py-2 px-3 text-zinc-800 dark:text-zinc-200">{l.description}</td>
-                                        <td className="py-2 px-3 text-center text-zinc-600">{l.carat}K</td>
-                                        <td className="py-2 px-3 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                                          {l.orderedWeight.toFixed(2)} gr
-                                        </td>
-                                        <td className="py-2 px-3 text-right font-mono text-emerald-600 font-bold">
-                                          {l.receivedWeight.toFixed(2)} gr
-                                        </td>
-                                        <td className="py-2 px-3 text-right font-mono text-zinc-700 dark:text-zinc-300">
-                                          {l.laborCostPerGram > 0 ? `${l.laborCostPerGram} ${l.laborCurrency}` : '-'}
-                                        </td>
-                                        <td className="py-2 px-3 text-center">
-                                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                                            {l.status}
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-
-                {filteredOrders.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="py-16 text-center text-zinc-400">
-                      <Boxes className="w-12 h-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-3" />
-                      <p className="text-base font-semibold">Tedarik siparişi bulunamadı.</p>
-                      <p className="text-xs text-zinc-500 mt-1">Yeni bir tedarik siparişi oluşturabilirsiniz.</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              {filteredOrders.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="py-16 text-center text-slate-400">
+                    <Boxes className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-3 animate-pulse" />
+                    <p className="text-base font-bold text-slate-700 dark:text-slate-300">Tedarik siparişi bulunamadı.</p>
+                    <p className="text-xs text-slate-500 mt-1">Yeni bir tedarik siparişi oluşturabilirsiniz.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* 2. SEKMELİ GÖRÜNÜM: Mal Kabul Makbuzları */}
       {activeMainTab === 'RECEIPTS' && (
-        <div className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 text-zinc-500 dark:text-zinc-400 font-semibold uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Makbuz No</th>
-                  <th className="py-3 px-4">Toptancı (Tedarikçi)</th>
-                  <th className="py-3 px-4">İrsaliye / Fatura No</th>
-                  <th className="py-3 px-4">Kabul Şubesi</th>
-                  <th className="py-3 px-4 text-center">Kalem / Adet</th>
-                  <th className="py-3 px-4 text-right">Fiili Gramaj</th>
-                  <th className="py-3 px-4 text-right">Has Altın Karşılığı</th>
-                  <th className="py-3 px-4 text-right">İşçilik Tutarı</th>
-                  <th className="py-3 px-4">Tarih</th>
-                  <th className="py-3 px-4 text-right">İşlemler</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {filteredReceipts.map((rec) => {
-                  const isExpanded = expandedId === rec.id;
-                  const totalQty = rec.lines.reduce((acc, l) => acc + (l.quantity || 1), 0);
+        <div className={THEME.TABLE.WRAPPER}>
+          <table className={THEME.TABLE.MAIN}>
+            <thead className={THEME.TABLE.THEAD}>
+              <tr>
+                <th className={THEME.TABLE.TH}>Makbuz No</th>
+                <th className={THEME.TABLE.TH}>Toptancı (Tedarikçi)</th>
+                <th className={THEME.TABLE.TH}>İrsaliye / Fatura No</th>
+                <th className={THEME.TABLE.TH}>Kabul Şubesi</th>
+                <th className={`${THEME.TABLE.TH} text-center`}>Kalem / Adet</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>Fiili Gramaj</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>Has Altın Karşılığı</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>İşçilik Tutarı</th>
+                <th className={THEME.TABLE.TH}>Tarih</th>
+                <th className={`${THEME.TABLE.TH} text-right`}>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody className={THEME.TABLE.TBODY}>
+              {filteredReceipts.map((rec) => {
+                const isExpanded = expandedId === rec.id;
+                const totalQty = rec.lines.reduce((acc, l) => acc + (l.quantity || 1), 0);
 
-                  return (
-                    <React.Fragment key={rec.id}>
-                      <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                          {rec.receiptNumber}
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-zinc-800 dark:text-zinc-200">
-                          {rec.supplier.name}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-zinc-600 dark:text-zinc-300">
-                          {rec.invoiceNumber || '-'}
-                        </td>
-                        <td className="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">
-                          {rec.branch ? rec.branch.name : 'Merkez'}
-                        </td>
-                        <td className="py-3.5 px-4 text-center font-medium text-zinc-700 dark:text-zinc-300">
-                          {rec.lines.length} Kalem / {totalQty} Adet
-                        </td>
-                        <td className="py-3.5 px-4 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                          {rec.totalActualWeight.toFixed(2)} gr
-                        </td>
-                        <td className="py-3.5 px-4 text-right font-mono font-bold text-amber-600">
-                          {rec.totalHasEquivalent.toFixed(3)} Has
-                        </td>
-                        <td className="py-3.5 px-4 text-right font-mono text-zinc-800 dark:text-zinc-200">
-                          {rec.totalLaborCostTl > 0 ? `${rec.totalLaborCostTl.toLocaleString('tr-TR')} ₺` : '-'}
-                        </td>
-                        <td className="py-3.5 px-4 text-zinc-500 dark:text-zinc-400">
-                          {new Date(rec.receiptDate).toLocaleDateString('tr-TR')}
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => setPrintReceipt(rec)}
-                              className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
-                              title="Mal Kabul Makbuzu Yazdır"
-                            >
-                              <Printer className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setExpandedId(isExpanded ? null : rec.id)}
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
-                            >
-                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
+                return (
+                  <React.Fragment key={rec.id}>
+                    <tr className={THEME.TABLE.TR}>
+                      <td className={`${THEME.TABLE.TD} font-mono font-bold text-slate-900 dark:text-white`}>
+                        {rec.receiptNumber}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} font-bold text-slate-800 dark:text-slate-200`}>
+                        {rec.supplier.name}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} font-mono text-slate-600 dark:text-slate-300`}>
+                        {rec.invoiceNumber || '-'}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-slate-600 dark:text-slate-300`}>
+                        {rec.branch ? rec.branch.name : 'Merkez'}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-center font-medium text-slate-700 dark:text-slate-300`}>
+                        {rec.lines.length} Kalem / {totalQty} Adet
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-right font-mono font-bold text-slate-900 dark:text-white`}>
+                        {rec.totalActualWeight.toFixed(2)} gr
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-right font-mono font-black text-amber-600 dark:text-amber-400`}>
+                        {rec.totalHasEquivalent.toFixed(3)} Has
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-right font-mono text-slate-800 dark:text-slate-200`}>
+                        {rec.totalLaborCostTl > 0 ? `${rec.totalLaborCostTl.toLocaleString('tr-TR')} ₺` : '-'}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-slate-500 dark:text-slate-400 font-mono`}>
+                        {new Date(rec.receiptDate).toLocaleDateString('tr-TR')}
+                      </td>
+                      <td className={`${THEME.TABLE.TD} text-right`}>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setPrintReceipt(rec)}
+                            className="p-2.5 rounded-xl text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                            title="Mal Kabul Makbuzu Yazdır"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setExpandedId(isExpanded ? null : rec.id)}
+                            className="p-2.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                          >
+                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Genişletilmiş Mal Kabul Kalemleri */}
+                    {isExpanded && (
+                      <tr className="bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800">
+                        <td colSpan={10} className="p-4 sm:p-5">
+                          <div className="space-y-3">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between flex-wrap gap-2">
+                              <div>
+                                <strong className="text-slate-700 dark:text-slate-300">Kabul Eden:</strong> {rec.receivedBy}
+                                {rec.purchaseOrder && (
+                                  <span className="ml-4 font-mono text-amber-700 dark:text-amber-400 font-bold">
+                                    Bağlı Sipariş: {rec.purchaseOrder.orderNumber}
+                                  </span>
+                                )}
+                              </div>
+                              {rec.notes && <div><strong className="text-slate-700 dark:text-slate-300">Not:</strong> {rec.notes}</div>}
+                            </div>
+                            <div className="border border-slate-200 dark:border-amber-500/15 rounded-xl overflow-hidden shadow-xs">
+                              <table className="w-full text-left text-xs">
+                                <thead className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-amber-400/90 font-bold uppercase text-[10px]">
+                                  <tr>
+                                    <th className="py-2.5 px-3">Tanım</th>
+                                    <th className="py-2.5 px-3 font-mono">Barkod</th>
+                                    <th className="py-2.5 px-3 text-center">Ayar / Milyem</th>
+                                    <th className="py-2.5 px-3 text-right">Fiili Gramaj</th>
+                                    <th className="py-2.5 px-3 text-right">Has Karşılığı</th>
+                                    <th className="py-2.5 px-3 text-right">İşçilik (TL)</th>
+                                    <th className="py-2.5 px-3">Fark Notu</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900/50">
+                                  {rec.lines.map((l) => (
+                                    <tr key={l.id} className="hover:bg-amber-500/[0.03]">
+                                      <td className="py-2 px-3 font-medium text-slate-800 dark:text-slate-200">
+                                        {l.description}
+                                      </td>
+                                      <td className="py-2 px-3 font-mono text-slate-500">{l.barcode || '-'}</td>
+                                      <td className="py-2 px-3 text-center text-slate-600 dark:text-slate-300 font-bold">{l.carat}K ({l.milyem})</td>
+                                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
+                                        {l.actualWeight.toFixed(2)} gr
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono font-black text-amber-600 dark:text-amber-400">
+                                        {l.hasEquivalent.toFixed(3)} Has
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono text-slate-800 dark:text-slate-200">
+                                        {l.laborCostTl > 0 ? `${l.laborCostTl.toLocaleString('tr-TR')} ₺` : '-'}
+                                      </td>
+                                      <td className="py-2 px-3 text-xs text-amber-700 dark:text-amber-400 font-medium">
+                                        {l.costVarianceNote || '-'}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         </td>
                       </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
 
-                      {/* Genişletilmiş Mal Kabul Kalemleri */}
-                      {isExpanded && (
-                        <tr className="bg-zinc-50/80 dark:bg-zinc-950/40">
-                          <td colSpan={10} className="p-4">
-                            <div className="space-y-3">
-                              <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
-                                <div>
-                                  <strong>Kabul Eden:</strong> {rec.receivedBy}
-                                  {rec.purchaseOrder && (
-                                    <span className="ml-4 font-mono text-amber-700">
-                                      Bağlı Sipariş: {rec.purchaseOrder.orderNumber}
-                                    </span>
-                                  )}
-                                </div>
-                                {rec.notes && <div><strong>Not:</strong> {rec.notes}</div>}
-                              </div>
-                              <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
-                                <table className="w-full text-left text-xs">
-                                  <thead className="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 font-semibold">
-                                    <tr>
-                                      <th className="py-2 px-3">Tanım</th>
-                                      <th className="py-2 px-3 font-mono">Barkod</th>
-                                      <th className="py-2 px-3 text-center">Ayar / Milyem</th>
-                                      <th className="py-2 px-3 text-right">Fiili Gramaj</th>
-                                      <th className="py-2 px-3 text-right">Has Karşılığı</th>
-                                      <th className="py-2 px-3 text-right">İşçilik (TL)</th>
-                                      <th className="py-2 px-3">Fark Notu</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                                    {rec.lines.map((l) => (
-                                      <tr key={l.id}>
-                                        <td className="py-2 px-3 font-medium text-zinc-800 dark:text-zinc-200">
-                                          {l.description}
-                                        </td>
-                                        <td className="py-2 px-3 font-mono text-zinc-500">{l.barcode || '-'}</td>
-                                        <td className="py-2 px-3 text-center text-zinc-600">{l.carat}K ({l.milyem})</td>
-                                        <td className="py-2 px-3 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                                          {l.actualWeight.toFixed(2)} gr
-                                        </td>
-                                        <td className="py-2 px-3 text-right font-mono font-bold text-amber-600">
-                                          {l.hasEquivalent.toFixed(3)} Has
-                                        </td>
-                                        <td className="py-2 px-3 text-right font-mono text-zinc-800 dark:text-zinc-200">
-                                          {l.laborCostTl > 0 ? `${l.laborCostTl.toLocaleString('tr-TR')} ₺` : '-'}
-                                        </td>
-                                        <td className="py-2 px-3 text-xs text-amber-700">
-                                          {l.costVarianceNote || '-'}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-
-                {filteredReceipts.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="py-16 text-center text-zinc-400">
-                      <Scale className="w-12 h-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-3" />
-                      <p className="text-base font-semibold">Mal kabul kaydı bulunamadı.</p>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        Tedarikçiden gelen ürünlerin terazi tartımı ile mal kabulünü yapabilirsiniz.
-                      </p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              {filteredReceipts.length === 0 && (
+                <tr>
+                  <td colSpan={10} className="py-16 text-center text-slate-400">
+                    <Scale className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-3 animate-pulse" />
+                    <p className="text-base font-bold text-slate-700 dark:text-slate-300">Mal kabul kaydı bulunamadı.</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Tedarikçiden gelen ürünlerin terazi tartımı ile mal kabulünü yapabilirsiniz.
+                    </p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* Yeni Tedarik Siparişi Modalı */}
       {isOrderModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden animate-in zoom-in-95 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+        <div className={THEME.MODAL.BACKDROP}>
+          <div className={`${THEME.MODAL.CONTAINER} max-w-2xl`}>
+            <div className={THEME.MODAL.HEADER}>
+              <h2 className={THEME.MODAL.TITLE}>
                 <Boxes className="w-5 h-5 text-amber-500" />
                 Yeni Tedarik Siparişi Oluştur
               </h2>
               <button
+                type="button"
                 onClick={() => setIsOrderModalOpen(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                className={THEME.MODAL.CLOSE_BTN}
+                aria-label="Kapat"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateOrder} className="p-6 space-y-4 overflow-y-auto flex-1">
-              {errorMessage && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {errorMessage}
-                </div>
-              )}
+            <form onSubmit={handleCreateOrder} className="flex flex-col flex-1 overflow-hidden">
+              <div className={THEME.MODAL.BODY}>
+                {errorMessage && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-500" />
+                    {errorMessage}
+                  </div>
+                )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Tedarikçi (Toptancı) *
-                  </label>
-                  <select
-                    value={orderSupplierId}
-                    onChange={(e) => setOrderSupplierId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-100"
-                  >
-                    {suppliers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} (Bakiye: {s.hasBalance.toFixed(2)} Has)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Teslim Alınacak Şube
-                  </label>
-                  <select
-                    value={orderBranchId}
-                    onChange={(e) => setOrderBranchId(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-100"
-                  >
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} ({b.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Beklenen Teslimat Tarihi
-                </label>
-                <input
-                  type="date"
-                  value={expectedDate}
-                  onChange={(e) => setExpectedDate(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100"
-                />
-              </div>
-
-              {/* Sipariş Kalemleri */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                    Sipariş Kalemleri ({orderLines.length})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleAddOrderLine}
-                    className="text-xs font-bold text-amber-500 hover:text-amber-600 flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Kalem Ekle
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {orderLines.map((line, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 grid grid-cols-12 gap-2 items-center"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={THEME.LABEL}>
+                      Tedarikçi (Toptancı) *
+                    </label>
+                    <select
+                      value={orderSupplierId}
+                      onChange={(e) => setOrderSupplierId(e.target.value)}
+                      className={THEME.SELECT}
                     >
-                      <div className="col-span-3">
-                        <select
-                          value={line.productCategory}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setOrderLines((prev) =>
-                              prev.map((l, i) => (i === idx ? { ...l, productCategory: val } : l))
-                            );
-                          }}
-                          className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs"
-                        >
-                          {Object.entries(PRODUCT_CATEGORIES).map(([k, v]) => (
-                            <option key={k} value={k}>
-                              {v}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      {suppliers.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} (Bakiye: {s.hasBalance.toFixed(2)} Has)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                      <div className="col-span-3">
-                        <input
-                          type="text"
-                          value={line.description}
-                          placeholder="Ürün açıklaması"
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setOrderLines((prev) =>
-                              prev.map((l, i) => (i === idx ? { ...l, description: val } : l))
-                            );
-                          }}
-                          className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs"
-                        />
-                      </div>
+                  <div>
+                    <label className={THEME.LABEL}>
+                      Teslim Alınacak Şube
+                    </label>
+                    <select
+                      value={orderBranchId}
+                      onChange={(e) => setOrderBranchId(e.target.value)}
+                      className={THEME.SELECT}
+                    >
+                      {branches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name} ({b.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-                      <div className="col-span-2">
-                        <select
-                          value={line.carat}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setOrderLines((prev) =>
-                              prev.map((l, i) => (i === idx ? { ...l, carat: val } : l))
-                            );
-                          }}
-                          className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs"
-                        >
-                          <option value={24}>24K</option>
-                          <option value={22}>22K</option>
-                          <option value={18}>18K</option>
-                          <option value={14}>14K</option>
-                          <option value={8}>8K</option>
-                        </select>
-                      </div>
+                <div>
+                  <label className={THEME.LABEL}>
+                    Beklenen Teslimat Tarihi
+                  </label>
+                  <input
+                    type="date"
+                    value={expectedDate}
+                    onChange={(e) => setExpectedDate(e.target.value)}
+                    className={THEME.INPUT}
+                  />
+                </div>
 
-                      <div className="col-span-2">
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="Gram"
-                          value={line.orderedWeight}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            setOrderLines((prev) =>
-                              prev.map((l, i) => (i === idx ? { ...l, orderedWeight: val } : l))
-                            );
-                          }}
-                          className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-right font-mono"
-                        />
-                      </div>
+                {/* Sipariş Kalemleri */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Sipariş Kalemleri ({orderLines.length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleAddOrderLine}
+                      className="text-xs font-black text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 min-h-[44px] px-2"
+                    >
+                      <Plus className="w-4 h-4" /> Kalem Ekle
+                    </button>
+                  </div>
 
-                      <div className="col-span-2 flex items-center justify-end gap-1">
-                        <input
-                          type="number"
-                          step="1"
-                          placeholder="İşçilik"
-                          value={line.laborCostPerGram}
-                          title="Gram başına işçilik bedeli"
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            setOrderLines((prev) =>
-                              prev.map((l, i) => (i === idx ? { ...l, laborCostPerGram: val } : l))
-                            );
-                          }}
-                          className="w-14 px-1.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-right font-mono"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveOrderLine(idx)}
-                          className="p-1 rounded text-rose-500 hover:bg-rose-500/10"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                  <div className="space-y-3">
+                    {orderLines.map((line, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-amber-500/15 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
+                      >
+                        <div className="sm:col-span-3">
+                          <select
+                            value={line.productCategory}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setOrderLines((prev) =>
+                                prev.map((l, i) => (i === idx ? { ...l, productCategory: val } : l))
+                              );
+                            }}
+                            className={THEME.SELECT}
+                          >
+                            {Object.entries(PRODUCT_CATEGORIES).map(([k, v]) => (
+                              <option key={k} value={k}>
+                                {v}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <input
+                            type="text"
+                            value={line.description}
+                            placeholder="Ürün açıklaması"
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setOrderLines((prev) =>
+                                prev.map((l, i) => (i === idx ? { ...l, description: val } : l))
+                              );
+                            }}
+                            className={THEME.INPUT}
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <select
+                            value={line.carat}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setOrderLines((prev) =>
+                                prev.map((l, i) => (i === idx ? { ...l, carat: val } : l))
+                              );
+                            }}
+                            className={THEME.SELECT}
+                          >
+                            <option value={24}>24K</option>
+                            <option value={22}>22K</option>
+                            <option value={18}>18K</option>
+                            <option value={14}>14K</option>
+                            <option value={8}>8K</option>
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="Gram"
+                            value={line.orderedWeight}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setOrderLines((prev) =>
+                                prev.map((l, i) => (i === idx ? { ...l, orderedWeight: val } : l))
+                              );
+                            }}
+                            className={`${THEME.INPUT} text-right font-mono font-bold`}
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2 flex items-center justify-end gap-1.5">
+                          <input
+                            type="number"
+                            step="1"
+                            placeholder="İşçilik"
+                            value={line.laborCostPerGram}
+                            title="Gram başına işçilik bedeli"
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setOrderLines((prev) =>
+                                prev.map((l, i) => (i === idx ? { ...l, laborCostPerGram: val } : l))
+                              );
+                            }}
+                            className={`${THEME.INPUT} text-right font-mono text-xs`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOrderLine(idx)}
+                            className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0"
+                            aria-label="Kalemi Kaldır"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className={THEME.LABEL}>
+                    Sipariş Notu
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    placeholder="Örn: Hafta sonuna kadar vitrine yetiştirilecek..."
+                    className={`${THEME.INPUT} min-h-[60px] resize-none`}
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Sipariş Notu
-                </label>
-                <textarea
-                  rows={2}
-                  value={orderNotes}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                  placeholder="Örn: Hafta sonuna kadar vitrine yetiştirilecek..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 resize-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+              <div className={THEME.MODAL.FOOTER}>
                 <button
                   type="button"
                   onClick={() => setIsOrderModalOpen(false)}
                   disabled={isLoading}
-                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                  className={THEME.BTN_SECONDARY}
                 >
                   Vazgeç
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-semibold shadow-md shadow-amber-500/20"
+                  className={THEME.BTN_PRIMARY}
                 >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
                   Siparişi Kaydet
                 </button>
               </div>
@@ -1091,273 +1055,278 @@ export default function PurchasesClient({
 
       {/* Mal Kabul Girişi Modalı */}
       {isReceiptModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden animate-in zoom-in-95 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+        <div className={THEME.MODAL.BACKDROP}>
+          <div className={`${THEME.MODAL.CONTAINER} max-w-3xl`}>
+            <div className={THEME.MODAL.HEADER}>
+              <h2 className={THEME.MODAL.TITLE}>
                 <Scale className="w-5 h-5 text-amber-500" />
                 Mal Kabul ve Terazi Tartım Girişi
               </h2>
               <button
+                type="button"
                 onClick={() => setIsReceiptModalOpen(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                className={THEME.MODAL.CLOSE_BTN}
+                aria-label="Kapat"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateReceipt} className="p-6 space-y-4 overflow-y-auto flex-1">
-              {errorMessage && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {errorMessage}
-                </div>
-              )}
+            <form onSubmit={handleCreateReceipt} className="flex flex-col flex-1 overflow-hidden">
+              <div className={THEME.MODAL.BODY}>
+                {errorMessage && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-500" />
+                    {errorMessage}
+                  </div>
+                )}
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Bağlı Tedarik Siparişi (Opsiyonel)
-                  </label>
-                  <select
-                    value={receiptPoId}
-                    onChange={(e) => handleSelectPoForReceipt(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-100"
-                  >
-                    <option value="">Bağımsız Doğrudan Mal Kabul</option>
-                    {orders
-                      .filter((o) => o.status !== PO_STATUS.RECEIVED)
-                      .map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.orderNumber} ({o.supplier.name})
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className={THEME.LABEL}>
+                      Bağlı Tedarik Siparişi (Opsiyonel)
+                    </label>
+                    <select
+                      value={receiptPoId}
+                      onChange={(e) => handleSelectPoForReceipt(e.target.value)}
+                      className={THEME.SELECT}
+                    >
+                      <option value="">Bağımsız Doğrudan Mal Kabul</option>
+                      {orders
+                        .filter((o) => o.status !== PO_STATUS.RECEIVED)
+                        .map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.orderNumber} ({o.supplier.name})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={THEME.LABEL}>
+                      Tedarikçi (Toptancı) *
+                    </label>
+                    <select
+                      value={receiptSupplierId}
+                      onChange={(e) => setReceiptSupplierId(e.target.value)}
+                      disabled={!!receiptPoId}
+                      className={`${THEME.SELECT} disabled:opacity-60`}
+                    >
+                      {suppliers.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
                         </option>
                       ))}
-                  </select>
-                </div>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Tedarikçi (Toptancı) *
-                  </label>
-                  <select
-                    value={receiptSupplierId}
-                    onChange={(e) => setReceiptSupplierId(e.target.value)}
-                    disabled={!!receiptPoId}
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-100 disabled:opacity-60"
-                  >
-                    {suppliers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    Kabul Edilen Şube *
-                  </label>
-                  <select
-                    value={receiptBranchId}
-                    onChange={(e) => setReceiptBranchId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-100"
-                  >
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} ({b.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Toptancının İrsaliye / Fatura No
-                </label>
-                <input
-                  type="text"
-                  placeholder="Örn: IRS-2026-98124"
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100"
-                />
-              </div>
-
-              {/* Mal Kabul Kalemleri */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                    Gelen Kalemler & Terazi Tartımı ({receiptLines.length})
-                  </span>
-                  {!receiptPoId && (
-                    <button
-                      type="button"
-                      onClick={handleAddReceiptLine}
-                      className="text-xs font-bold text-amber-500 hover:text-amber-600 flex items-center gap-1"
+                  <div>
+                    <label className={THEME.LABEL}>
+                      Kabul Edilen Şube *
+                    </label>
+                    <select
+                      value={receiptBranchId}
+                      onChange={(e) => setReceiptBranchId(e.target.value)}
+                      className={THEME.SELECT}
                     >
-                      <Plus className="w-3.5 h-3.5" /> Kalem Ekle
-                    </button>
-                  )}
+                      {branches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name} ({b.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  {receiptLines.map((line, idx) => {
-                    const lineVariance = line.orderedWeight
-                      ? calculateWeightVariance(line.orderedWeight, line.actualWeight)
-                      : null;
-                    const lineHas = calculateHasEquivalent(line.actualWeight, line.carat, line.milyem);
+                <div>
+                  <label className={THEME.LABEL}>
+                    Toptancının İrsaliye / Fatura No
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Örn: IRS-2026-98124"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    className={THEME.INPUT}
+                  />
+                </div>
 
-                    return (
-                      <div
-                        key={idx}
-                        className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2"
+                {/* Mal Kabul Kalemleri */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Gelen Kalemler & Terazi Tartımı ({receiptLines.length})
+                    </span>
+                    {!receiptPoId && (
+                      <button
+                        type="button"
+                        onClick={handleAddReceiptLine}
+                        className="text-xs font-black text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 min-h-[44px] px-2"
                       >
-                        <div className="grid grid-cols-12 gap-2 items-center">
-                          <div className="col-span-4">
-                            <input
-                              type="text"
-                              value={line.description}
-                              placeholder="Tanım / Model"
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setReceiptLines((prev) =>
-                                  prev.map((l, i) => (i === idx ? { ...l, description: val } : l))
-                                );
-                              }}
-                              className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium"
-                            />
-                          </div>
+                        <Plus className="w-4 h-4" /> Kalem Ekle
+                      </button>
+                    )}
+                  </div>
 
-                          <div className="col-span-2">
-                            <select
-                              value={line.carat}
-                              onChange={(e) => {
-                                const c = Number(e.target.value);
-                                setReceiptLines((prev) =>
-                                  prev.map((l, i) =>
-                                    i === idx ? { ...l, carat: c, milyem: getCaratMilyem(c) } : l
-                                  )
-                                );
-                              }}
-                              className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs"
-                            >
-                              <option value={24}>24K (995)</option>
-                              <option value={22}>22K (916)</option>
-                              <option value={18}>18K (750)</option>
-                              <option value={14}>14K (585)</option>
-                              <option value={8}>8K (333)</option>
-                            </select>
-                          </div>
+                  <div className="space-y-3">
+                    {receiptLines.map((line, idx) => {
+                      const lineVariance = line.orderedWeight
+                        ? calculateWeightVariance(line.orderedWeight, line.actualWeight)
+                        : null;
+                      const lineHas = calculateHasEquivalent(line.actualWeight, line.carat, line.milyem);
 
-                          <div className="col-span-3">
-                            <div className="flex items-center gap-1">
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-amber-500/15 space-y-2"
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                            <div className="sm:col-span-4">
+                              <input
+                                type="text"
+                                value={line.description}
+                                placeholder="Tanım / Model"
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setReceiptLines((prev) =>
+                                    prev.map((l, i) => (i === idx ? { ...l, description: val } : l))
+                                  );
+                                }}
+                                className={THEME.INPUT}
+                              />
+                            </div>
+
+                            <div className="sm:col-span-2">
+                              <select
+                                value={line.carat}
+                                onChange={(e) => {
+                                  const c = Number(e.target.value);
+                                  setReceiptLines((prev) =>
+                                    prev.map((l, i) =>
+                                      i === idx ? { ...l, carat: c, milyem: getCaratMilyem(c) } : l
+                                    )
+                                  );
+                                }}
+                                className={THEME.SELECT}
+                              >
+                                <option value={24}>24K (995)</option>
+                                <option value={22}>22K (916)</option>
+                                <option value={18}>18K (750)</option>
+                                <option value={14}>14K (585)</option>
+                                <option value={8}>8K (333)</option>
+                              </select>
+                            </div>
+
+                            <div className="sm:col-span-3">
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Fiili Gram"
+                                  value={line.actualWeight}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    setReceiptLines((prev) =>
+                                      prev.map((l, i) => (i === idx ? { ...l, actualWeight: val } : l))
+                                    );
+                                  }}
+                                  className={`${THEME.INPUT} pr-8 text-right font-mono font-black text-amber-600 dark:text-amber-400`}
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono pointer-events-none">gr</span>
+                              </div>
+                            </div>
+
+                            <div className="sm:col-span-2">
                               <input
                                 type="number"
-                                step="0.01"
-                                placeholder="Fiili Gram"
-                                value={line.actualWeight}
+                                step="0.5"
+                                placeholder="İşçilik TL/gr"
+                                value={line.laborCostPerGram}
                                 onChange={(e) => {
                                   const val = parseFloat(e.target.value) || 0;
                                   setReceiptLines((prev) =>
-                                    prev.map((l, i) => (i === idx ? { ...l, actualWeight: val } : l))
+                                    prev.map((l, i) => (i === idx ? { ...l, laborCostPerGram: val } : l))
                                   );
                                 }}
-                                className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-amber-500/40 text-xs text-right font-mono font-bold text-amber-600"
+                                className={`${THEME.INPUT} text-right font-mono text-xs`}
                               />
-                              <span className="text-[10px] text-zinc-400 font-mono">gr</span>
+                            </div>
+
+                            <div className="sm:col-span-1 text-right">
+                              <button
+                                type="button"
+                                onClick={() => setReceiptLines((prev) => prev.filter((_, i) => i !== idx))}
+                                className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                aria-label="Kalemi Sil"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
 
-                          <div className="col-span-2">
-                            <input
-                              type="number"
-                              step="0.5"
-                              placeholder="İşçilik TL/gr"
-                              value={line.laborCostPerGram}
-                              onChange={(e) => {
-                                const val = parseFloat(e.target.value) || 0;
-                                setReceiptLines((prev) =>
-                                  prev.map((l, i) => (i === idx ? { ...l, laborCostPerGram: val } : l))
-                                );
-                              }}
-                              className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-right font-mono"
-                            />
-                          </div>
-
-                          <div className="col-span-1 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setReceiptLines((prev) => prev.filter((_, i) => i !== idx))}
-                              className="p-1 rounded text-rose-500 hover:bg-rose-500/10"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Canlı Fark ve Has Hesaplama Göstergesi */}
-                        <div className="flex items-center justify-between text-[11px] pt-1 border-t border-zinc-100 dark:border-zinc-800/60 text-zinc-500">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-amber-600">
-                              Has Karşılığı: {lineHas.toFixed(3)} Has
-                            </span>
-                            {line.laborCostPerGram > 0 && (
-                              <span className="text-zinc-600 dark:text-zinc-400">
-                                Toplam İşçilik: {(line.actualWeight * line.laborCostPerGram).toLocaleString('tr-TR')} ₺
+                          {/* Canlı Fark ve Has Hesaplama Göstergesi */}
+                          <div className="flex items-center justify-between text-[11px] pt-2 border-t border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 flex-wrap gap-2">
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono font-black text-amber-600 dark:text-amber-400">
+                                Has Karşılığı: {lineHas.toFixed(3)} Has
                               </span>
-                            )}
-                          </div>
-                          {lineVariance && (
-                            <div className="flex items-center gap-1 font-medium">
-                              {lineVariance.isExcess ? (
-                                <span className="text-emerald-600 flex items-center gap-0.5">
-                                  <TrendingUp className="w-3 h-3" />
-                                  {lineVariance.statusText}
-                                </span>
-                              ) : (
-                                <span className="text-amber-600 flex items-center gap-0.5">
-                                  <TrendingDown className="w-3 h-3" />
-                                  {lineVariance.statusText}
+                              {line.laborCostPerGram > 0 && (
+                                <span className="font-mono text-slate-600 dark:text-slate-300">
+                                  Toplam İşçilik: {(line.actualWeight * line.laborCostPerGram).toLocaleString('tr-TR')} ₺
                                 </span>
                               )}
                             </div>
-                          )}
+                            {lineVariance && (
+                              <div className="flex items-center gap-1 font-bold">
+                                {lineVariance.isExcess ? (
+                                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <TrendingUp className="w-3.5 h-3.5" />
+                                    {lineVariance.statusText}
+                                  </span>
+                                ) : (
+                                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                    <TrendingDown className="w-3.5 h-3.5" />
+                                    {lineVariance.statusText}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className={THEME.LABEL}>
+                    Mal Kabul Notu
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={receiptNotes}
+                    onChange={(e) => setReceiptNotes(e.target.value)}
+                    placeholder="Kabul ile ilgili ek gözlemler veya fatura notu..."
+                    className={`${THEME.INPUT} min-h-[60px] resize-none`}
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Mal Kabul Notu
-                </label>
-                <textarea
-                  rows={2}
-                  value={receiptNotes}
-                  onChange={(e) => setReceiptNotes(e.target.value)}
-                  placeholder="Kabul ile ilgili ek gözlemler veya fatura notu..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 resize-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+              <div className={THEME.MODAL.FOOTER}>
                 <button
                   type="button"
                   onClick={() => setIsReceiptModalOpen(false)}
                   disabled={isLoading}
-                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                  className={THEME.BTN_SECONDARY}
                 >
                   Vazgeç
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading || receiptLines.length === 0}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                  className={`${THEME.BTN_PRIMARY} bg-gradient-to-r from-emerald-600 to-teal-600 text-white`}
                 >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
                   Mal Kabulü Tamamla ve Stoğa Ekle
                 </button>
               </div>

@@ -163,17 +163,17 @@ export default function CameraScannerModal({ isOpen, onClose, onScan }: CameraSc
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <motion.div
           {...ANIM.SCALE_UP}
-          className="w-full max-w-lg bg-gray-900 border border-yellow-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+          className="w-full max-w-lg bg-slate-900 border border-yellow-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
         >
           {/* MODAL BAŞLIĞI */}
-          <div className="px-6 py-4 bg-gray-950 border-b border-gray-800 flex items-center justify-between">
+          <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-400">
                 <Camera size={20} />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white">Kamera İle Barkod Okut</h3>
-                <p className="text-[11px] text-gray-400">Kamerayı takı ürününün barkoduna doğrultun</p>
+                <p className="text-[11px] text-slate-400">Kamerayı takı ürününün barkoduna doğrultun</p>
               </div>
             </div>
 
@@ -181,13 +181,13 @@ export default function CameraScannerModal({ isOpen, onClose, onScan }: CameraSc
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 title={soundEnabled ? 'Ses Açık' : 'Ses Kapalı'}
-                className="p-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors"
+                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 transition-colors"
               >
-                {soundEnabled ? <Volume2 size={16} className="text-yellow-400" /> : <VolumeX size={16} className="text-gray-500" />}
+                {soundEnabled ? <Volume2 size={16} className="text-yellow-400" /> : <VolumeX size={16} className="text-slate-500" />}
               </button>
               <button
                 onClick={handleClose}
-                className="p-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 hover:text-white transition-colors"
+                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 hover:text-white transition-colors"
               >
                 <X size={18} />
               </button>
@@ -225,9 +225,9 @@ export default function CameraScannerModal({ isOpen, onClose, onScan }: CameraSc
 
             {/* HATA MESAJI */}
             {error && (
-              <div className="absolute inset-0 bg-gray-950/90 p-6 flex flex-col items-center justify-center text-center space-y-3">
+              <div className="absolute inset-0 bg-slate-950/90 p-6 flex flex-col items-center justify-center text-center space-y-3">
                 <AlertTriangle className="text-amber-500" size={36} />
-                <p className="text-xs text-gray-300 max-w-xs">{error}</p>
+                <p className="text-xs text-slate-300 max-w-xs">{error}</p>
                 <button
                   onClick={() => setSelectedCameraId(selectedCameraId)}
                   className="px-4 py-2 bg-yellow-500 text-black font-bold text-xs rounded-xl flex items-center gap-1.5"
@@ -239,7 +239,7 @@ export default function CameraScannerModal({ isOpen, onClose, onScan }: CameraSc
           </div>
 
           {/* KAMERA KONTROLLERİ VE SON OKUNAN BARKOD */}
-          <div className="p-4 bg-gray-950 border-t border-gray-800 space-y-3">
+          <div className="p-4 bg-slate-950 border-t border-slate-800 space-y-3">
             {/* KAMERA SEÇİMİ VE MOD TOGGLE */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex-1">
@@ -247,7 +247,7 @@ export default function CameraScannerModal({ isOpen, onClose, onScan }: CameraSc
                   <select
                     value={selectedCameraId}
                     onChange={e => setSelectedCameraId(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-xs text-gray-300 focus:outline-none focus:border-yellow-500/50"
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-yellow-500/50"
                   >
                     {cameras.map(c => (
                       <option key={c.id} value={c.id}>{c.label}</option>
@@ -262,7 +262,7 @@ export default function CameraScannerModal({ isOpen, onClose, onScan }: CameraSc
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
                   continuousMode
                     ? 'bg-yellow-500 text-black'
-                    : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+                    : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
                 }`}
               >
                 {continuousMode ? '⚡ Seri Okutma Açık' : '🎯 Tekli Okutma'}
@@ -275,7 +275,7 @@ export default function CameraScannerModal({ isOpen, onClose, onScan }: CameraSc
                 <span className="flex items-center gap-1.5 font-bold font-mono">
                   <CheckCircle size={14} /> Son Okutulan: {lastScanned}
                 </span>
-                <span className="text-[10px] text-gray-400">Sepete eklendi</span>
+                <span className="text-[10px] text-slate-400">Sepete eklendi</span>
               </div>
             )}
           </div>

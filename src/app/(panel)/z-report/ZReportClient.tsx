@@ -52,7 +52,6 @@ import {
 } from '@/constants/forex';
 import { DailyZReportMetrics, CashMovementRecord } from '@/lib/z-report';
 import ZReportSlipModal from '@/components/ZReportSlipModal';
-import HeaderActions from '@/components/HeaderActions';
 
 interface ZReportClientProps {
   initialSummary: {
@@ -423,7 +422,7 @@ export default function ZReportClient({
   const currentDiff = closeForm.countedCashTL !== '' ? Number((countedNum - expectedNum).toFixed(2)) : null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-950 text-gray-100 pb-16">
+    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 pb-16">
       {/* Toast Mesajı */}
       <AnimatePresence>
         {toastMessage && (
@@ -444,7 +443,7 @@ export default function ZReportClient({
       </AnimatePresence>
 
       {/* ─── ÜST BAŞLIK & KONTROLLER ─── */}
-      <header className="sticky top-0 z-30 bg-gray-950/80 backdrop-blur-md border-b border-gray-800/80 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+      <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 sm:p-2.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-2xl">
             <Building size={22} />
@@ -458,12 +457,12 @@ export default function ZReportClient({
                   KASA AÇIK
                 </span>
               ) : (
-                <span className="px-2.5 py-0.5 bg-gray-800 border border-gray-700 text-gray-400 text-[10px] font-bold rounded-full">
+                <span className="px-2.5 py-0.5 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded-full">
                   KASA KAPALI
                 </span>
               )}
             </h1>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-slate-400">
               Nakit, POS, Havale, Hurda Alış ve Has mutabakatı & Devir Raporu
             </p>
           </div>
@@ -472,7 +471,7 @@ export default function ZReportClient({
         {/* Sağ Butonlar */}
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Tarih Seçici */}
-          <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl px-3 py-1.5 text-xs text-gray-300">
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300">
             <Calendar size={14} className="text-yellow-500" />
             <input
               type="date"
@@ -488,7 +487,7 @@ export default function ZReportClient({
           <button
             onClick={() => fetchData(selectedDate)}
             disabled={loading}
-            className="p-2.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 rounded-xl transition-colors disabled:opacity-50"
+            className="p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl transition-colors disabled:opacity-50"
             title="Yenile"
           >
             <RefreshCw size={15} className={loading ? 'animate-spin text-yellow-500' : ''} />
@@ -555,35 +554,33 @@ export default function ZReportClient({
               Yeni Kasa Oturumu Aç
             </button>
           )}
-
-          <HeaderActions />
         </div>
       </header>
 
       {/* ─── ANA İÇERİK ALANI ─── */}
-      <main className="p-3.5 sm:p-6 max-w-[1920px] mx-auto w-full flex flex-col gap-4 sm:gap-6 min-w-0">
+      <div className="w-full flex flex-col gap-4 sm:gap-6 min-w-0">
         {/* 1. AKTİF OTURUM DURUM BANDI */}
         {activeSession && (
-          <div className={`${THEME.GLASS_CARD} p-5 border border-yellow-500/20 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-gray-900 via-gray-900 to-yellow-950/20`}>
+          <div className={`${THEME.GLASS_CARD} p-5 border border-yellow-500/20 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-900 to-yellow-950/20`}>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Oturum No</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Oturum No</span>
                 <span className="text-sm font-mono font-black text-yellow-400">{activeSession.sessionNumber}</span>
               </div>
-              <div className="h-8 w-px bg-gray-800 hidden sm:block" />
+              <div className="h-8 w-px bg-slate-800 hidden sm:block" />
               <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Açılış Saati & Personel</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Açılış Saati & Personel</span>
                 <span className="text-xs text-white font-medium flex items-center gap-1.5">
-                  <Clock size={12} className="text-gray-400" />
+                  <Clock size={12} className="text-slate-400" />
                   {new Date(activeSession.openedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                  <span className="text-gray-500">|</span>
-                  <User size={12} className="text-gray-400" />
+                  <span className="text-slate-500">|</span>
+                  <User size={12} className="text-slate-400" />
                   {activeSession.openedBy}
                 </span>
               </div>
-              <div className="h-8 w-px bg-gray-800 hidden sm:block" />
+              <div className="h-8 w-px bg-slate-800 hidden sm:block" />
               <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Devir Açılış Kasası</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Devir Açılış Kasası</span>
                 <span className="text-xs font-mono font-bold text-white">
                   ₺{activeSession.openingCashTL.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                 </span>
@@ -593,7 +590,7 @@ export default function ZReportClient({
             {/* Mutabakat Durumu Rozeti */}
             {activeSession.status === SESSION_STATUS.CLOSED && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">Mutabakat:</span>
+                <span className="text-xs text-slate-400">Mutabakat:</span>
                 <span className={`px-3 py-1 rounded-xl text-xs font-black border flex items-center gap-1.5 ${
                   activeSession.discrepancyStatus === DISCREPANCY_STATUS.SHORTAGE
                     ? 'bg-red-500/20 border-red-500/40 text-red-400'
@@ -618,7 +615,7 @@ export default function ZReportClient({
           {/* KART 1: NAKİT KASA (TL) */}
           <div className={`${THEME.GLASS_CARD} p-4 flex flex-col justify-between border-l-4 border-l-amber-500`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400">Nakit Kasa (TL)</span>
+              <span className="text-xs font-bold text-slate-400">Nakit Kasa (TL)</span>
               <div className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg">
                 <Coins size={16} />
               </div>
@@ -627,7 +624,7 @@ export default function ZReportClient({
               <div className="text-xl font-black font-mono text-white">
                 ₺{(activeSession?.systemCashTL ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400">
+              <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
                 <span>Nakit Satış: ₺{(activeSession?.cashSales ?? 0).toLocaleString('tr-TR')}</span>
                 <span>Tahsilat: ₺{(activeSession?.customerCashCollections ?? 0).toLocaleString('tr-TR')}</span>
               </div>
@@ -637,7 +634,7 @@ export default function ZReportClient({
           {/* KART 2: POS / KREDİ KARTI */}
           <div className={`${THEME.GLASS_CARD} p-4 flex flex-col justify-between border-l-4 border-l-purple-500`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400">POS / Kredi Kartı</span>
+              <span className="text-xs font-bold text-slate-400">POS / Kredi Kartı</span>
               <div className="p-1.5 bg-purple-500/10 text-purple-400 rounded-lg">
                 <CreditCard size={16} />
               </div>
@@ -655,7 +652,7 @@ export default function ZReportClient({
           {/* KART 3: BANKA HAVALE / FAST */}
           <div className={`${THEME.GLASS_CARD} p-4 flex flex-col justify-between border-l-4 border-l-blue-500`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400">Banka / FAST</span>
+              <span className="text-xs font-bold text-slate-400">Banka / FAST</span>
               <div className="p-1.5 bg-blue-500/10 text-blue-400 rounded-lg">
                 <Landmark size={16} />
               </div>
@@ -673,7 +670,7 @@ export default function ZReportClient({
           {/* KART 4: HURDA & GERİ ALIŞ */}
           <div className={`${THEME.GLASS_CARD} p-4 flex flex-col justify-between border-l-4 border-l-orange-500`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400">Hurda / Geri Alış</span>
+              <span className="text-xs font-bold text-slate-400">Hurda / Geri Alış</span>
               <div className="p-1.5 bg-orange-500/10 text-orange-400 rounded-lg">
                 <Flame size={16} />
               </div>
@@ -682,7 +679,7 @@ export default function ZReportClient({
               <div className="text-xl font-black font-mono text-orange-400">
                 -₺{(activeSession?.scrapCashPurchases ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="mt-1 text-[10px] text-gray-400">
+              <div className="mt-1 text-[10px] text-slate-400">
                 Giren Hurda: <span className="font-bold text-white">{(activeSession?.scrapGoldGramsIn ?? 0).toFixed(3)} gr</span>
               </div>
             </div>
@@ -691,7 +688,7 @@ export default function ZReportClient({
           {/* KART 5: HAS ALTIN AKIŞI */}
           <div className={`${THEME.GLASS_CARD} p-4 flex flex-col justify-between border-l-4 border-l-yellow-500`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400">Has Altın Akışı</span>
+              <span className="text-xs font-bold text-slate-400">Has Altın Akışı</span>
               <div className="p-1.5 bg-yellow-500/10 text-yellow-400 rounded-lg">
                 <Scale size={16} />
               </div>
@@ -700,7 +697,7 @@ export default function ZReportClient({
               <div className="text-xl font-black font-mono text-yellow-400">
                 {(activeSession?.systemHasGram ?? 0).toFixed(3)} gr
               </div>
-              <div className="mt-1 text-[10px] text-gray-400">
+              <div className="mt-1 text-[10px] text-slate-400">
                 Ödenen: {(activeSession?.supplierHasPaymentsGram ?? 0).toFixed(2)} gr | Tahsilat: {(activeSession?.customerHasCollectionsGram ?? 0).toFixed(2)} gr
               </div>
             </div>
@@ -718,7 +715,7 @@ export default function ZReportClient({
               <div className="text-xl font-black font-mono text-emerald-400">
                 ₺{(activeSession?.totalTurnover ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="mt-1 text-[10px] text-gray-400">
+              <div className="mt-1 text-[10px] text-slate-400">
                 Toplam {(activeSession?.totalSalesCount ?? 0)} POS Satışı
               </div>
             </div>
@@ -733,7 +730,7 @@ export default function ZReportClient({
               <div className="text-2xl font-black font-mono text-emerald-300 mt-1">
                 {(activeSession.totalProfitTL ?? 0) >= 0 ? '+' : ''}₺{(activeSession.totalProfitTL ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
               </div>
-              <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+              <span className="text-[11px] text-slate-400 mt-1 block font-medium">
                 {activeSession.profitableTransactionsCount ?? 0} Kârlı Satış İşlemi
               </span>
             </div>
@@ -742,7 +739,7 @@ export default function ZReportClient({
               <div className="text-2xl font-black font-mono text-blue-300 mt-1">
                 %{(activeSession.profitMarginPercent ?? 0).toFixed(1)}
               </div>
-              <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+              <span className="text-[11px] text-slate-400 mt-1 block font-medium">
                 Satış Hasılatı Üstü Net Kârlılık
               </span>
             </div>
@@ -751,7 +748,7 @@ export default function ZReportClient({
               <div className="text-2xl font-black font-mono text-yellow-300 mt-1">
                 {activeSession.totalSalesCount ?? 0} İşlem
               </div>
-              <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+              <span className="text-[11px] text-slate-400 mt-1 block font-medium">
                 Kasa Oturumu Boyunca Satışlar
               </span>
             </div>
@@ -760,7 +757,7 @@ export default function ZReportClient({
 
         {/* FAZ 3: ÇOK PARA BİRİMLİ KASA & KAMBİYO DEĞERLEMESİ */}
         {activeSession && (
-          <div className={`${THEME.GLASS_CARD} p-4 border border-indigo-500/30 bg-gradient-to-r from-indigo-950/30 via-gray-900 to-indigo-950/20 flex flex-wrap items-center justify-between gap-4`}>
+          <div className={`${THEME.GLASS_CARD} p-4 border border-indigo-500/30 bg-gradient-to-r from-indigo-950/30 via-slate-900 to-indigo-950/20 flex flex-wrap items-center justify-between gap-4`}>
             <div className="flex items-center gap-6 flex-wrap">
               <div>
                 <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">
@@ -772,16 +769,16 @@ export default function ZReportClient({
                   </span>
                 </div>
               </div>
-              <div className="h-8 w-px bg-gray-800 hidden sm:block" />
+              <div className="h-8 w-px bg-slate-800 hidden sm:block" />
               <div>
-                <span className="text-[10px] text-gray-400 font-semibold uppercase block">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase block">
                   Çekmecedeki Döviz & Has Bakiyesi
                 </span>
-                <div className="text-xs font-mono font-bold text-gray-200 mt-1 flex items-center gap-3">
+                <div className="text-xs font-mono font-bold text-slate-200 mt-1 flex items-center gap-3">
                   <span className="text-emerald-400">${(activeSession.systemCashUSD ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
-                  <span className="text-gray-600">•</span>
+                  <span className="text-slate-600">•</span>
                   <span className="text-blue-400">€{(activeSession.systemCashEUR ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
-                  <span className="text-gray-600">•</span>
+                  <span className="text-slate-600">•</span>
                   <span className="text-yellow-400">{(activeSession.systemHasGram ?? 0).toFixed(3)} gr Has</span>
                 </div>
               </div>
@@ -800,13 +797,13 @@ export default function ZReportClient({
         {/* 3. SEKME BAŞLIKLARI VE LİSTELER */}
         <div className={`${THEME.GLASS_CARD} flex flex-col overflow-hidden`}>
           {/* Sekme Butonları */}
-          <div className="flex border-b border-gray-800 bg-gray-950/40 p-2 gap-2 flex-wrap">
+          <div className="flex border-b border-slate-800 bg-slate-950/40 p-2 gap-2 flex-wrap">
             <button
               onClick={() => setActiveTab('movements')}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
                 activeTab === 'movements'
                   ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/10'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
               <Layers size={14} />
@@ -817,7 +814,7 @@ export default function ZReportClient({
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
                 activeTab === 'archive'
                   ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/10'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
               <Clock size={14} />
@@ -831,7 +828,7 @@ export default function ZReportClient({
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
                 activeTab === 'forex'
                   ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/10'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
               <Coins size={14} />
@@ -845,7 +842,7 @@ export default function ZReportClient({
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
                 activeTab === 'discrepancies'
                   ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/10'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
               <AlertTriangle size={14} />
@@ -857,7 +854,7 @@ export default function ZReportClient({
           {activeTab === 'movements' && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-900/60 text-gray-400 text-[10px] uppercase font-bold border-b border-gray-800">
+                <thead className="bg-slate-900/60 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-800">
                   <tr>
                     <th className="p-3.5">Saat</th>
                     <th className="p-3.5">Hareket Türü</th>
@@ -868,10 +865,10 @@ export default function ZReportClient({
                     <th className="p-3.5 text-right">Tutar</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/60 font-medium text-gray-300">
+                <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
                   {data.recentMovements.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-gray-500">
+                      <td colSpan={7} className="p-8 text-center text-slate-500">
                         Henüz gün içi kasa hareketi kaydedilmedi.
                       </td>
                     </tr>
@@ -892,8 +889,8 @@ export default function ZReportClient({
                         : m.paymentMethod;
 
                       return (
-                        <tr key={m.id} className="hover:bg-gray-900/30 transition-colors">
-                          <td className="p-3.5 text-gray-400 font-mono">
+                        <tr key={m.id} className="hover:bg-slate-900/30 transition-colors">
+                          <td className="p-3.5 text-slate-400 font-mono">
                             {new Date(m.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                           </td>
                           <td className="p-3.5">
@@ -904,10 +901,10 @@ export default function ZReportClient({
                               {m.type}
                             </span>
                           </td>
-                          <td className="p-3.5 text-gray-300 font-semibold">{categoryLabel}</td>
-                          <td className="p-3.5 text-gray-400">{methodLabel}</td>
+                          <td className="p-3.5 text-slate-300 font-semibold">{categoryLabel}</td>
+                          <td className="p-3.5 text-slate-400">{methodLabel}</td>
                           <td className="p-3.5 text-white max-w-xs truncate">{m.description}</td>
-                          <td className="p-3.5 text-gray-400">{m.employeeName || '—'}</td>
+                          <td className="p-3.5 text-slate-400">{m.employeeName || '—'}</td>
                           <td className={`p-3.5 text-right font-mono font-bold ${isInflow ? 'text-emerald-400' : 'text-red-400'}`}>
                             {isInflow ? '+' : '-'}₺{m.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                           </td>
@@ -924,7 +921,7 @@ export default function ZReportClient({
           {activeTab === 'archive' && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-900/60 text-gray-400 text-[10px] uppercase font-bold border-b border-gray-800">
+                <thead className="bg-slate-900/60 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-800">
                   <tr>
                     <th className="p-3.5">Z-Rapor No</th>
                     <th className="p-3.5">Tarih</th>
@@ -938,10 +935,10 @@ export default function ZReportClient({
                     <th className="p-3.5 text-center">İşlem</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/60 font-medium text-gray-300">
+                <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
                   {data.archiveSessions.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="p-8 text-center text-gray-500">
+                      <td colSpan={10} className="p-8 text-center text-slate-500">
                         Geçmiş Z-Raporu kaydı bulunamadı.
                       </td>
                     </tr>
@@ -951,12 +948,12 @@ export default function ZReportClient({
                       const isOver = s.discrepancyStatus === DISCREPANCY_STATUS.OVERAGE;
 
                       return (
-                        <tr key={s.sessionId} className="hover:bg-gray-900/30 transition-colors">
+                        <tr key={s.sessionId} className="hover:bg-slate-900/30 transition-colors">
                           <td className="p-3.5 font-mono font-black text-yellow-400">{s.sessionNumber}</td>
-                          <td className="p-3.5 text-gray-300">
+                          <td className="p-3.5 text-slate-300">
                             {new Date(s.openedAt).toLocaleDateString('tr-TR')}
                           </td>
-                          <td className="p-3.5 text-gray-400">
+                          <td className="p-3.5 text-slate-400">
                             {s.openedBy} {s.closedBy ? `→ ${s.closedBy}` : ''}
                           </td>
                           <td className="p-3.5 text-right font-mono">₺{s.openingCashTL.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
@@ -974,7 +971,7 @@ export default function ZReportClient({
                           </td>
                           <td className="p-3.5 text-center">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              s.status === SESSION_STATUS.OPEN ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 text-gray-400'
+                              s.status === SESSION_STATUS.OPEN ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
                             }`}>
                               {s.status === SESSION_STATUS.OPEN ? 'AÇIK' : 'KAPALI'}
                             </span>
@@ -1004,7 +1001,7 @@ export default function ZReportClient({
           {activeTab === 'forex' && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-900/60 text-gray-400 text-[10px] uppercase font-bold border-b border-gray-800">
+                <thead className="bg-slate-900/60 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-800">
                   <tr>
                     <th className="p-3.5">İşlem No</th>
                     <th className="p-3.5">Tarih / Saat</th>
@@ -1017,18 +1014,18 @@ export default function ZReportClient({
                     <th className="p-3.5">Açıklama / Not</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/60 font-medium text-gray-300">
+                <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
                   {forexList.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-gray-500">
+                      <td colSpan={9} className="p-8 text-center text-slate-500">
                         Kayıtlı döviz alım-satım hareketi bulunamadı.
                       </td>
                     </tr>
                   ) : (
                     forexList.map((fx: any) => (
-                      <tr key={fx.id} className="hover:bg-gray-900/30 transition-colors">
+                      <tr key={fx.id} className="hover:bg-slate-900/30 transition-colors">
                         <td className="p-3.5 font-mono font-bold text-yellow-400">{fx.exchangeNumber}</td>
-                        <td className="p-3.5 text-gray-400 font-mono">
+                        <td className="p-3.5 text-slate-400 font-mono">
                           {new Date(fx.createdAt).toLocaleString('tr-TR', {
                             day: '2-digit',
                             month: '2-digit',
@@ -1036,7 +1033,7 @@ export default function ZReportClient({
                             minute: '2-digit',
                           })}
                         </td>
-                        <td className="p-3.5 text-gray-400">{fx.branch?.name || 'Merkez'}</td>
+                        <td className="p-3.5 text-slate-400">{fx.branch?.name || 'Merkez'}</td>
                         <td className="p-3.5 font-mono text-emerald-400 font-bold">
                           +{fx.fromAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {fx.fromCurrency}
                         </td>
@@ -1050,7 +1047,7 @@ export default function ZReportClient({
                           {fx.profitTL > 0 ? `+₺${fx.profitTL.toFixed(2)}` : '—'}
                         </td>
                         <td className="p-3.5 text-white">{fx.customerName || '—'}</td>
-                        <td className="p-3.5 text-gray-400 max-w-xs truncate">{fx.notes || '—'}</td>
+                        <td className="p-3.5 text-slate-400 max-w-xs truncate">{fx.notes || '—'}</td>
                       </tr>
                     ))
                   )}
@@ -1063,7 +1060,7 @@ export default function ZReportClient({
           {activeTab === 'discrepancies' && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-900/60 text-gray-400 text-[10px] uppercase font-bold border-b border-gray-800">
+                <thead className="bg-slate-900/60 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-800">
                   <tr>
                     <th className="p-3.5">Tarih</th>
                     <th className="p-3.5">Oturum No</th>
@@ -1076,10 +1073,10 @@ export default function ZReportClient({
                     <th className="p-3.5 text-center">Yönetici Onayı</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/60 font-medium text-gray-300">
+                <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
                   {discrepancyList.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-gray-500">
+                      <td colSpan={9} className="p-8 text-center text-slate-500">
                         Kayıtlı kasa sayım farkı bulunmamaktadır.
                       </td>
                     </tr>
@@ -1089,28 +1086,28 @@ export default function ZReportClient({
                       const statusConfig =
                         FX_DISCREPANCY_LABELS[disc.status as keyof typeof FX_DISCREPANCY_LABELS] || {
                           label: disc.status,
-                          color: 'text-gray-400',
-                          bg: 'bg-gray-800',
+                          color: 'text-slate-400',
+                          bg: 'bg-slate-800',
                         };
 
                       return (
-                        <tr key={disc.id} className="hover:bg-gray-900/30 transition-colors">
-                          <td className="p-3.5 text-gray-400 font-mono">
+                        <tr key={disc.id} className="hover:bg-slate-900/30 transition-colors">
+                          <td className="p-3.5 text-slate-400 font-mono">
                             {new Date(disc.createdAt).toLocaleDateString('tr-TR')}
                           </td>
                           <td className="p-3.5 font-mono text-yellow-400">{disc.session?.sessionNumber || '—'}</td>
                           <td className="p-3.5 font-bold text-white">{disc.currency}</td>
-                          <td className="p-3.5 text-right font-mono text-gray-400">
+                          <td className="p-3.5 text-right font-mono text-slate-400">
                             {disc.systemAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="p-3.5 text-right font-mono text-gray-200 font-bold">
+                          <td className="p-3.5 text-right font-mono text-slate-200 font-bold">
                             {disc.countedAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                           </td>
                           <td className={`p-3.5 text-right font-mono font-black ${isShort ? 'text-red-400' : 'text-emerald-400'}`}>
                             {disc.diffAmount >= 0 ? '+' : ''}
                             {disc.diffAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {disc.currency}
                           </td>
-                          <td className="p-3.5 text-gray-300 max-w-xs">{disc.explanation || '—'}</td>
+                          <td className="p-3.5 text-slate-300 max-w-xs">{disc.explanation || '—'}</td>
                           <td className="p-3.5 text-center">
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${statusConfig.bg} ${statusConfig.color}`}>
                               {statusConfig.label}
@@ -1137,7 +1134,7 @@ export default function ZReportClient({
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-[11px] text-gray-500">{disc.approvedBy || disc.reviewedBy || '—'}</span>
+                              <span className="text-[11px] text-slate-500">{disc.approvedBy || disc.reviewedBy || '—'}</span>
                             )}
                           </td>
                         </tr>
@@ -1149,7 +1146,7 @@ export default function ZReportClient({
             </div>
           )}
         </div>
-      </main>
+      </div>
 
       {/* ─── MODAL 1: KASA AÇILIŞ MODALI ─── */}
       <AnimatePresence>
@@ -1161,19 +1158,19 @@ export default function ZReportClient({
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className={`${THEME.GLASS_CARD} w-full max-w-md p-6 flex flex-col gap-4 border border-emerald-500/30`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
                   <Unlock className="text-emerald-400" size={18} />
                   <h2 className="text-sm font-bold text-white">Yeni Kasa Oturumu Açılışı</h2>
                 </div>
-                <button onClick={() => setIsOpenModalOpen(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setIsOpenModalOpen(false)} className="text-slate-400 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
 
               <form onSubmit={handleOpenShift} className="flex flex-col gap-3.5 text-xs">
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">Açılış Devir Kasası (TL) *</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Açılış Devir Kasası (TL) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -1181,73 +1178,73 @@ export default function ZReportClient({
                     value={openForm.openingCashTL}
                     onChange={(e) => setOpenForm({ ...openForm, openingCashTL: e.target.value })}
                     placeholder="0.00"
-                    className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">USD Devir</label>
+                    <label className="block text-slate-400 font-semibold mb-1">USD Devir</label>
                     <input
                       type="number"
                       step="0.01"
                       value={openForm.openingCashUSD}
                       onChange={(e) => setOpenForm({ ...openForm, openingCashUSD: e.target.value })}
                       placeholder="0.00"
-                      className="w-full px-2.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">EUR Devir</label>
+                    <label className="block text-slate-400 font-semibold mb-1">EUR Devir</label>
                     <input
                       type="number"
                       step="0.01"
                       value={openForm.openingCashEUR}
                       onChange={(e) => setOpenForm({ ...openForm, openingCashEUR: e.target.value })}
                       placeholder="0.00"
-                      className="w-full px-2.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Has (gr)</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Has (gr)</label>
                     <input
                       type="number"
                       step="0.001"
                       value={openForm.openingHasGram}
                       onChange={(e) => setOpenForm({ ...openForm, openingHasGram: e.target.value })}
                       placeholder="0.000"
-                      className="w-full px-2.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">Kasayı Açan Personel *</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Kasayı Açan Personel *</label>
                   <input
                     type="text"
                     required
                     value={openForm.openedBy}
                     onChange={(e) => setOpenForm({ ...openForm, openedBy: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">Açılış Notu</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Açılış Notu</label>
                   <input
                     type="text"
                     value={openForm.notes}
                     onChange={(e) => setOpenForm({ ...openForm, notes: e.target.value })}
                     placeholder="İsteğe bağlı not..."
-                    className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-800 mt-2">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800 mt-2">
                   <button
                     type="button"
                     onClick={() => setIsOpenModalOpen(false)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold"
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold"
                   >
                     Vazgeç
                   </button>
@@ -1275,19 +1272,19 @@ export default function ZReportClient({
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className={`${THEME.GLASS_CARD} w-full max-w-lg p-6 flex flex-col gap-4 border border-red-500/30 max-h-[90vh] overflow-y-auto`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
                   <Lock className="text-red-400" size={18} />
                   <h2 className="text-sm font-bold text-white">Kasa Kapatma ve Z-Raporu Mutabakatı</h2>
                 </div>
-                <button onClick={() => setIsCloseModalOpen(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setIsCloseModalOpen(false)} className="text-slate-400 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
 
               {/* Sistem Hesaplanan Kasa Özeti */}
-              <div className="p-4 bg-gray-900/80 rounded-xl border border-gray-800 space-y-1.5 text-xs">
-                <div className="flex justify-between text-gray-400">
+              <div className="p-4 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1.5 text-xs">
+                <div className="flex justify-between text-slate-400">
                   <span>Devir Açılış Kasası:</span>
                   <span className="font-mono text-white">₺{activeSession.openingCashTL.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
                 </div>
@@ -1299,7 +1296,7 @@ export default function ZReportClient({
                   <span>(-) Toplam Nakit Çıkış (Hurda, Tedarikçi & Masraf):</span>
                   <span className="font-mono">-₺{(activeSession.supplierCashPayments + activeSession.scrapCashPurchases + activeSession.manualCashOut).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="border-t border-gray-700/60 pt-1.5 flex justify-between text-sm font-black text-white">
+                <div className="border-t border-slate-700/60 pt-1.5 flex justify-between text-sm font-black text-white">
                   <span>Beklenen Kasa Nakdi:</span>
                   <span className="font-mono text-yellow-400">₺{activeSession.systemCashTL.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
                 </div>
@@ -1308,7 +1305,7 @@ export default function ZReportClient({
               <form onSubmit={handleCloseShift} className="flex flex-col gap-3.5 text-xs">
                 {/* Fiili Sayılan Nakit Girişi */}
                 <div>
-                  <label className="block text-gray-300 font-bold mb-1">
+                  <label className="block text-slate-300 font-bold mb-1">
                     Sayılan Fiili Nakit (TL Çekmece Mevcudu) *
                   </label>
                   <input
@@ -1319,7 +1316,7 @@ export default function ZReportClient({
                     value={closeForm.countedCashTL}
                     onChange={(e) => setCloseForm({ ...closeForm, countedCashTL: e.target.value })}
                     placeholder="Saydığınız TL nakit tutarını giriniz..."
-                    className="w-full px-3.5 py-3 bg-gray-900 border border-yellow-500/40 rounded-xl text-white font-mono text-base font-black focus:outline-none focus:border-yellow-500"
+                    className="w-full px-3.5 py-3 bg-slate-900 border border-yellow-500/40 rounded-xl text-white font-mono text-base font-black focus:outline-none focus:border-yellow-500"
                   />
                 </div>
 
@@ -1343,67 +1340,67 @@ export default function ZReportClient({
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Sayılan USD</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Sayılan USD</label>
                     <input
                       type="number"
                       step="0.01"
                       value={closeForm.countedCashUSD}
                       onChange={(e) => setCloseForm({ ...closeForm, countedCashUSD: e.target.value })}
                       placeholder="0.00"
-                      className="w-full px-2.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-yellow-500"
+                      className="w-full px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-yellow-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Sayılan EUR</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Sayılan EUR</label>
                     <input
                       type="number"
                       step="0.01"
                       value={closeForm.countedCashEUR}
                       onChange={(e) => setCloseForm({ ...closeForm, countedCashEUR: e.target.value })}
                       placeholder="0.00"
-                      className="w-full px-2.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-yellow-500"
+                      className="w-full px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-yellow-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Sayılan Has (gr)</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Sayılan Has (gr)</label>
                     <input
                       type="number"
                       step="0.001"
                       value={closeForm.countedHasGram}
                       onChange={(e) => setCloseForm({ ...closeForm, countedHasGram: e.target.value })}
                       placeholder="0.000"
-                      className="w-full px-2.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-yellow-500"
+                      className="w-full px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-yellow-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">Kasayı Kapatan Personel *</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Kasayı Kapatan Personel *</label>
                   <input
                     type="text"
                     required
                     value={closeForm.closedBy}
                     onChange={(e) => setCloseForm({ ...closeForm, closedBy: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-yellow-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-yellow-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">Kapanış / Mutabakat Notu</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Kapanış / Mutabakat Notu</label>
                   <input
                     type="text"
                     value={closeForm.notes}
                     onChange={(e) => setCloseForm({ ...closeForm, notes: e.target.value })}
                     placeholder="Varsa kasa farkı veya gün sonu açıklaması..."
-                    className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-yellow-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-yellow-500"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-800 mt-2">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800 mt-2">
                   <button
                     type="button"
                     onClick={() => setIsCloseModalOpen(false)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold"
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold"
                   >
                     İptal
                   </button>
@@ -1431,12 +1428,12 @@ export default function ZReportClient({
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className={`${THEME.GLASS_CARD} w-full max-w-md p-6 flex flex-col gap-4 border border-blue-500/30`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
                   <Plus className="text-blue-400" size={18} />
                   <h2 className="text-sm font-bold text-white">Manuel Kasa Giriş / Çıkış Hareketi</h2>
                 </div>
-                <button onClick={() => setIsMovementModalOpen(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setIsMovementModalOpen(false)} className="text-slate-400 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
@@ -1450,7 +1447,7 @@ export default function ZReportClient({
                     className={`py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all border ${
                       movementForm.type === 'INFLOW'
                         ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                        : 'bg-gray-900 border-gray-800 text-gray-400'
+                        : 'bg-slate-900 border-slate-800 text-slate-400'
                     }`}
                   >
                     <ArrowDownRight size={14} />
@@ -1462,7 +1459,7 @@ export default function ZReportClient({
                     className={`py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all border ${
                       movementForm.type === 'OUTFLOW'
                         ? 'bg-red-500/20 border-red-500/50 text-red-400'
-                        : 'bg-gray-900 border-gray-800 text-gray-400'
+                        : 'bg-slate-900 border-slate-800 text-slate-400'
                     }`}
                   >
                     <ArrowUpRight size={14} />
@@ -1472,11 +1469,11 @@ export default function ZReportClient({
 
                 {/* Kategori Seçimi */}
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">Hareket Kategorisi</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Hareket Kategorisi</label>
                   <select
                     value={movementForm.category}
                     onChange={(e) => setMovementForm({ ...movementForm, category: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
                   >
                     {movementForm.type === 'INFLOW' ? (
                       <>
@@ -1496,7 +1493,7 @@ export default function ZReportClient({
                 {/* Tutar & Para Birimi */}
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
-                    <label className="block text-gray-400 font-semibold mb-1">Tutar *</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Tutar *</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1504,15 +1501,15 @@ export default function ZReportClient({
                       value={movementForm.amount}
                       onChange={(e) => setMovementForm({ ...movementForm, amount: e.target.value })}
                       placeholder="0.00"
-                      className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Birim</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Birim</label>
                     <select
                       value={movementForm.currency}
                       onChange={(e) => setMovementForm({ ...movementForm, currency: e.target.value })}
-                      className="w-full px-2 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-2 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
                     >
                       <option value="TL">TL (₺)</option>
                       <option value="USD">USD ($)</option>
@@ -1524,33 +1521,33 @@ export default function ZReportClient({
 
                 {/* Açıklama */}
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">Açıklama *</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Açıklama *</label>
                   <input
                     type="text"
                     required
                     value={movementForm.description}
                     onChange={(e) => setMovementForm({ ...movementForm, description: e.target.value })}
                     placeholder="Örn: Personel öğle yemeği, kargo ücreti..."
-                    className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 {/* Personel */}
                 <div>
-                  <label className="block text-gray-400 font-semibold mb-1">İşlemi Yapan Personel</label>
+                  <label className="block text-slate-400 font-semibold mb-1">İşlemi Yapan Personel</label>
                   <input
                     type="text"
                     value={movementForm.employeeName}
                     onChange={(e) => setMovementForm({ ...movementForm, employeeName: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-800 mt-2">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800 mt-2">
                   <button
                     type="button"
                     onClick={() => setIsMovementModalOpen(false)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold"
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold"
                   >
                     Vazgeç
                   </button>
@@ -1578,12 +1575,12 @@ export default function ZReportClient({
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className={`${THEME.GLASS_CARD} w-full max-w-lg p-6 flex flex-col gap-4 border border-emerald-500/30 shadow-2xl`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
                   <Coins className="text-emerald-400" size={20} />
                   <h2 className="text-base font-bold text-white">Döviz Alım-Satım & Kambiyo İşlemi</h2>
                 </div>
-                <button onClick={() => setIsExchangeModalOpen(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setIsExchangeModalOpen(false)} className="text-slate-400 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
@@ -1592,7 +1589,7 @@ export default function ZReportClient({
                 {/* Kaynak Para Birimi ve Tutar */}
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
-                    <label className="block text-gray-400 font-semibold mb-1">Müşteriden Alınan Tutar *</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Müşteriden Alınan Tutar *</label>
                     <input
                       type="number"
                       step="any"
@@ -1600,15 +1597,15 @@ export default function ZReportClient({
                       value={exchangeForm.fromAmount}
                       onChange={(e) => setExchangeForm({ ...exchangeForm, fromAmount: e.target.value })}
                       placeholder="0.00"
-                      className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Alınan Birim</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Alınan Birim</label>
                     <select
                       value={exchangeForm.fromCurrency}
                       onChange={(e) => setExchangeForm({ ...exchangeForm, fromCurrency: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
                     >
                       <option value="USD">USD ($)</option>
                       <option value="EUR">EUR (€)</option>
@@ -1621,7 +1618,7 @@ export default function ZReportClient({
                 {/* Hedef Para Birimi ve Kur */}
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
-                    <label className="block text-gray-400 font-semibold mb-1">İşlem Kuru (Fiyat) *</label>
+                    <label className="block text-slate-400 font-semibold mb-1">İşlem Kuru (Fiyat) *</label>
                     <input
                       type="number"
                       step="any"
@@ -1629,15 +1626,15 @@ export default function ZReportClient({
                       value={exchangeForm.exchangeRate}
                       onChange={(e) => setExchangeForm({ ...exchangeForm, exchangeRate: e.target.value })}
                       placeholder="Örn: 34.50"
-                      className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Verilecek Birim</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Verilecek Birim</label>
                     <select
                       value={exchangeForm.toCurrency}
                       onChange={(e) => setExchangeForm({ ...exchangeForm, toCurrency: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
                     >
                       <option value="TL">TL (₺)</option>
                       <option value="USD">USD ($)</option>
@@ -1650,7 +1647,7 @@ export default function ZReportClient({
                 {/* Hesaplanan Hedef Tutar Önizleme */}
                 {exchangeForm.fromAmount && exchangeForm.exchangeRate && (
                   <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between">
-                    <span className="text-gray-300 font-semibold">Müşteriye Ödenecek / Kasadan Çıkacak:</span>
+                    <span className="text-slate-300 font-semibold">Müşteriye Ödenecek / Kasadan Çıkacak:</span>
                     <span className="font-mono font-black text-emerald-400 text-sm">
                       {exchangeForm.fromCurrency === 'TL'
                         ? (parseFloat(exchangeForm.fromAmount) / parseFloat(exchangeForm.exchangeRate)).toFixed(2)
@@ -1663,32 +1660,32 @@ export default function ZReportClient({
                 {/* Müşteri ve Not */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">Müşteri Ad Soyad</label>
+                    <label className="block text-slate-400 font-semibold mb-1">Müşteri Ad Soyad</label>
                     <input
                       type="text"
                       value={exchangeForm.customerName}
                       onChange={(e) => setExchangeForm({ ...exchangeForm, customerName: e.target.value })}
                       placeholder="İsteğe bağlı"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-400 font-semibold mb-1">İşlem Notu</label>
+                    <label className="block text-slate-400 font-semibold mb-1">İşlem Notu</label>
                     <input
                       type="text"
                       value={exchangeForm.notes}
                       onChange={(e) => setExchangeForm({ ...exchangeForm, notes: e.target.value })}
                       placeholder="Açıklama..."
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-800">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
                   <button
                     type="button"
                     onClick={() => setIsExchangeModalOpen(false)}
-                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold"
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold"
                   >
                     Vazgeç
                   </button>

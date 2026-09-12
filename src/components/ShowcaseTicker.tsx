@@ -57,7 +57,7 @@ export default function ShowcaseTicker({
   }, [announcements, liveSummaryText]);
 
   return (
-    <footer className="relative w-full bg-gradient-to-r from-gray-950 via-gray-900 to-gray-950 border-t border-yellow-900/30 py-3 px-4 shadow-2xl overflow-hidden flex items-center z-20 select-none">
+    <footer className="relative w-full bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-t border-yellow-900/30 py-3 px-4 shadow-2xl overflow-hidden flex items-center z-20 select-none">
       {/* Sol Duyuru Başlık Rozeti */}
       {showBadge && (
         <div className="flex-shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-yellow-500/20 to-amber-500/10 border border-yellow-500/40 text-yellow-400 font-bold text-xs uppercase tracking-widest mr-4 z-10 shadow-lg shadow-black/50">
@@ -69,8 +69,8 @@ export default function ShowcaseTicker({
       {/* Kesintisiz Kayan Yazı Konteynırı */}
       <div className="relative flex-1 overflow-hidden flex items-center">
         {/* Sol & Sağ Karartma Gradyanları */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-950 to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-950 to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-950 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-950 to-transparent z-10 pointer-events-none" />
 
         <div
           className="flex whitespace-nowrap will-change-transform font-mono font-medium text-sm md:text-base lg:text-lg text-yellow-100/90 tracking-wider items-center"

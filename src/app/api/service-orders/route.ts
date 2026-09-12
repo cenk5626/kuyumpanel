@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
         branch: { select: { id: true, name: true, code: true } },
         workshopJob: { select: { id: true, jobNo: true, workshopName: true, status: true } },
         events: { orderBy: { createdAt: 'desc' }, take: 5 },
+        photos: true,
       },
       orderBy: { createdAt: 'desc' },
       take: 100,

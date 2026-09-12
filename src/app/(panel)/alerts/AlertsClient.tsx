@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
-import HeaderActions from '@/components/HeaderActions';
 import { generateWhatsAppShareUrl } from '@/lib/whatsapp';
 
 interface PriceAlertItem {
@@ -192,7 +191,7 @@ export default function AlertsClient() {
             </div>
             <div>
               <h1 className={THEME.HEADER_TITLE}>{MESSAGES.ALERTS_TITLE}</h1>
-              <p className="text-gray-400 text-xs mt-0.5">{MESSAGES.ALERTS_SUBTITLE}</p>
+              <p className="text-slate-400 text-xs mt-0.5">{MESSAGES.ALERTS_SUBTITLE}</p>
             </div>
           </div>
 
@@ -203,7 +202,6 @@ export default function AlertsClient() {
             >
               <Plus size={16} /> {MESSAGES.ALERTS_ADD_BUTTON}
             </button>
-            <HeaderActions />
           </div>
         </div>
       </header>
@@ -222,7 +220,7 @@ export default function AlertsClient() {
                 <h3 className="text-sm font-black text-white">
                   {triggeredCount} Adet Fiyat Alarmı Tetiklendi!
                 </h3>
-                <p className="text-xs text-gray-300">
+                <p className="text-xs text-slate-300">
                   Piyasa hedeflediğiniz eşik seviyelerine ulaştı. WhatsApp ile bildirim gönderebilirsiniz.
                 </p>
               </div>
@@ -238,15 +236,15 @@ export default function AlertsClient() {
 
         {/* Alarm Kartları Izgarası */}
         {loading && alerts.length === 0 ? (
-          <div className="text-center py-16 text-gray-500 text-sm">
+          <div className="text-center py-16 text-slate-500 text-sm">
             <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-yellow-400" />
             Alarmlar yükleniyor...
           </div>
         ) : alerts.length === 0 ? (
-          <div className={`${THEME.GLASS_CARD} p-12 text-center text-gray-400`}>
+          <div className={`${THEME.GLASS_CARD} p-12 text-center text-slate-400`}>
             <BellRing size={48} className="mx-auto mb-3 text-yellow-500/40" />
             <h3 className="text-base font-bold text-white mb-1">Henüz Kurulu Fiyat Alarmınız Yok</h3>
-            <p className="text-xs text-gray-500 max-w-md mx-auto mb-4">
+            <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
               Has Altın, Çeyrek veya Döviz kurları belirlediğiniz seviyeye geldiğinde haberdar olmak için yeni bir alarm tanımlayın.
             </p>
             <button
@@ -268,7 +266,7 @@ export default function AlertsClient() {
                     ? 'border-red-500/60 bg-red-500/[0.04] shadow-lg shadow-red-500/10'
                     : alert.isActive
                     ? 'border-yellow-500/30'
-                    : 'border-gray-800 opacity-60'
+                    : 'border-slate-800 opacity-60'
                 }`}
               >
                 {/* Durum Rozeti */}
@@ -283,13 +281,13 @@ export default function AlertsClient() {
                         <CheckCircle2 size={11} /> AKTİF İZLENİYOR
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 bg-gray-800 text-gray-400 text-[10px] font-bold rounded-full">
+                      <span className="px-2.5 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded-full">
                         DURAKLATILDI
                       </span>
                     )}
                   </div>
 
-                  <span className="text-[10px] font-mono text-gray-500 flex items-center gap-1">
+                  <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
                     <Clock size={11} />
                     {new Date(alert.createdAt).toLocaleDateString('tr-TR')}
                   </span>
@@ -298,9 +296,9 @@ export default function AlertsClient() {
                 {/* Ürün & Hedef */}
                 <h3 className="text-base font-black text-white mb-2">{alert.productLabel}</h3>
 
-                <div className="bg-gray-950/60 p-3.5 rounded-2xl border border-gray-800/80 mb-4 space-y-2">
+                <div className="bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800/80 mb-4 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-400">Hedef Eşik:</span>
+                    <span className="text-slate-400">Hedef Eşik:</span>
                     <span className="font-mono font-black text-base text-yellow-400 flex items-center gap-1">
                       {alert.condition === 'GTE' ? (
                         <ArrowUpRight size={14} className="text-emerald-400" />
@@ -312,8 +310,8 @@ export default function AlertsClient() {
                   </div>
 
                   {alert.lastCheckedPrice && (
-                    <div className="flex justify-between items-center text-xs border-t border-gray-800/60 pt-2">
-                      <span className="text-gray-500">Son Okunan Kur:</span>
+                    <div className="flex justify-between items-center text-xs border-t border-slate-800/60 pt-2">
+                      <span className="text-slate-500">Son Okunan Kur:</span>
                       <span className="font-mono font-bold text-white">
                         ₺{alert.lastCheckedPrice.toLocaleString('tr-TR')}
                       </span>
@@ -322,16 +320,16 @@ export default function AlertsClient() {
                 </div>
 
                 {alert.notes && (
-                  <p className="text-xs text-gray-400 italic mb-4">"{alert.notes}"</p>
+                  <p className="text-xs text-slate-400 italic mb-4">"{alert.notes}"</p>
                 )}
 
                 {/* Butonlar */}
-                <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-800/80">
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-800/80">
                   <button
                     onClick={() => handleToggleActive(alert)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
                       alert.isActive
-                        ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                         : 'bg-emerald-600 hover:bg-emerald-500 text-white'
                     }`}
                   >
@@ -369,15 +367,15 @@ export default function AlertsClient() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-gray-950 border border-yellow-500/30 rounded-3xl p-6 shadow-2xl relative"
+              className="w-full max-w-md bg-slate-950 border border-yellow-500/30 rounded-3xl p-6 shadow-2xl relative"
             >
-              <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-800">
+              <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-800">
                 <h3 className="text-base font-black text-white flex items-center gap-2">
                   <BellRing className="text-yellow-400" size={18} /> Yeni Fiyat Alarmı Kur
                 </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-1 text-gray-400 hover:text-white rounded-lg"
+                  className="p-1 text-slate-400 hover:text-white rounded-lg"
                 >
                   <X size={18} />
                 </button>
@@ -385,14 +383,14 @@ export default function AlertsClient() {
 
               <form onSubmit={handleCreateAlert} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Ürün / Varlık</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Ürün / Varlık</label>
                   <select
                     value={selectedProduct}
                     onChange={(e) => setSelectedProduct(e.target.value)}
                     className={THEME.INPUT}
                   >
                     {AVAILABLE_PRODUCTS.map((p) => (
-                      <option key={p.code} value={p.code} className="bg-gray-900 text-white">
+                      <option key={p.code} value={p.code} className="bg-slate-900 text-white">
                         {p.label}
                       </option>
                     ))}
@@ -401,26 +399,26 @@ export default function AlertsClient() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase mb-1">İşlem Yönü</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1">İşlem Yönü</label>
                     <select
                       value={priceType}
                       onChange={(e) => setPriceType(e.target.value as any)}
                       className={THEME.INPUT}
                     >
-                      <option value="bid" className="bg-gray-900 text-white">Alış / Bozma</option>
-                      <option value="ask" className="bg-gray-900 text-white">Satış</option>
+                      <option value="bid" className="bg-slate-900 text-white">Alış / Bozma</option>
+                      <option value="ask" className="bg-slate-900 text-white">Satış</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Koşul</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Koşul</label>
                     <select
                       value={condition}
                       onChange={(e) => setCondition(e.target.value as any)}
                       className={THEME.INPUT}
                     >
-                      <option value="GTE" className="bg-gray-900 text-white">≥ Eşit veya Üstü</option>
-                      <option value="LTE" className="bg-gray-900 text-white">≤ Eşit veya Altı</option>
+                      <option value="GTE" className="bg-slate-900 text-white">≥ Eşit veya Üstü</option>
+                      <option value="LTE" className="bg-slate-900 text-white">≤ Eşit veya Altı</option>
                     </select>
                   </div>
                 </div>
@@ -439,7 +437,7 @@ export default function AlertsClient() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">WhatsApp Bildirim Numarası</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">WhatsApp Bildirim Numarası</label>
                   <input
                     type="tel"
                     placeholder="05xxxxxxxxx (Mağaza Yetkilisi)"
@@ -450,7 +448,7 @@ export default function AlertsClient() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Hatırlatma Notu</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Hatırlatma Notu</label>
                   <input
                     type="text"
                     placeholder="Örn: Bozma için toptancıyla iletişime geç"
@@ -460,7 +458,7 @@ export default function AlertsClient() {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}

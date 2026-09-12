@@ -25,6 +25,10 @@ import {
   BANKING_DEFAULTS,
 } from '@/constants/banking';
 import { calculatePosSettlement } from '@/lib/banking/banking-engine';
+import { THEME } from '@/constants/theme';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
 
 interface BankAccountItem {
   id: string;
@@ -287,149 +291,78 @@ export default function BankingClient({
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 dark:from-amber-400 dark:via-yellow-400 dark:to-amber-500 bg-clip-text text-transparent flex items-center gap-3">
-            <Landmark className="w-8 h-8 text-amber-600 dark:text-amber-400" />
-            Banka, POS & Açık Bankacılık Mutabakatı
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Vadesiz & Altın Depo Hesapları, POS Komisyon ve Valör Takas Takibi, Otomatik Dekont Eşleştirme
-          </p>
-        </div>
+      <PageHeader
+        icon={<Landmark className="w-6 h-6 text-amber-500" />}
+        title="Banka, POS & Açık Bankacılık Mutabakatı"
+        subtitle="Vadesiz & Altın Depo Hesapları, POS Komisyon ve Valör Takas Takibi, Otomatik Dekont Eşleştirme"
+        badges={[
+          { label: `${accounts.length} Banka Hesabı`, variant: 'gold' },
+          { label: `${posTerminals.length} POS Terminali`, variant: 'neutral' },
+        ]}
+        actions={
+          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+            <button
+              onClick={() => setIsSettlementModalOpen(true)}
+              className={`${THEME.BTN_SECONDARY} min-h-[44px] flex items-center gap-2`}
+            >
+              <CreditCard className="w-4 h-4 text-amber-500" />
+              Gün Sonu POS Takası Ekle
+            </button>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsSettlementModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 rounded-xl font-medium transition-all text-sm"
-          >
-            <CreditCard className="w-4 h-4" />
-            Gün Sonu POS Takası Ekle
-          </button>
-
-          <button
-            onClick={() => setIsAccountModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium shadow-lg shadow-amber-600/20 transition-all text-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Yeni Banka Hesabı
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={() => setIsAccountModalOpen(true)}
+              className={`${THEME.BTN_PRIMARY} min-h-[44px] flex items-center gap-2`}
+            >
+              <Plus className="w-4 h-4" />
+              Yeni Banka Hesabı
+            </button>
+          </div>
+        }
+      />
 
       {/* KPI Kartları */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Banka Nakit Varlığı (TL)
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <Landmark className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            ₺{stats.totalTlBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Tüm banka vadesiz TL hesapları</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-              Bankadaki Altın Depo
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
-              <Coins className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400">
-            {stats.totalGoldBalanceGr.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} gr
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Banka altın hesapları (Has karşılığı)</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-              Blokede Bekleyen POS
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <Clock className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400">
-            ₺{stats.blockedSettlementTL.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Valör vadesinde hesaba geçecek net tutar</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Eşleşmemiş Dekont
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            {stats.unmatchedCount}
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Satış eşleştirmesi bekleyen hareket</p>
-        </div>
+        <StatCard
+          title="Banka Nakit Varlığı (TL)"
+          value={`₺${stats.totalTlBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`}
+          icon={Landmark}
+          iconColor="emerald"
+          subtitle="Tüm banka vadesiz TL hesapları"
+        />
+        <StatCard
+          title="Bankadaki Altın Depo"
+          value={`${stats.totalGoldBalanceGr.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} gr`}
+          icon={Coins}
+          iconColor="gold"
+          subtitle="Banka altın hesapları (Has karşılığı)"
+        />
+        <StatCard
+          title="Blokede Bekleyen POS"
+          value={`₺${stats.blockedSettlementTL.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`}
+          icon={Clock}
+          iconColor="blue"
+          subtitle="Valör vadesinde hesaba geçecek net tutar"
+        />
+        <StatCard
+          title="Eşleşmemiş Dekont"
+          value={stats.unmatchedCount}
+          icon={AlertCircle}
+          iconColor="rose"
+          subtitle="Satış eşleştirmesi bekleyen hareket"
+        />
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800">
-        <button
-          onClick={() => setActiveTab('accounts')}
-          className={`px-5 py-3 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
-            activeTab === 'accounts'
-              ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Building2 className="w-4 h-4" />
-          Banka & Altın Hesapları ({accounts.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('pos')}
-          className={`px-5 py-3 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
-            activeTab === 'pos'
-              ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <CreditCard className="w-4 h-4" />
-          POS Cihazları & Valör Takasları ({settlements.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('transactions')}
-          className={`px-5 py-3 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
-            activeTab === 'transactions'
-              ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <ArrowDownLeft className="w-4 h-4" />
-          Hesap Hareketleri & Eşleştirme ({transactions.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('calculator')}
-          className={`px-5 py-3 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
-            activeTab === 'calculator'
-              ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Calculator className="w-4 h-4" />
-          Valör & Komisyon Hesaplayıcı
-        </button>
-      </div>
+      <LuxuryTabs<'accounts' | 'pos' | 'transactions' | 'calculator'>
+        tabs={[
+          { id: 'accounts', label: '1. Banka & Altın Hesapları', icon: <Building2 className="w-4 h-4" />, count: accounts.length },
+          { id: 'pos', label: '2. POS Cihazları & Valör Takasları', icon: <CreditCard className="w-4 h-4" />, count: settlements.length },
+          { id: 'transactions', label: '3. Hesap Hareketleri & Eşleştirme', icon: <ArrowDownLeft className="w-4 h-4" />, count: transactions.length },
+          { id: 'calculator', label: '4. Valör & Komisyon Hesaplayıcı', icon: <Calculator className="w-4 h-4" /> },
+        ]}
+        activeTab={activeTab}
+        onChange={(tab) => setActiveTab(tab)}
+      />
 
       {/* TAB 1: BANKA & ALTIN HESAPLARI */}
       {activeTab === 'accounts' && (

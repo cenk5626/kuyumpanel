@@ -22,7 +22,6 @@ import {
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
-import HeaderActions from '@/components/HeaderActions';
 
 export default function AiSettingsClient() {
   const [loading, setLoading] = useState(true);
@@ -157,7 +156,7 @@ export default function AiSettingsClient() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
           <RefreshCw size={28} className="animate-spin text-yellow-500 mx-auto" />
-          <p className="text-gray-400 text-xs">Ayarlar yükleniyor...</p>
+          <p className="text-slate-400 text-xs">Ayarlar yükleniyor...</p>
         </div>
       </div>
     );
@@ -173,7 +172,7 @@ export default function AiSettingsClient() {
             </div>
             <div>
               <h1 className={THEME.HEADER_TITLE}>{MESSAGES.MENU_SETTINGS_AI}</h1>
-              <p className="text-gray-400 text-xs mt-0.5">
+              <p className="text-slate-400 text-xs mt-0.5">
                 Bayinize özel Google Gemini / OpenAI anahtarlarınızı ve WhatsApp bildirim motorunuzu yapılandırın.
               </p>
             </div>
@@ -182,11 +181,10 @@ export default function AiSettingsClient() {
           <div className="flex items-center gap-2">
             <Link
               href={ROUTES.AI_ASSISTANT}
-              className="px-3.5 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-gray-950 text-xs font-black rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-yellow-500/10"
+              className="px-3.5 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-yellow-500/10"
             >
               <Bot size={15} /> Asistana Git
             </Link>
-            <HeaderActions />
           </div>
         </div>
       </header>
@@ -209,12 +207,12 @@ export default function AiSettingsClient() {
         <form onSubmit={handleSaveSettings} className="space-y-6">
           {/* ─── 1. YAPAY ZEKA (AI) SAĞLAYICI & API ANAHTARI ─── */}
           <div className={`${THEME.GLASS_CARD} p-6 space-y-5`}>
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2 text-yellow-400 font-black text-sm">
                 <Sparkles size={18} />
                 <h3>1. Yapay Zeka Sağlayıcısı (BYOK - Kendi Anahtarını Getir)</h3>
               </div>
-              <span className="text-[11px] text-gray-400">Her bayi kendi kotasını kullanır</span>
+              <span className="text-[11px] text-slate-400">Her bayi kendi kotasını kullanır</span>
             </div>
 
             {/* Sağlayıcı Seçimi */}
@@ -228,7 +226,7 @@ export default function AiSettingsClient() {
                 className={`p-4 rounded-2xl border text-left transition-all ${
                   aiProvider === 'GEMINI'
                     ? 'bg-yellow-500/15 border-yellow-500 text-white shadow-lg shadow-yellow-500/10'
-                    : 'bg-gray-950/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -237,7 +235,7 @@ export default function AiSettingsClient() {
                     Ücretsiz & Hızlı
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-slate-400">
                   Gemini 2.0 Flash / Pro modelleri. Google AI Studio üzerinden ücretsiz API anahtarı alınabilir.
                 </p>
               </button>
@@ -251,7 +249,7 @@ export default function AiSettingsClient() {
                 className={`p-4 rounded-2xl border text-left transition-all ${
                   aiProvider === 'OPENAI'
                     ? 'bg-yellow-500/15 border-yellow-500 text-white shadow-lg shadow-yellow-500/10'
-                    : 'bg-gray-950/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -260,7 +258,7 @@ export default function AiSettingsClient() {
                     GPT-4o
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-slate-400">
                   OpenAI Platform API anahtarınız ile GPT-4o ve GPT-4o-mini modelleri.
                 </p>
               </button>
@@ -393,7 +391,7 @@ export default function AiSettingsClient() {
                     <label className="text-xs font-bold text-yellow-400">
                       Özel / Yeni Çıkan Model Kimliği (Model ID)
                     </label>
-                    <span className="text-[10px] text-gray-400">Google veya OpenAI API formatında</span>
+                    <span className="text-[10px] text-slate-400">Google veya OpenAI API formatında</span>
                   </div>
                   <input
                     type="text"
@@ -403,7 +401,7 @@ export default function AiSettingsClient() {
                     className={`${THEME.INPUT} font-mono`}
                     required
                   />
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] text-slate-400">
                     Google AI Studio veya OpenAI platformuna yeni eklenen herhangi bir modeli anında buraya yazıp kullanabilirsiniz.
                   </p>
                 </div>
@@ -413,12 +411,12 @@ export default function AiSettingsClient() {
 
           {/* ─── 2. WHATSAPP ENTEGRASYON AYARLARI ─── */}
           <div className={`${THEME.GLASS_CARD} p-6 space-y-5`}>
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2 text-emerald-400 font-black text-sm">
                 <MessageSquare size={18} />
                 <h3>2. WhatsApp Bağlantı & Bildirim Motoru</h3>
               </div>
-              <span className="text-[11px] text-gray-400">Patron ve Müşteri Bildirimleri</span>
+              <span className="text-[11px] text-slate-400">Patron ve Müşteri Bildirimleri</span>
             </div>
 
             {/* Sağlayıcı Seçimi: 1 (Web Intent) ve 3 (QR Kod Gateway) */}
@@ -429,7 +427,7 @@ export default function AiSettingsClient() {
                 className={`p-4 rounded-2xl border text-left transition-all ${
                   whatsappProvider === 'WEB_INTENT'
                     ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-md'
-                    : 'bg-gray-950/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -438,7 +436,7 @@ export default function AiSettingsClient() {
                     Ücretsiz & Sıfır Kurulum
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-slate-400">
                   Fiş, garanti belgesi veya alarm oluşturulduğunda cihazınızdaki WhatsApp tek tıkla açılır.
                 </p>
               </button>
@@ -449,7 +447,7 @@ export default function AiSettingsClient() {
                 className={`p-4 rounded-2xl border text-left transition-all ${
                   whatsappProvider === 'GATEWAY'
                     ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-md'
-                    : 'bg-gray-950/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -458,7 +456,7 @@ export default function AiSettingsClient() {
                     Otomatik Gönderim
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-slate-400">
                   Mağazanızın kendi telefon numarasını QR ile bağlayarak arka planda sessiz ve otomatik mesaj atın.
                 </p>
               </button>
@@ -488,7 +486,7 @@ export default function AiSettingsClient() {
 
             {/* QR Gateway Özel Alanları */}
             {whatsappProvider === 'GATEWAY' && (
-              <div className="space-y-4 pt-3 border-t border-gray-850">
+              <div className="space-y-4 pt-3 border-t border-slate-850">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-yellow-400 uppercase flex items-center gap-1.5">
                     <QrCode size={14} /> Gateway Bilgileri (UltraMsg / GreenAPI)
@@ -532,7 +530,7 @@ export default function AiSettingsClient() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-4 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-gray-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-yellow-500/20"
+            className="w-full py-4 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-50 text-slate-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-yellow-500/20"
           >
             {saving ? (
               <>

@@ -89,7 +89,7 @@ function DirIcon({ dir, size = 20 }: { dir: 'up' | 'down' | 'none'; size?: numbe
   if (dir === 'down') {
     return <ChevronDown size={size} className="text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)] animate-pulse" />;
   }
-  return <Minus size={size} className="text-gray-600" />;
+  return <Minus size={size} className="text-slate-600" />;
 }
 
 function ShowcasePriceBox({
@@ -110,7 +110,7 @@ function ShowcasePriceBox({
       ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 font-black shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-[1.02]'
       : dir === 'down'
       ? 'bg-red-500/20 border-red-500/50 text-red-400 font-black shadow-[0_0_20px_rgba(239,68,68,0.3)] scale-[1.02]'
-      : 'bg-gray-950/80 border-gray-800/80 text-white font-bold';
+      : 'bg-slate-950/80 border-slate-800/80 text-white font-bold';
 
   const sizeClass =
     size === 'hero'
@@ -487,7 +487,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
       <motion.div
         {...ANIM.FADE_UP}
         transition={{ delay: 0.05, duration: ANIM.DURATION.NORMAL }}
-        className="bg-gray-900/80 backdrop-blur-2xl border border-yellow-500/25 rounded-3xl p-5 md:p-6 flex flex-col justify-between shadow-2xl shadow-black/60 relative overflow-hidden"
+        className="bg-slate-900/80 backdrop-blur-2xl border border-yellow-500/25 rounded-3xl p-5 md:p-6 flex flex-col justify-between shadow-2xl shadow-black/60 relative overflow-hidden"
       >
         {/* Dekoratif Altın Işıma */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -502,7 +502,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
               <h2 className="text-yellow-400 font-bold text-lg md:text-xl tracking-wider uppercase">
                 {MESSAGES.SHOWCASE_HAS_GOLD}
               </h2>
-              <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">
+              <span className="text-xs text-slate-400 font-medium tracking-widest uppercase">
                 {SOURCE_LABELS[activeSrcKey]} Canlı Kotasyon
               </span>
             </div>
@@ -514,7 +514,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
         </div>
 
         {/* HAS ALTIN DEV HERO KARTI */}
-        <div className="bg-gradient-to-b from-gray-950/90 to-gray-900/90 border border-yellow-500/30 rounded-2xl p-5 md:p-6 mb-5 shadow-inner flex flex-col justify-center flex-1">
+        <div className="bg-gradient-to-b from-slate-950/90 to-slate-900/90 border border-yellow-500/30 rounded-2xl p-5 md:p-6 mb-5 shadow-inner flex flex-col justify-center flex-1">
           <div className="flex items-center justify-between mb-3">
             <span className="text-yellow-500 font-bold text-sm md:text-base uppercase tracking-widest">
               24K Has Altın (Gram / TL)
@@ -527,7 +527,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
           <div className="grid grid-cols-2 gap-3 md:gap-4 items-center">
             {/* Alış */}
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                 {MESSAGES.PRICES_ALIS}
               </span>
               <ShowcasePriceBox value={activeHas?.bid} dir={activeHas?.dir ?? 'none'} type="TL" size="hero" />
@@ -544,20 +544,20 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
 
         {/* DÖVİZ KURLARI (USD & EUR) */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
             <DollarSign size={16} className="text-yellow-500" />
             <span>{MESSAGES.SHOWCASE_DOVIZ_RATES}</span>
           </div>
 
           {/* USD/TRY */}
-          <div className="bg-gray-950/70 border border-gray-800/80 rounded-2xl p-3.5 flex items-center justify-between hover:border-yellow-500/30 transition-all">
+          <div className="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3.5 flex items-center justify-between hover:border-yellow-500/30 transition-all">
             <div className="flex items-center gap-3">
               <span className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center font-bold text-blue-400 text-sm">
                 $
               </span>
               <div>
                 <p className="font-bold text-white text-base md:text-lg">USD / TRY</p>
-                <p className="text-[11px] text-gray-500">Amerikan Doları</p>
+                <p className="text-[11px] text-slate-500">Amerikan Doları</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -570,14 +570,14 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
           </div>
 
           {/* EUR/TRY */}
-          <div className="bg-gray-950/70 border border-gray-800/80 rounded-2xl p-3.5 flex items-center justify-between hover:border-yellow-500/30 transition-all">
+          <div className="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3.5 flex items-center justify-between hover:border-yellow-500/30 transition-all">
             <div className="flex items-center gap-3">
               <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 text-sm">
                 €
               </span>
               <div>
                 <p className="font-bold text-white text-base md:text-lg">EUR / TRY</p>
-                <p className="text-[11px] text-gray-500">Avrupa Para Birimi</p>
+                <p className="text-[11px] text-slate-500">Avrupa Para Birimi</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -595,7 +595,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
       <motion.div
         {...ANIM.FADE_UP}
         transition={{ delay: 0.1, duration: ANIM.DURATION.NORMAL }}
-        className="bg-gray-900/80 backdrop-blur-2xl border border-yellow-500/25 rounded-3xl p-5 md:p-6 flex flex-col justify-between shadow-2xl shadow-black/60 relative overflow-hidden"
+        className="bg-slate-900/80 backdrop-blur-2xl border border-yellow-500/25 rounded-3xl p-5 md:p-6 flex flex-col justify-between shadow-2xl shadow-black/60 relative overflow-hidden"
       >
         {/* Kolon Başlığı */}
         <div className="flex items-center justify-between border-b border-yellow-500/20 pb-4 mb-3">
@@ -607,19 +607,19 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
               <h2 className="text-yellow-400 font-bold text-lg md:text-xl tracking-wider uppercase">
                 {MESSAGES.SHOWCASE_ZIYNET_RATES}
               </h2>
-              <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">
+              <span className="text-xs text-slate-400 font-medium tracking-widest uppercase">
                 Baskı & Darphane Ziynet
               </span>
             </div>
           </div>
-          <span className="text-xs text-gray-500 font-bold tracking-widest uppercase">TL</span>
+          <span className="text-xs text-slate-500 font-bold tracking-widest uppercase">TL</span>
         </div>
 
         {/* Tablo Başlıkları */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-gray-950/60 rounded-xl border border-gray-800/60 mb-2">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex-1">SARRAFİYE CİNSİ</span>
+        <div className="flex items-center justify-between px-3 py-1.5 bg-slate-950/60 rounded-xl border border-slate-800/60 mb-2">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex-1">SARRAFİYE CİNSİ</span>
           <div className="flex items-center gap-3 pr-6">
-            <span className="w-[120px] text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="w-[120px] text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
               {MESSAGES.PRICES_ALIS}
             </span>
             <span className="w-[120px] text-center text-xs font-bold text-yellow-400 uppercase tracking-wider">
@@ -637,11 +637,11 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
             return (
               <div
                 key={code}
-                className="bg-gray-950/70 border border-gray-800/80 rounded-2xl p-3 flex items-center justify-between hover:border-yellow-500/30 transition-all"
+                className="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between hover:border-yellow-500/30 transition-all"
               >
                 <div className="flex-1 min-w-0 mr-2">
                   <p className="font-bold text-white text-base md:text-lg truncate">{label}</p>
-                  <p className="text-[10px] text-gray-500 font-mono">Eski/Yeni Baskı</p>
+                  <p className="text-[10px] text-slate-500 font-mono">Eski/Yeni Baskı</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <ShowcasePriceBox value={bid} dir={dir} type="TL" size="normal" />
@@ -660,7 +660,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
       <motion.div
         {...ANIM.FADE_UP}
         transition={{ delay: 0.15, duration: ANIM.DURATION.NORMAL }}
-        className="bg-gray-900/80 backdrop-blur-2xl border border-yellow-500/25 rounded-3xl p-5 md:p-6 flex flex-col justify-between shadow-2xl shadow-black/60 relative overflow-hidden"
+        className="bg-slate-900/80 backdrop-blur-2xl border border-yellow-500/25 rounded-3xl p-5 md:p-6 flex flex-col justify-between shadow-2xl shadow-black/60 relative overflow-hidden"
       >
         {/* Kolon Başlığı */}
         <div className="flex items-center justify-between border-b border-yellow-500/20 pb-4 mb-3">
@@ -672,19 +672,19 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
               <h2 className="text-yellow-400 font-bold text-lg md:text-xl tracking-wider uppercase">
                 {MESSAGES.SHOWCASE_BILEZIK_RATES}
               </h2>
-              <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">
+              <span className="text-xs text-slate-400 font-medium tracking-widest uppercase">
                 Ayar & Milyem Değerleri
               </span>
             </div>
           </div>
-          <span className="text-xs text-gray-500 font-bold tracking-widest uppercase">Gram TL</span>
+          <span className="text-xs text-slate-500 font-bold tracking-widest uppercase">Gram TL</span>
         </div>
 
         {/* Tablo Başlıkları */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-gray-950/60 rounded-xl border border-gray-800/60 mb-2">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex-1">ÜRÜN / MODEL</span>
+        <div className="flex items-center justify-between px-3 py-1.5 bg-slate-950/60 rounded-xl border border-slate-800/60 mb-2">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex-1">ÜRÜN / MODEL</span>
           <div className="flex items-center gap-3 pr-6">
-            <span className="w-[120px] text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="w-[120px] text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
               {MESSAGES.PRICES_ALIS}
             </span>
             <span className="w-[120px] text-center text-xs font-bold text-yellow-400 uppercase tracking-wider">
@@ -703,7 +703,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
             return (
               <div
                 key={key}
-                className="bg-gray-950/70 border border-gray-800/80 rounded-2xl p-3 flex items-center justify-between hover:border-yellow-500/30 transition-all"
+                className="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between hover:border-yellow-500/30 transition-all"
               >
                 <div className="flex-1 min-w-0 mr-2">
                   <div className="flex items-center gap-2">
@@ -712,7 +712,7 @@ export default function ShowcaseRatesGrid({ onRatesUpdate, onStatusChange }: Sho
                       {mil}‰
                     </span>
                   </div>
-                  <p className="text-[10px] text-gray-500 font-mono">Has × {mil} / 1000</p>
+                  <p className="text-[10px] text-slate-500 font-mono">Has × {mil} / 1000</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <ShowcasePriceBox value={bid} dir={dir} type="TL" size="normal" />

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { THEME, ANIM } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
-import HeaderActions from '@/components/HeaderActions';
 import {
   ALTIS_WS_URL,
   HAREM_WS_URL,
@@ -91,7 +90,7 @@ function DirIcon({ dir }: { dir: 'up' | 'down' | 'none' }) {
     return <ChevronUp size={18} className="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />;
   if (dir === 'down')
     return <ChevronDown size={18} className="text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]" />;
-  return <Minus size={18} className="text-gray-600" />;
+  return <Minus size={18} className="text-slate-600" />;
 }
 
 function dirColor(dir: 'up' | 'down' | 'none'): string {
@@ -106,7 +105,7 @@ function PriceCell({ value, dir, type = 'TL' }: { value: number | undefined; dir
   const bgClass =
     dir === 'up' ? 'bg-emerald-50/70 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400 font-extrabold' :
     dir === 'down' ? 'bg-rose-50/70 dark:bg-red-500/10 border-rose-300 dark:border-red-500/30 text-rose-800 dark:text-red-400 font-extrabold' :
-    'bg-slate-50/80 dark:bg-gray-950/60 border-slate-200 dark:border-gray-800/60 text-slate-900 dark:text-white font-bold';
+    'bg-slate-50/80 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800/60 text-slate-900 dark:text-white font-bold';
     
   return (
     <span className={`w-36 text-center font-mono text-xl md:text-2xl px-2.5 py-2 rounded-xl border transition-all duration-300 shadow-xs ${bgClass}`}>
@@ -144,7 +143,7 @@ function ConnBadge({ label, status }: { label: string; status: ConnectionStatus 
 
 function CardHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <div className="bg-slate-100/90 dark:bg-gradient-to-r dark:from-gray-900 dark:to-gray-800 border-b border-slate-200 dark:border-yellow-900/20 py-3 px-5 flex justify-between items-center transition-colors">
+    <div className="bg-slate-100/90 dark:bg-gradient-to-r dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-yellow-900/20 py-3 px-5 flex justify-between items-center transition-colors">
       <h3 className="text-slate-800 dark:text-yellow-500 font-bold tracking-wider text-xs uppercase flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
         {title}
@@ -753,7 +752,6 @@ export default function PricesPage() {
               <Settings size={16} />
               {MESSAGES.PRICES_SETTINGS_TITLE}
             </button>
-            <HeaderActions />
           </div>
         </div>
       </header>
@@ -771,7 +769,7 @@ export default function PricesPage() {
             <CardHeader title="HAS & DÖVİZ" />
 
             {/* Aktif kaynak — büyük */}
-            <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-800/50 flex-1 flex flex-col justify-center">
+            <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-slate-800/50 flex-1 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs font-bold text-yellow-500 uppercase tracking-widest">
                   {SOURCE_LABELS[activeSrcKey]} · {MESSAGES.PRICES_ACTIVE_SOURCE} (HAS)
@@ -782,11 +780,11 @@ export default function PricesPage() {
               {activeHas ? (
                 <div className="flex items-center justify-between gap-3 sm:gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-1 font-bold">{MESSAGES.PRICES_ALIS}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 font-bold">{MESSAGES.PRICES_ALIS}</p>
                     <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate shadow-xs ${
                       activeHas.dir === 'up' ? 'bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400' :
                       activeHas.dir === 'down' ? 'bg-rose-50/80 dark:bg-red-500/10 border-rose-300 dark:border-red-500/30 text-rose-800 dark:text-red-400' :
-                      'bg-slate-50/80 dark:bg-gray-950/60 border-slate-200 dark:border-gray-800/60 text-slate-900 dark:text-white'
+                      'bg-slate-50/80 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800/60 text-slate-900 dark:text-white'
                     }`}>
                       {fmtTL(activeHas.bid)}
                     </div>
@@ -795,71 +793,71 @@ export default function PricesPage() {
                     <DirIcon dir={activeHas.dir} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-500 dark:text-gray-400 mb-1 font-bold text-right">{MESSAGES.PRICES_SATIS}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 font-bold text-right">{MESSAGES.PRICES_SATIS}</p>
                     <div className={`py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl border font-mono font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-center truncate shadow-xs ${
                       activeHas.dir === 'up' ? 'bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-400' :
                       activeHas.dir === 'down' ? 'bg-rose-50/80 dark:bg-red-500/10 border-rose-300 dark:border-red-500/30 text-rose-800 dark:text-red-400' :
-                      'bg-slate-50/80 dark:bg-gray-950/60 border-slate-200 dark:border-gray-800/60 text-slate-900 dark:text-white'
+                      'bg-slate-50/80 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800/60 text-slate-900 dark:text-white'
                     }`}>
                       {fmtTL(activeHas.ask)}
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-400 dark:text-gray-500 text-sm font-semibold">Bekleniyor...</p>
+                <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold">Bekleniyor...</p>
               )}
             </div>
 
             {/* İkincil kaynak — küçük */}
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-gray-800/50 flex-1 flex flex-col justify-center">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800/50 flex-1 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-widest">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   {SOURCE_LABELS[secondarySrcKey]} · {MESSAGES.PRICES_SECONDARY_SOURCE} (HAS)
                 </span>
                 <StatusDot status={statusMap[secondarySrcKey]} />
               </div>
               {secondaryData[HAS_CODE] ? (
                 <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/80 dark:bg-gray-950/40 border border-slate-200 dark:border-gray-800/60">
-                    <span className="text-xs text-slate-500 dark:text-gray-400 font-semibold">{MESSAGES.PRICES_ALIS}</span>
-                    <span className="font-bold font-mono text-base text-slate-800 dark:text-gray-300">
+                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{MESSAGES.PRICES_ALIS}</span>
+                    <span className="font-bold font-mono text-base text-slate-800 dark:text-slate-300">
                       {fmtTL(secondaryData[HAS_CODE]?.bid)}
                     </span>
                   </div>
-                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/80 dark:bg-gray-950/40 border border-slate-200 dark:border-gray-800/60">
-                    <span className="text-xs text-slate-500 dark:text-gray-400 font-semibold">{MESSAGES.PRICES_SATIS}</span>
-                    <span className="font-bold font-mono text-base text-slate-800 dark:text-gray-300">
+                  <div className="flex-1 flex items-center justify-between py-1.5 px-3 rounded-xl bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{MESSAGES.PRICES_SATIS}</span>
+                    <span className="font-bold font-mono text-base text-slate-800 dark:text-slate-300">
                       {fmtTL(secondaryData[HAS_CODE]?.ask)}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-400 dark:text-gray-600 text-sm">Veri yok</p>
+                <p className="text-slate-400 dark:text-slate-600 text-sm">Veri yok</p>
               )}
             </div>
 
             {/* DÖVİZ — Harem'den */}
             <div className="flex-[2] flex flex-col justify-between">
               {/* Döviz sütun başlıkları */}
-              <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-gray-900/40 border-b border-slate-200 dark:border-gray-800/30">
-                <span className="text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider flex-1">DÖVİZ</span>
+              <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800/30">
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider flex-1">DÖVİZ</span>
                 <div className="flex items-center gap-4 pr-5">
-                  <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
-                  <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
+                  <span className="w-36 text-center text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
+                  <span className="w-36 text-center text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
                 </div>
               </div>
 
-              <div className="divide-y divide-slate-100 dark:divide-gray-800/30 flex-1 flex flex-col justify-between">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/30 flex-1 flex flex-col justify-between">
                 {[
                   { label: 'USD/TRY', data: dovizUSD },
                   { label: 'EUR/TRY', data: dovizEUR },
                 ].map(({ label, data }) => (
                   <div key={label} className="flex-1 flex items-center justify-between py-4 px-6 hover:bg-amber-500/5 transition-colors">
-                    <span className="text-slate-900 dark:text-gray-200 font-bold text-base">{label}</span>
+                    <span className="text-slate-900 dark:text-slate-200 font-bold text-base">{label}</span>
                     <div className="flex items-center gap-4">
                       <PriceCell value={data?.bid} dir={data?.dir ?? 'none'} type="Doviz" />
                       <PriceCell value={data?.ask} dir={data?.dir ?? 'none'} type="Doviz" />
-                      <div className="w-5 flex justify-end">{data ? <DirIcon dir={data.dir} /> : <Minus size={16} className="text-gray-400 dark:text-gray-700" />}</div>
+                      <div className="w-5 flex justify-end">{data ? <DirIcon dir={data.dir} /> : <Minus size={16} className="text-slate-400 dark:text-slate-700" />}</div>
                     </div>
                   </div>
                 ))}
@@ -874,14 +872,14 @@ export default function PricesPage() {
             className={`${THEME.GLASS_CARD} overflow-hidden flex flex-col h-full`}
           >
             <CardHeader title={MESSAGES.PRICES_ZIYNET_TL_TITLE} />
-            <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-gray-900/40 border-b border-slate-200 dark:border-gray-800/30">
-              <span className="text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
+            <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800/30">
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
               <div className="flex items-center gap-4 pr-5">
-                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
-                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
               </div>
             </div>
-            <div className="divide-y divide-slate-100 dark:divide-gray-800/50 flex-1 flex flex-col justify-between">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/50 flex-1 flex flex-col justify-between">
               {ZIYNET_TL_OLD_CODES.map(code => {
                 const isManuel = settings.priceOffsets?.isManuel === true;
                 const { bid, ask, dir } = calcZiynet(code, isManuel, activeHas);
@@ -889,12 +887,12 @@ export default function PricesPage() {
                 return (
                   <div key={code} className="flex-1 flex items-center justify-between py-3 px-6 hover:bg-amber-500/5 transition-colors">
                     <div className="flex-1 min-w-0 mr-3 flex items-center">
-                      <p className="text-slate-900 dark:text-gray-200 font-bold text-base truncate">{ZIYNET_TL_LABELS[code]}</p>
+                      <p className="text-slate-900 dark:text-slate-200 font-bold text-base truncate">{ZIYNET_TL_LABELS[code]}</p>
                     </div>
                     <div className="flex items-center gap-4">
                       <PriceCell value={bid} dir={dir} type="TL" />
                       <PriceCell value={ask} dir={dir} type="TL" />
-                      <div className="w-5 flex justify-end">{bid != null ? <DirIcon dir={dir} /> : <Minus size={16} className="text-gray-400 dark:text-gray-700" />}</div>
+                      <div className="w-5 flex justify-end">{bid != null ? <DirIcon dir={dir} /> : <Minus size={16} className="text-slate-400 dark:text-slate-700" />}</div>
                     </div>
                   </div>
                 );
@@ -910,18 +908,18 @@ export default function PricesPage() {
           >
             <CardHeader
               title={MESSAGES.PRICES_PRODUCTS_TITLE}
-              right={<span className="text-xs text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Has × Milyem</span>}
+              right={<span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Has × Milyem</span>}
             />
-            <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-gray-900/40 border-b border-slate-200 dark:border-gray-800/30">
-              <span className="text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
+            <div className="flex justify-between items-center px-6 py-2.5 bg-slate-100/70 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800/30">
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider flex-1">ÜRÜN</span>
               <div className="flex items-center gap-4 pr-5">
-                <span className="w-8 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">MİL</span>
-                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
-                <span className="w-36 text-center text-xs text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
+                <span className="w-8 text-center text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">MİL</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_ALIS}</span>
+                <span className="w-36 text-center text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{MESSAGES.PRICES_SATIS}</span>
               </div>
             </div>
 
-            <div className="divide-y divide-gray-800/50 flex-1 flex flex-col justify-between">
+            <div className="divide-y divide-slate-800/50 flex-1 flex flex-col justify-between">
               {PRODUCTS.map(({ key, label }) => {
                 const mil = milMap[key as ProductKey];
                 const { bid, ask } = calcProductPrice(mil);
@@ -931,13 +929,13 @@ export default function PricesPage() {
                 return (
                   <div key={key} className="flex-1 flex items-center justify-between py-3 px-6 hover:bg-yellow-500/5 transition-colors">
                     <div className="flex-1 min-w-0 mr-3 flex items-center">
-                      <p className="text-gray-200 font-bold text-base truncate">{label}</p>
+                      <p className="text-slate-200 font-bold text-base truncate">{label}</p>
                     </div>
                     <div className="flex items-center gap-4 flex-shrink-0">
-                      <span className="w-8 text-center text-gray-400 text-xs font-mono font-bold">{mil.toFixed(0)}</span>
+                      <span className="w-8 text-center text-slate-400 text-xs font-mono font-bold">{mil.toFixed(0)}</span>
                       <PriceCell value={bid} dir={dir} type="TL" />
                       <PriceCell value={ask} dir={dir} type="TL" />
-                      <div className="w-5 flex justify-end">{bid != null ? <DirIcon dir={dir} /> : <Minus size={16} className="text-gray-700" />}</div>
+                      <div className="w-5 flex justify-end">{bid != null ? <DirIcon dir={dir} /> : <Minus size={16} className="text-slate-700" />}</div>
                     </div>
                   </div>
                 );
@@ -945,7 +943,7 @@ export default function PricesPage() {
             </div>
 
             {!activeHas && (
-              <div className="px-6 py-4 text-center text-gray-500 text-sm font-semibold">
+              <div className="px-6 py-4 text-center text-slate-500 text-sm font-semibold">
                 Has fiyatı bekleniyor...
               </div>
             )}
@@ -973,10 +971,10 @@ export default function PricesPage() {
               className="fixed inset-0 flex items-center justify-center z-50 p-4"
               onClick={e => e.stopPropagation()}
             >
-              <div className="bg-gray-900 border border-yellow-900/30 rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden flex flex-col max-h-[95vh]">
+              <div className="bg-slate-900 border border-yellow-900/30 rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden flex flex-col max-h-[95vh]">
 
                 {/* Modal başlık */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-yellow-900/20 bg-gradient-to-r from-gray-900 to-gray-800 flex-shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-yellow-900/20 bg-gradient-to-r from-slate-900 to-slate-800 flex-shrink-0">
                   <h2 className="text-white font-semibold text-lg flex items-center gap-2">
                     <Settings size={18} className="text-yellow-500" />
                     {MESSAGES.PRICES_SETTINGS_TITLE}
@@ -990,7 +988,7 @@ export default function PricesPage() {
                 </div>
 
                 {/* Sekmeler */}
-                <div className="flex border-b border-gray-800 flex-shrink-0">
+                <div className="flex border-b border-slate-800 flex-shrink-0">
                   {[
                     { id: 'source' as SettingsTab,    label: MESSAGES.PRICES_SOURCE_ORDER_TAB },
                     { id: 'milliemes' as SettingsTab, label: MESSAGES.PRICES_MILLIEMES_TAB },
@@ -1001,7 +999,7 @@ export default function PricesPage() {
                       className={`flex-1 py-3 text-sm font-medium transition-colors ${
                         settingsTab === tab.id
                           ? 'text-yellow-400 border-b-2 border-yellow-500 bg-yellow-500/5'
-                          : 'text-gray-500 hover:text-gray-300'
+                          : 'text-slate-500 hover:text-slate-300'
                       }`}
                     >
                       {tab.label}
@@ -1015,7 +1013,7 @@ export default function PricesPage() {
                   {/* ── KAYNAK ÖNCELİĞİ ──────────────────────────────── */}
                   {settingsTab === 'source' && (
                     <div className="space-y-3">
-                      <p className="text-gray-500 text-xs mb-4">
+                      <p className="text-slate-500 text-xs mb-4">
                         İlk sıradaki kaynak aktif (birincil) olarak kullanılır. Bağlantı kesilirse ikinci kaynağa bakılır.
                       </p>
                       {editSettings.sourceOrder.map((src, idx) => (
@@ -1024,17 +1022,17 @@ export default function PricesPage() {
                           className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
                             idx === 0
                               ? 'bg-yellow-500/10 border-yellow-500/30'
-                              : 'bg-gray-800/50 border-gray-700/50'
+                              : 'bg-slate-800/50 border-slate-700/50'
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <span className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ${
-                              idx === 0 ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-gray-400'
+                              idx === 0 ? 'bg-yellow-500 text-black' : 'bg-slate-700 text-slate-400'
                             }`}>
                               {idx + 1}
                             </span>
                             <div>
-                              <p className={`font-medium text-sm ${idx === 0 ? 'text-yellow-400' : 'text-gray-300'}`}>
+                              <p className={`font-medium text-sm ${idx === 0 ? 'text-yellow-400' : 'text-slate-300'}`}>
                                 {SOURCE_LABELS[src]}
                               </p>
                               {idx === 0 && <p className="text-xs text-yellow-600">Aktif Kaynak</p>}
@@ -1046,14 +1044,14 @@ export default function PricesPage() {
                               <button
                                 onClick={() => moveSource(idx, -1)}
                                 disabled={idx === 0}
-                                className="p-1 rounded hover:bg-gray-700 disabled:opacity-20 disabled:cursor-not-allowed text-gray-400 hover:text-white transition-colors"
+                                className="p-1 rounded hover:bg-slate-700 disabled:opacity-20 disabled:cursor-not-allowed text-slate-400 hover:text-white transition-colors"
                               >
                                 <ArrowUp size={14} />
                               </button>
                               <button
                                 onClick={() => moveSource(idx, 1)}
                                 disabled={idx === editSettings.sourceOrder.length - 1}
-                                className="p-1 rounded hover:bg-gray-700 disabled:opacity-20 disabled:cursor-not-allowed text-gray-400 hover:text-white transition-colors"
+                                className="p-1 rounded hover:bg-slate-700 disabled:opacity-20 disabled:cursor-not-allowed text-slate-400 hover:text-white transition-colors"
                               >
                                 <ArrowDown size={14} />
                               </button>
@@ -1069,9 +1067,9 @@ export default function PricesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                       {/* HAS & DÖVİZ OFFSETS (Sol Sütun) */}
-                      <div className="bg-gray-800/10 p-4 rounded-xl border border-gray-800/40 flex flex-col h-full">
+                      <div className="bg-slate-800/10 p-4 rounded-xl border border-slate-800/40 flex flex-col h-full">
                         <h4 className="text-yellow-500 font-bold text-sm mb-1 uppercase tracking-wider">Has & Döviz Ayarları</h4>
-                        <p className="text-gray-500 text-[10px] mb-4">
+                        <p className="text-slate-500 text-[10px] mb-4">
                           Sol sütundaki Has fiyatı ve döviz kurları için alış/satış makas farkları (spread).
                         </p>
                         <div className="space-y-3 flex-1 flex flex-col justify-between">
@@ -1080,27 +1078,27 @@ export default function PricesPage() {
                             { label: 'USD/TRY', key: 'usdtry' },
                             { label: 'EUR/TRY', key: 'eurtry' },
                           ].map(item => (
-                            <div key={item.key} className="flex flex-col gap-1 bg-gray-900/60 p-2.5 rounded-lg border border-gray-850">
-                              <span className="text-gray-300 text-xs font-semibold">{item.label}</span>
+                            <div key={item.key} className="flex flex-col gap-1 bg-slate-900/60 p-2.5 rounded-lg border border-slate-850">
+                              <span className="text-slate-300 text-xs font-semibold">{item.label}</span>
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="text-[9px] text-gray-500">Alış Fark (+/-)</label>
+                                  <label className="text-[9px] text-slate-500">Alış Fark (+/-)</label>
                                   <input
                                     type="number"
                                     step="0.0001"
                                     value={editSettings.priceOffsets?.[`${item.key}Bid`] ?? 0}
                                     onChange={e => setEditOffset(`${item.key}Bid`, Number(e.target.value))}
-                                    className="w-full px-2 py-1 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
+                                    className="w-full px-2 py-1 bg-slate-800/80 border border-slate-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-[9px] text-gray-500">Satış Fark (+/-)</label>
+                                  <label className="text-[9px] text-slate-500">Satış Fark (+/-)</label>
                                   <input
                                     type="number"
                                     step="0.0001"
                                     value={editSettings.priceOffsets?.[`${item.key}Ask`] ?? 0}
                                     onChange={e => setEditOffset(`${item.key}Ask`, Number(e.target.value))}
-                                    className="w-full px-2 py-1 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
+                                    className="w-full px-2 py-1 bg-slate-800/80 border border-slate-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
                                   />
                                 </div>
                               </div>
@@ -1110,14 +1108,14 @@ export default function PricesPage() {
                       </div>
 
                       {/* ZİYNET TL OFFSETS (Orta Sütun) */}
-                      <div className="bg-gray-800/10 p-4 rounded-xl border border-gray-800/40 flex flex-col h-full">
+                      <div className="bg-slate-800/10 p-4 rounded-xl border border-slate-800/40 flex flex-col h-full">
                         <h4 className="text-yellow-500 font-bold text-sm mb-1 uppercase tracking-wider">Ziynet Ayarları</h4>
                         
                         {/* Yöntem Toggle */}
-                        <div className="flex items-center justify-between p-2 bg-gray-900/60 rounded-lg border border-gray-800/60 mb-4 mt-2">
+                        <div className="flex items-center justify-between p-2 bg-slate-900/60 rounded-lg border border-slate-800/60 mb-4 mt-2">
                           <div>
-                            <span className="text-gray-300 text-xs font-semibold block">Milyem Yöntemi</span>
-                            <span className="text-[9px] text-gray-500">Otomatik (WS) / Manuel (Has × Ağırlık)</span>
+                            <span className="text-slate-300 text-xs font-semibold block">Milyem Yöntemi</span>
+                            <span className="text-[9px] text-slate-500">Otomatik (WS) / Manuel (Has × Ağırlık)</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <button
@@ -1161,18 +1159,18 @@ export default function PricesPage() {
                             const wKey = keyMap[code];
 
                             return (
-                              <div key={code} className="flex flex-col gap-1 bg-gray-900/60 p-2.5 rounded-lg border border-gray-850">
+                              <div key={code} className="flex flex-col gap-1 bg-slate-900/60 p-2.5 rounded-lg border border-slate-850">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-gray-300 text-xs font-semibold">{label} ({code})</span>
+                                  <span className="text-slate-300 text-xs font-semibold">{label} ({code})</span>
                                   {isManuel && (
                                     <div className="flex items-center gap-1">
-                                      <span className="text-[9px] text-gray-500">Milyem:</span>
+                                      <span className="text-[9px] text-slate-500">Milyem:</span>
                                       <input
                                         type="number"
                                         step="0.001"
                                         value={editSettings.priceOffsets?.[wKey] ?? DEFAULT_SETTINGS.priceOffsets[wKey]}
                                         onChange={e => setEditOffset(wKey, Number(e.target.value))}
-                                        className="w-16 px-1 py-0.5 bg-gray-800 border border-gray-700 rounded text-white text-[10px] font-mono text-center focus:outline-none focus:border-yellow-500/50"
+                                        className="w-16 px-1 py-0.5 bg-slate-800 border border-slate-700 rounded text-white text-[10px] font-mono text-center focus:outline-none focus:border-yellow-500/50"
                                         placeholder="gr"
                                       />
                                     </div>
@@ -1180,23 +1178,23 @@ export default function PricesPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                   <div>
-                                    <label className="text-[9px] text-gray-500">Alış Fark (+/- TL)</label>
+                                    <label className="text-[9px] text-slate-500">Alış Fark (+/- TL)</label>
                                     <input
                                       type="number"
                                       step="0.01"
                                       value={editSettings.priceOffsets?.[`${key}Bid`] ?? 0}
                                       onChange={e => setEditOffset(`${key}Bid`, Number(e.target.value))}
-                                      className="w-full px-2 py-1 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
+                                      className="w-full px-2 py-1 bg-slate-800/80 border border-slate-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
                                     />
                                   </div>
                                   <div>
-                                    <label className="text-[9px] text-gray-500">Satış Fark (+/- TL)</label>
+                                    <label className="text-[9px] text-slate-500">Satış Fark (+/- TL)</label>
                                     <input
                                       type="number"
                                       step="0.01"
                                       value={editSettings.priceOffsets?.[`${key}Ask`] ?? 0}
                                       onChange={e => setEditOffset(`${key}Ask`, Number(e.target.value))}
-                                      className="w-full px-2 py-1 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
+                                      className="w-full px-2 py-1 bg-slate-800/80 border border-slate-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
                                     />
                                   </div>
                                 </div>
@@ -1207,15 +1205,15 @@ export default function PricesPage() {
                       </div>
 
                       {/* ÜRÜN MİLYEMLERİ (Sağ Sütun) */}
-                      <div className="bg-gray-800/10 p-4 rounded-xl border border-gray-800/40 flex flex-col h-full">
+                      <div className="bg-slate-800/10 p-4 rounded-xl border border-slate-800/40 flex flex-col h-full">
                         <h4 className="text-yellow-500 font-bold text-sm mb-1 uppercase tracking-wider">Diğer Ürün Milyemleri</h4>
-                        <p className="text-gray-500 text-[10px] mb-4">
+                        <p className="text-slate-500 text-[10px] mb-4">
                           Sağ sütundaki ürünler için milyem oranları. (Fiyat = Has × Milyem / 1000)
                         </p>
                         <div className="space-y-3 flex-1 flex flex-col justify-between">
                           {PRODUCTS.map(({ key, label }) => (
                             <div key={key} className="flex items-center justify-between gap-4">
-                              <label className="text-gray-300 text-xs flex-1">{label}</label>
+                              <label className="text-slate-300 text-xs flex-1">{label}</label>
                               <div className="relative w-24">
                                 <input
                                   type="number"
@@ -1224,9 +1222,9 @@ export default function PricesPage() {
                                   max="1000"
                                   value={editSettings[key as ProductKey]}
                                   onChange={e => setEditMil(key as ProductKey, Number(e.target.value))}
-                                  className="w-full px-2 py-1.5 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
+                                  className="w-full px-2 py-1.5 bg-slate-800/80 border border-slate-700/50 rounded-lg text-white text-xs font-mono text-right focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all"
                                 />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-650 pointer-events-none">‰</span>
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-650 pointer-events-none">‰</span>
                               </div>
                             </div>
                           ))}
@@ -1238,7 +1236,7 @@ export default function PricesPage() {
                 </div>
 
                 {/* Modal footer */}
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-800 bg-gray-900/50 flex-shrink-0">
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex-shrink-0">
                   <button
                     onClick={() => setIsSettingsOpen(false)}
                     className={THEME.BTN_SECONDARY}

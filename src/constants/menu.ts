@@ -15,6 +15,12 @@ export const MENU_ITEMS = [
     icon: 'Activity',
   },
   {
+    id: 'history-rates',
+    label: 'Geçmiş Kurlar & Milyem',
+    href: ROUTES.HISTORY_RATES,
+    icon: 'History',
+  },
+  {
     id: 'stocks',
     label: MESSAGES.MENU_STOCKS,
     href: ROUTES.STOCKS,
@@ -39,10 +45,22 @@ export const MENU_ITEMS = [
     icon: 'Boxes',
   },
   {
+    id: 'purchase-orders',
+    label: 'Toptancı Siparişleri',
+    href: ROUTES.PURCHASE_ORDERS,
+    icon: 'ShoppingBag',
+  },
+  {
     id: 'customers',
     label: MESSAGES.MENU_CUSTOMERS,
     href: ROUTES.CUSTOMERS,
     icon: 'UserCheck',
+  },
+  {
+    id: 'identity-vault',
+    label: 'Kimlik Havuzu',
+    href: ROUTES.IDENTITY_VAULT,
+    icon: 'ShieldCheck',
   },
   {
     id: 'loyalty',
@@ -91,6 +109,12 @@ export const MENU_ITEMS = [
     label: 'Servis & Tamir',
     href: ROUTES.SERVICES,
     icon: 'Wrench',
+  },
+  {
+    id: 'notebook',
+    label: 'Kuyumcu Defteri',
+    href: ROUTES.NOTEBOOK,
+    icon: 'BookOpen',
   },
   {
     id: 'branches',
@@ -157,6 +181,12 @@ export const MENU_ITEMS = [
     label: MESSAGES.MENU_BANKING,
     href: ROUTES.BANKING,
     icon: 'Landmark',
+  },
+  {
+    id: 'bank-accounts',
+    label: 'Banka IBAN Kayıtları',
+    href: ROUTES.BANK_ACCOUNTS,
+    icon: 'CreditCard',
   },
   {
     id: 'data-hub',

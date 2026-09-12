@@ -162,13 +162,13 @@ export default function PriceCheckClient() {
     <div className="min-h-[calc(100vh-64px)] flex flex-col">
 
       {/* ── ÜST CANLI FİYAT TICKER ── */}
-      <div className="bg-gray-900/90 backdrop-blur-xl border-b border-yellow-900/20 px-4 py-3">
+      <div className="bg-slate-900/90 backdrop-blur-xl border-b border-yellow-900/20 px-4 py-3">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-6">
             {/* Has Altın */}
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-              <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Has Altın</span>
+              <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Has Altın</span>
               <span className="text-sm font-bold text-yellow-400">
                 {hasPrice > 0 ? `₺${formatCurrency(hasPrice)}/gr` : 'Bağlanıyor...'}
               </span>
@@ -176,7 +176,7 @@ export default function PriceCheckClient() {
             {/* USD */}
             <div className="flex items-center gap-2">
               <DollarSign size={14} className="text-green-400" />
-              <span className="text-xs text-gray-500 font-semibold">USD/TRY</span>
+              <span className="text-xs text-slate-500 font-semibold">USD/TRY</span>
               <span className="text-sm font-bold text-green-400">
                 {usdTry > 0 ? `₺${formatCurrency(usdTry)}` : '—'}
               </span>
@@ -184,13 +184,13 @@ export default function PriceCheckClient() {
             {/* EUR */}
             <div className="flex items-center gap-2">
               <Euro size={14} className="text-blue-400" />
-              <span className="text-xs text-gray-500 font-semibold">EUR/TRY</span>
+              <span className="text-xs text-slate-500 font-semibold">EUR/TRY</span>
               <span className="text-sm font-bold text-blue-400">
                 {eurTry > 0 ? `₺${formatCurrency(eurTry)}` : '—'}
               </span>
             </div>
           </div>
-          <div className="text-xs text-gray-600">
+          <div className="text-xs text-slate-600">
             <Clock size={12} className="inline mr-1" />
             {new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
           </div>
@@ -198,7 +198,7 @@ export default function PriceCheckClient() {
       </div>
 
       {/* ── SABİT BARKOD OKUTMA ÜST ALANI ── */}
-      <div className="bg-gray-900/70 backdrop-blur-md border-b border-gray-800/60 px-4 py-4">
+      <div className="bg-slate-900/70 backdrop-blur-md border-b border-slate-800/60 px-4 py-4">
         <div className="max-w-2xl mx-auto">
           <div className="relative">
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-yellow-500/10 blur-lg" />
@@ -212,7 +212,7 @@ export default function PriceCheckClient() {
                   onChange={(e) => setBarcodeInput(e.target.value.toUpperCase())}
                   onKeyDown={handleKeyDown}
                   placeholder="Barkod okutun veya yazın..."
-                  className="w-full pl-12 pr-4 py-4 bg-gray-950/80 border-2 border-yellow-500/20 rounded-2xl text-white text-lg font-mono placeholder-gray-600 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+                  className="w-full pl-12 pr-4 py-4 bg-slate-950/80 border-2 border-yellow-500/20 rounded-2xl text-white text-lg font-mono placeholder-slate-600 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-500/20 transition-all"
                   autoFocus
                   autoComplete="off"
                 />
@@ -270,7 +270,7 @@ export default function PriceCheckClient() {
                 </div>
               </motion.div>
               <h1 className="text-3xl font-bold text-white/80 mb-2">Fiyat Sorgulama</h1>
-              <p className="text-gray-500 text-lg">Ürün barkodunu okutun</p>
+              <p className="text-slate-500 text-lg">Ürün barkodunu okutun</p>
             </motion.div>
           ) : (
             /* ─── ÜRÜN FİYAT KARTI ─── */
@@ -283,7 +283,7 @@ export default function PriceCheckClient() {
               className="w-full max-w-2xl"
             >
               {/* Ana Kart */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-900/95 to-gray-950 border border-yellow-500/20 shadow-2xl shadow-black/40">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-950 border border-yellow-500/20 shadow-2xl shadow-black/40">
                 {/* Altın Üst Çizgi */}
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600" />
                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-yellow-500/5 rounded-full blur-3xl" />
@@ -296,7 +296,7 @@ export default function PriceCheckClient() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <Tag size={14} className="text-yellow-500" />
-                          <span className="text-xs text-gray-500 font-mono uppercase tracking-widest">Barkod</span>
+                          <span className="text-xs text-slate-500 font-mono uppercase tracking-widest">Barkod</span>
                         </div>
                         <p className="text-lg font-mono font-bold text-yellow-400 tracking-wider">{product.barcode}</p>
                       </div>
@@ -335,7 +335,7 @@ export default function PriceCheckClient() {
 
                   {/* ── ANA FİYAT ── */}
                   <div className="text-center mb-6">
-                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest mb-2">
+                    <p className="text-xs text-slate-500 font-semibold uppercase tracking-widest mb-2">
                       Satış Fiyatı
                     </p>
                     <motion.div
@@ -347,7 +347,7 @@ export default function PriceCheckClient() {
                         ₺{formatCurrency(calcSellingPrice(product))}
                       </p>
                     </motion.div>
-                    <p className="text-xs text-gray-600 mt-2">
+                    <p className="text-xs text-slate-600 mt-2">
                       Has Fiyat: ₺{formatCurrency(hasPrice)}/gr × {(product.sellingMilyem ?? (product.costMilyem + product.laborMilyem)).toFixed(3)} × {product.weight.toFixed(2)} gr
                     </p>
                   </div>
@@ -355,30 +355,30 @@ export default function PriceCheckClient() {
                   {/* ── DÖVİZ KARŞILIKLARI ── */}
                   <div className="grid grid-cols-2 gap-4">
                     {/* USD */}
-                    <div className="bg-gray-950/60 rounded-2xl border border-gray-800/80 p-4 text-center">
+                    <div className="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-4 text-center">
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <div className="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center">
                           <DollarSign size={13} className="text-green-400" />
                         </div>
-                        <span className="text-xs text-gray-500 font-semibold uppercase">Dolar Karşılığı</span>
+                        <span className="text-xs text-slate-500 font-semibold uppercase">Dolar Karşılığı</span>
                       </div>
                       <p className="text-2xl font-bold text-green-400">
                         {usdTry > 0 ? `$${formatCurrency(calcSellingPrice(product) / usdTry)}` : '—'}
                       </p>
-                      <p className="text-[10px] text-gray-600 mt-1">1 USD = ₺{formatCurrency(usdTry)}</p>
+                      <p className="text-[10px] text-slate-600 mt-1">1 USD = ₺{formatCurrency(usdTry)}</p>
                     </div>
                     {/* EUR */}
-                    <div className="bg-gray-950/60 rounded-2xl border border-gray-800/80 p-4 text-center">
+                    <div className="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-4 text-center">
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <div className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
                           <Euro size={13} className="text-blue-400" />
                         </div>
-                        <span className="text-xs text-gray-500 font-semibold uppercase">Euro Karşılığı</span>
+                        <span className="text-xs text-slate-500 font-semibold uppercase">Euro Karşılığı</span>
                       </div>
                       <p className="text-2xl font-bold text-blue-400">
                         {eurTry > 0 ? `€${formatCurrency(calcSellingPrice(product) / eurTry)}` : '—'}
                       </p>
-                      <p className="text-[10px] text-gray-600 mt-1">1 EUR = ₺{formatCurrency(eurTry)}</p>
+                      <p className="text-[10px] text-slate-600 mt-1">1 EUR = ₺{formatCurrency(eurTry)}</p>
                     </div>
                   </div>
 
@@ -408,7 +408,7 @@ export default function PriceCheckClient() {
                   </div>
 
                   {/* Güven Notu */}
-                  <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-gray-600">
+                  <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-slate-600">
                     <Shield size={12} className="text-yellow-600" />
                     <span>Fiyatlar canlı altın piyasası verilerine göre anlık hesaplanmaktadır.</span>
                   </div>
@@ -433,10 +433,10 @@ export default function PriceCheckClient() {
 /* ── Yardımcı Detay Kartı Bileşeni ── */
 function DetailCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-gray-950/50 rounded-xl border border-gray-800/60 p-3">
+    <div className="bg-slate-950/50 rounded-xl border border-slate-800/60 p-3">
       <div className="flex items-center gap-1.5 mb-1">
         {icon}
-        <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">{label}</span>
+        <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{label}</span>
       </div>
       <p className="text-sm font-bold text-white truncate" title={value}>{value}</p>
     </div>

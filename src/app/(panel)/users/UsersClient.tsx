@@ -14,7 +14,6 @@ import {
   PERMISSION_PRESETS,
   PAGE_CATEGORIES,
 } from '@/constants/page-permissions';
-import HeaderActions from '@/components/HeaderActions';
 import UserPermissionsModal from '@/components/users/UserPermissionsModal';
 
 interface User {
@@ -421,20 +420,19 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                 Yeni Çalışan Ekle
               </motion.button>
             )}
-            <HeaderActions />
           </div>
         </div>
       </header>
 
       {/* Tabs */}
       {(isSuperAdmin || currentUserRole === USER_ROLES.ADMIN) && (
-        <div className="px-3.5 sm:px-6 pt-4 sm:pt-6 flex gap-3 border-b border-gray-800/40 overflow-x-auto">
+        <div className="px-3.5 sm:px-6 pt-4 sm:pt-6 flex gap-3 border-b border-slate-800/40 overflow-x-auto">
           <button
             onClick={() => setActiveTab('users')}
             className={`pb-3 px-2 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'users'
                 ? 'border-yellow-500 text-yellow-500'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                : 'border-transparent text-slate-500 hover:text-slate-300'
             }`}
           >
             <Users size={16} /> Kullanıcı Yönetimi
@@ -446,7 +444,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
               className={`pb-3 px-2 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
                 activeTab === 'dealers'
                   ? 'border-yellow-500 text-yellow-500'
-                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
               <Building2 size={16} /> Bayi (Kuyumcu) Listesi
@@ -458,7 +456,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
             className={`pb-3 px-2 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'employees'
                 ? 'border-yellow-500 text-yellow-500'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                : 'border-transparent text-slate-500 hover:text-slate-300'
             }`}
           >
             <Users size={16} className="text-emerald-400" /> Çalışan Listesi (Fiş için)
@@ -506,7 +504,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                           <span className={THEME.TEXT_SECONDARY}>{user.email}</span>
                         </td>
                         <td className={THEME.TABLE.TD}>
-                          <span className="text-gray-300 text-xs px-2.5 py-1.5 rounded-lg bg-gray-800/60 border border-gray-700/50">
+                          <span className="text-slate-300 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
                             {user.dealerName}
                           </span>
                         </td>
@@ -573,7 +571,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-6 py-16 text-center text-gray-500">
+                      <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
                         Henüz kayıtlı kullanıcı bulunmuyor.
                       </td>
                     </tr>
@@ -611,7 +609,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                         className={THEME.TABLE.TR}
                       >
                         <td className={THEME.TABLE.TD}>
-                          <span className="font-mono text-gray-400 text-xs">{dealer.id}</span>
+                          <span className="font-mono text-slate-400 text-xs">{dealer.id}</span>
                         </td>
                         <td className={THEME.TABLE.TD}>
                           <span className="font-medium text-white">{dealer.name}</span>
@@ -658,7 +656,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                           <span className="font-medium text-white">{emp.name}</span>
                         </td>
                         <td className={THEME.TABLE.TD}>
-                          <span className="text-gray-300 text-xs px-2.5 py-1.5 rounded-lg bg-gray-800/60 border border-gray-700/50">
+                          <span className="text-slate-300 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
                             {emp.dealerName}
                           </span>
                         </td>
@@ -681,7 +679,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-6 py-16 text-center text-gray-500">
+                      <td colSpan={4} className="px-6 py-16 text-center text-slate-500">
                         Henüz kayıtlı çalışan bulunmuyor.
                       </td>
                     </tr>
@@ -741,7 +739,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                   <label htmlFor="user-password" className={THEME.LABEL}>
                     {MESSAGES.USER_FORM_PASSWORD}
                     {editingUser && (
-                      <span className="text-xs text-gray-500 ml-2">{MESSAGES.USER_FORM_PASSWORD_HINT}</span>
+                      <span className="text-xs text-slate-500 ml-2">{MESSAGES.USER_FORM_PASSWORD_HINT}</span>
                     )}
                   </label>
                   <input
@@ -787,8 +785,8 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                 </div>
 
                 {/* SAYFA ERİŞİM İZİNLERİ (33 SAYFA KAPSAMI & HIZLI ŞABLONLAR) */}
-                <div className="bg-gray-950/70 p-4 rounded-xl border border-gray-800 space-y-3">
-                  <div className="flex items-center justify-between border-b border-gray-800/80 pb-2 flex-wrap gap-2">
+                <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2 flex-wrap gap-2">
                     <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-1.5">
                       <ShieldCheck size={14} /> Sayfa Erişim Yetkileri ({userFormData.permissions.length}/{SYSTEM_PAGES.length})
                     </span>
@@ -833,7 +831,7 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                           className={`flex items-start gap-2.5 p-2 rounded-lg border cursor-pointer transition-all select-none ${
                             isChecked
                               ? 'bg-yellow-500/10 border-yellow-500/40 text-white shadow-sm ring-1 ring-yellow-500/20'
-                              : 'bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                              : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
                           }`}
                         >
                           <input
@@ -845,11 +843,11 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                                 : [...userFormData.permissions, page.id];
                               setUserFormData({ ...userFormData, permissions: nextPerms });
                             }}
-                            className="w-4 h-4 mt-0.5 rounded border-gray-700 text-yellow-500 focus:ring-yellow-500/30 accent-yellow-500 cursor-pointer"
+                            className="w-4 h-4 mt-0.5 rounded border-slate-700 text-yellow-500 focus:ring-yellow-500/30 accent-yellow-500 cursor-pointer"
                           />
                           <div className="min-w-0">
                             <span className="text-xs font-bold block truncate">{page.name}</span>
-                            <span className="text-[10px] text-gray-500 block leading-tight truncate">{page.description}</span>
+                            <span className="text-[10px] text-slate-500 block leading-tight truncate">{page.description}</span>
                           </div>
                         </label>
                       );

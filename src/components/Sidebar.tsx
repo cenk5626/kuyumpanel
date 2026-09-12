@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History, Building, TrendingUp, ClipboardCheck, FileSpreadsheet, BellRing, Bot, Settings, CalendarClock, ReceiptText, Flame, GitFork, ArrowRightLeft, Boxes, HeartHandshake, FileText, Wrench, MessageSquareShare, BadgePercent, LineChart, ShieldCheck, Radio, Globe, ShieldAlert, Landmark } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Activity, ChevronLeft, Menu, Package, ArrowLeftRight, Truck, ScanBarcode, UserCheck, History, Building, TrendingUp, ClipboardCheck, FileSpreadsheet, BellRing, Bot, Settings, CalendarClock, ReceiptText, Flame, GitFork, ArrowRightLeft, Boxes, HeartHandshake, FileText, Wrench, MessageSquareShare, BadgePercent, LineChart, ShieldCheck, Radio, Globe, ShieldAlert, Landmark, ShoppingBag, CreditCard, BookOpen } from 'lucide-react';
 import { MENU_ITEMS } from '@/constants/menu';
 import { MESSAGES } from '@/constants/messages';
 import { THEME } from '@/constants/theme';
@@ -44,6 +44,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; size?: n
   Globe,
   ShieldAlert,
   Landmark,
+  ShoppingBag,
+  CreditCard,
+  BookOpen,
 };
 
 interface SidebarProps {
@@ -65,12 +68,12 @@ export default function Sidebar({
   const role = (session?.user as any)?.role;
   const userPermissionsRaw = (session?.user as any)?.permissions;
 
-  let allowedPermissions: string[] = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'purchases', 'customers', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'channels', 'compliance', 'banking', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
+  let allowedPermissions: string[] = ['dashboard', 'prices', 'history-rates', 'stocks', 'transactions', 'suppliers', 'purchases', 'purchase-orders', 'customers', 'identity-vault', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'notebook', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'channels', 'compliance', 'banking', 'bank-accounts', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
   if (role !== 'SUPER_ADMIN' && userPermissionsRaw) {
     try {
       allowedPermissions = typeof userPermissionsRaw === 'string' ? JSON.parse(userPermissionsRaw) : userPermissionsRaw;
     } catch (e) {
-      allowedPermissions = ['dashboard', 'prices', 'stocks', 'transactions', 'suppliers', 'purchases', 'customers', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'channels', 'compliance', 'banking', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
+      allowedPermissions = ['dashboard', 'prices', 'history-rates', 'stocks', 'transactions', 'suppliers', 'purchases', 'purchase-orders', 'customers', 'identity-vault', 'loyalty', 'crm', 'quotes', 'installments', 'invoices', 'expense-vouchers', 'workshop', 'services', 'notebook', 'branches', 'transfers', 'z-report', 'balance-sheet', 'executive-analytics', 'approvals', 'stock-audit', 'rfid-stocktake', 'channels', 'compliance', 'banking', 'bank-accounts', 'data-hub', 'alerts', 'ai-assistant', 'settings-ai', 'logs', 'price-check', 'users'];
     }
   }
 
@@ -151,7 +154,7 @@ export default function Sidebar({
 
         {/* Footer Info */}
         <div className={THEME.SIDEBAR.FOOTER}>
-          <div className={`text-[10px] text-gray-500 font-mono text-center ${isCollapsed ? 'md:hidden' : ''}`}>
+          <div className={`text-[10px] text-slate-500 font-mono text-center ${isCollapsed ? 'md:hidden' : ''}`}>
             {MESSAGES.APP_NAME} v1.0
           </div>
         </div>

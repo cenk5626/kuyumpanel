@@ -26,7 +26,9 @@ import {
   ArrowRightLeft
 } from 'lucide-react';
 import { THEME, ANIM } from '@/constants/theme';
-import HeaderActions from '@/components/HeaderActions';
+import PageHeader from '@/components/PageHeader';
+import LuxuryTabs from '@/components/LuxuryTabs';
+import StatCard from '@/components/StatCard';
 
 // ─── Tipler ───────────────────────────────────────────────────────────────────
 
@@ -506,108 +508,71 @@ export default function SuppliersPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 min-w-0">
-      {/* BAŞLIK & HEADER ACTIONS */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Truck className="text-amber-500 dark:text-yellow-400" size={26} />
-            Toptancı & Mutabakat Yönetimi
-          </h1>
-          <p className="text-slate-500 dark:text-gray-400 text-xs mt-1">
-            Toptancı mal alımları, Has/TL borç bakiyeleri, cari hesap ekstresi ve toptan mutabakat takibi.
-          </p>
-        </div>
+      {/* Üst Başlık & Aksiyonlar (Luxury Jewelry Design System) */}
+      <PageHeader
+        icon={<Truck className="w-6 h-6 text-amber-500 animate-pulse" />}
+        title="Toptancı & Mutabakat Yönetimi"
+        subtitle="Toptancı mal alımları, Has/TL borç bakiyeleri, cari hesap ekstresi ve toptan mutabakat takibi."
+        badges={[
+          { label: `${suppliers.length} Toptancı Cari`, variant: 'gold' },
+          { label: `${totalOwedSuppliersCount} Borçlu Hesap`, variant: 'warning' },
+        ]}
+        actions={
+          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+            <button
+              onClick={() => setShowVirmanModal(true)}
+              className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-bold border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 transition-all shadow-xs min-h-[44px]"
+            >
+              <ArrowRightLeft size={16} /> Virman Transferi
+            </button>
+            <button
+              onClick={() => setShowAddSupplierModal(true)}
+              className={`${THEME.BTN_PRIMARY} flex items-center gap-2`}
+            >
+              <Plus size={16} /> Yeni Toptancı
+            </button>
+          </div>
+        }
+      />
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={() => setShowVirmanModal(true)}
-            className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-700 dark:text-purple-300 font-bold border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 transition-all shadow-xs min-h-[40px]"
-          >
-            <ArrowRightLeft size={16} /> Virman Transferi
-          </button>
-          <button
-            onClick={() => setShowAddSupplierModal(true)}
-            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-2 transition-colors shadow-md shadow-amber-500/20 min-h-[40px]"
-          >
-            <Plus size={16} /> Yeni Toptancı
-          </button>
-          <HeaderActions />
-        </div>
-      </div>
-
-      {/* İKİLİ TAB SEÇİCİ */}
-      <div className="flex flex-col sm:flex-row bg-slate-100 dark:bg-gray-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-gray-800/80 max-w-xl backdrop-blur-md gap-1 shadow-xs">
-        <button
-          onClick={() => setActiveTab('reconciliation')}
-          className={`flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
-            activeTab === 'reconciliation'
-              ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-800/40'
-          }`}
-        >
-          <Scale size={16} /> 1. Toptan Mutabakat & Cari Hesaplar
-        </button>
-        <button
-          onClick={() => setActiveTab('purchasing')}
-          className={`flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
-            activeTab === 'purchasing'
-              ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-gray-800/40'
-          }`}
-        >
-          <Receipt size={16} /> 2. Toptancı Mal Alımı Kaydı
-        </button>
+      {/* 2'Lİ ANA TAB SEÇİCİ */}
+      <div className="w-full">
+        <LuxuryTabs
+          tabs={[
+            { id: 'reconciliation', label: '1. Toptan Mutabakat & Cari Hesaplar', icon: <Scale size={16} />, count: suppliers.length },
+            { id: 'purchasing', label: '2. Toptancı Mal Alımı Kaydı', icon: <Receipt size={16} /> },
+          ]}
+          activeTab={activeTab}
+          onChange={(tab) => setActiveTab(tab as 'reconciliation' | 'purchasing')}
+        />
       </div>
 
       {/* TOPLAM STAT KARTLARI */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
-          <div>
-            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Toplam Has Borcumuz</p>
-            <p className="text-xl font-extrabold text-amber-700 dark:text-amber-400 font-mono mt-1">
-              {totalHasBalance.toFixed(3)} gr Has
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-            <Coins size={20} />
-          </div>
-        </div>
-
-        <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
-          <div>
-            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Toplam TL Borcumuz</p>
-            <p className="text-xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono mt-1">
-              ₺{Math.round(totalTlBalance).toLocaleString('tr-TR')}
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-            <CreditCard size={20} />
-          </div>
-        </div>
-
-        <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
-          <div>
-            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Borçlu Toptancı Sayısı</p>
-            <p className="text-xl font-extrabold text-purple-700 dark:text-purple-400 font-mono mt-1">
-              {totalOwedSuppliersCount} Toptancı
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
-            <Building2 size={20} />
-          </div>
-        </div>
-
-        <div className={`${THEME.GLASS_CARD} p-5 flex items-center justify-between`}>
-          <div>
-            <p className="text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Anlık Has Satış Fiyatı</p>
-            <p className="text-xl font-extrabold text-amber-700 dark:text-yellow-400 font-mono mt-1">
-              {hasPrice?.ask ? `₺${hasPrice.ask.toFixed(2)}` : '—'}
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-yellow-400">
-            <TrendingUp size={20} />
-          </div>
-        </div>
+        <StatCard
+          label="Toplam Has Borcumuz"
+          value={`${totalHasBalance.toFixed(3)} gr Has`}
+          subtitle="Toptancılara güncel saf altın borcu"
+          icon={<Coins className="w-5 h-5 text-amber-500" />}
+        />
+        <StatCard
+          label="Toplam TL Borcumuz"
+          value={`₺${Math.round(totalTlBalance).toLocaleString('tr-TR')}`}
+          subtitle="Nakit / Cari TL borç toplamı"
+          icon={<CreditCard className="w-5 h-5 text-emerald-500" />}
+        />
+        <StatCard
+          label="Borçlu Toptancı Sayısı"
+          value={`${totalOwedSuppliersCount} Toptancı`}
+          subtitle={`Toplam ${suppliers.length} aktif toptancı`}
+          icon={<Building2 className="w-5 h-5 text-purple-500" />}
+        />
+        <StatCard
+          label="Anlık Has Satış Fiyatı"
+          value={hasPrice?.ask ? `₺${hasPrice.ask.toFixed(2)}` : '—'}
+          subtitle="Canlı spot piyasa fiyatı"
+          icon={<TrendingUp className="w-5 h-5 text-yellow-500" />}
+        />
       </div>
 
       {/* TAB 1: TOPTAN MUTABAKAT VE CARİ HESAP EKSTRESİ */}
@@ -616,7 +581,7 @@ export default function SuppliersPage() {
           {/* SOL PANEL: TOPTANCI LİSTESİ */}
           <div className="lg:col-span-4 space-y-4">
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-gray-500">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                 <Search size={16} />
               </span>
               <input
@@ -624,17 +589,17 @@ export default function SuppliersPage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Toptancı ara..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-900/90 border border-slate-300 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-amber-500 shadow-xs"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900/90 border border-slate-300 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 shadow-xs"
               />
             </div>
 
-            <div className={`${THEME.GLASS_CARD} p-3 max-h-[600px] overflow-y-auto space-y-2 border border-slate-200 dark:border-gray-800/60`}>
+            <div className={`${THEME.GLASS_CARD} p-3 max-h-[600px] overflow-y-auto space-y-2 border border-slate-200 dark:border-slate-800/60`}>
               {loading ? (
-                <div className="text-center py-10 text-slate-400 dark:text-gray-500 text-xs">
+                <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-xs">
                   <RefreshCw size={18} className="animate-spin inline mr-2" /> Yükleniyor...
                 </div>
               ) : filteredSuppliers.length === 0 ? (
-                <div className="text-center py-10 text-slate-400 dark:text-gray-500 text-xs">Toptancı bulunamadı.</div>
+                <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-xs">Toptancı bulunamadı.</div>
               ) : (
                 filteredSuppliers.map(s => {
                   const isSelected = s.id === selectedSupplierId;
@@ -647,28 +612,28 @@ export default function SuppliersPage() {
                       className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
                         isSelected
                           ? 'bg-amber-100/90 dark:bg-yellow-500/10 border-amber-400 dark:border-yellow-500/40 text-slate-900 dark:text-white shadow-xs'
-                          : 'bg-white dark:bg-gray-950/40 border-slate-200 dark:border-gray-800/80 hover:bg-slate-50 dark:hover:bg-gray-900/60 text-slate-700 dark:text-gray-300'
+                          : 'bg-white dark:bg-slate-950/40 border-slate-200 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-700 dark:text-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-sm text-white">{s.name}</span>
+                        <span className="font-bold text-sm text-slate-900 dark:text-white">{s.name}</span>
                         {hasDebt && (
-                          <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-md font-bold">
+                          <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded-md font-bold">
                             Borçlu
                           </span>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-800/40 text-xs font-mono">
+                      <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 text-xs font-mono">
                         <div>
-                          <span className="text-[10px] text-gray-500 block">Has Borcu</span>
-                          <span className={s.hasBalance > 0 ? 'text-amber-400 font-bold' : 'text-gray-400'}>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Has Borcu</span>
+                          <span className={s.hasBalance > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-500 dark:text-slate-400'}>
                             {s.hasBalance.toFixed(3)} gr
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] text-gray-500 block">TL Borcu</span>
-                          <span className={s.tlBalance > 0 ? 'text-emerald-400 font-bold' : 'text-gray-400'}>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block">TL Borcu</span>
+                          <span className={s.tlBalance > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-400'}>
                             ₺{Math.round(s.tlBalance).toLocaleString('tr-TR')}
                           </span>
                         </div>
@@ -686,53 +651,53 @@ export default function SuppliersPage() {
               <motion.div
                 key={selectedSupplier.id}
                 {...ANIM.FADE_UP}
-                className={`${THEME.GLASS_CARD} p-6 border border-gray-800 space-y-6`}
+                className={`${THEME.GLASS_CARD} p-6 border border-slate-200 dark:border-amber-500/15 space-y-6`}
               >
                 {/* TOPTANCI BAŞLIĞI VE AKSİYONLAR */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-800/60">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-amber-500/20">
                   <div>
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Building2 className="text-yellow-400" size={20} />
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Building2 className="text-amber-500 dark:text-yellow-400" size={20} />
                       {selectedSupplier.name}
                     </h2>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       {selectedSupplier.phone || 'Telefon yok'} {selectedSupplier.address ? `• ${selectedSupplier.address}` : ''}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setShowPaymentModal(true)}
-                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-colors shadow-md min-h-[44px]"
                     >
-                      <Coins size={14} /> Ödeme Yap / Borç Düş
+                      <Coins size={15} /> Ödeme Yap / Borç Düş
                     </button>
 
                     <button
                       onClick={handlePrintStatement}
-                      className="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-yellow-400 border border-gray-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors"
+                      className={`${THEME.BTN_SECONDARY} flex items-center gap-2`}
                     >
-                      <Printer size={14} /> Ekstre Yazdır
+                      <Printer size={15} /> Ekstre Yazdır
                     </button>
                   </div>
                 </div>
 
                 {/* GÜNCEL BAKİYE ÖZET BARI */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-950/60 p-4 rounded-xl border border-gray-800/80">
-                  <div className="flex items-center justify-between border-r sm:border-r border-gray-800/60 pr-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200 dark:border-amber-500/15">
+                  <div className="flex items-center justify-between border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-slate-800/60 pb-3 sm:pb-0 sm:pr-4">
                     <div>
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Güncel Has Borç Bakiyesi</span>
-                      <p className="text-lg font-black text-amber-400 font-mono mt-0.5">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Güncel Has Borç Bakiyesi</span>
+                      <p className="text-lg font-black text-amber-600 dark:text-amber-400 font-mono mt-0.5">
                         {selectedSupplier.hasBalance.toFixed(3)} gr Has
                       </p>
                     </div>
                     <Scale className="text-amber-500/40" size={24} />
                   </div>
 
-                  <div className="flex items-center justify-between pl-2">
+                  <div className="flex items-center justify-between sm:pl-2">
                     <div>
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Güncel TL Borç Bakiyesi</span>
-                      <p className="text-lg font-black text-emerald-400 font-mono mt-0.5">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Güncel TL Borç Bakiyesi</span>
+                      <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
                         ₺{Math.round(selectedSupplier.tlBalance).toLocaleString('tr-TR')}
                       </p>
                     </div>
@@ -742,61 +707,61 @@ export default function SuppliersPage() {
 
                 {/* EKSTRE HAREKET TABLOSU */}
                 <div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Receipt size={14} className="text-yellow-500" /> Cari Hesap Ekstresi Geçmişi
+                  <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Receipt size={14} className="text-amber-500" /> Cari Hesap Ekstresi Geçmişi
                   </h3>
 
                   {loadingTransactions ? (
-                    <div className="text-center py-12 text-gray-500 text-xs">
+                    <div className="text-center py-12 text-slate-500 text-xs">
                       <RefreshCw size={18} className="animate-spin inline mr-2" /> İşlemler yükleniyor...
                     </div>
                   ) : transactions.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500 text-xs bg-gray-950/30 rounded-xl border border-gray-800/50">
+                    <div className="text-center py-12 text-slate-500 text-xs bg-slate-50 dark:bg-slate-950/30 rounded-xl border border-slate-200 dark:border-slate-800/50">
                       Henüz bu toptancıya ait işlem kaydı bulunmuyor.
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="border-b border-gray-800/60 text-gray-500 uppercase text-[10px] font-bold">
-                            <th className="px-3 py-2.5 text-left">Tarih</th>
-                            <th className="px-3 py-2.5 text-left">İşlem Türü</th>
-                            <th className="px-3 py-2.5 text-left">Belge / Açıklama</th>
-                            <th className="px-3 py-2.5 text-right">Has Miktarı</th>
-                            <th className="px-3 py-2.5 text-right">TL Tutarı</th>
-                            <th className="px-3 py-2.5 text-right">Personel</th>
+                    <div className={THEME.TABLE.WRAPPER}>
+                      <table className={THEME.TABLE.MAIN}>
+                        <thead className={THEME.TABLE.THEAD}>
+                          <tr>
+                            <th className={THEME.TABLE.TH}>Tarih</th>
+                            <th className={THEME.TABLE.TH}>İşlem Türü</th>
+                            <th className={THEME.TABLE.TH}>Belge / Açıklama</th>
+                            <th className={`${THEME.TABLE.TH} text-right`}>Has Miktarı</th>
+                            <th className={`${THEME.TABLE.TH} text-right`}>TL Tutarı</th>
+                            <th className={`${THEME.TABLE.TH} text-right`}>Personel</th>
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody className={THEME.TABLE.TBODY}>
                           {transactions.map(tx => (
-                            <tr key={tx.id} className="border-b border-gray-800/30 hover:bg-yellow-500/3 transition-colors">
-                              <td className="px-3 py-3 text-gray-400 font-mono">
+                            <tr key={tx.id} className={THEME.TABLE.TR}>
+                              <td className={`${THEME.TABLE.TD} text-slate-500 dark:text-slate-400 font-mono`}>
                                 {new Date(tx.createdAt).toLocaleString('tr-TR')}
                               </td>
-                              <td className="px-3 py-3">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${TRANSACTION_TYPES[tx.type]?.color || ''}`}>
+                              <td className={THEME.TABLE.TD}>
+                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${TRANSACTION_TYPES[tx.type]?.color || ''}`}>
                                   {TRANSACTION_TYPES[tx.type]?.label || tx.type}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 text-gray-300">
-                                <div className="font-semibold text-white">{tx.documentNo ? `No: ${tx.documentNo}` : '—'}</div>
-                                {tx.description && <div className="text-[10px] text-gray-500 line-clamp-1">{tx.description}</div>}
+                              <td className={THEME.TABLE.TD}>
+                                <div className="font-semibold text-slate-900 dark:text-white">{tx.documentNo ? `No: ${tx.documentNo}` : '—'}</div>
+                                {tx.description && <div className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">{tx.description}</div>}
                               </td>
-                              <td className="px-3 py-3 text-right font-mono font-bold">
+                              <td className={`${THEME.TABLE.TD} text-right font-mono font-bold`}>
                                 {tx.hasAmount > 0 ? (
-                                  <span className={tx.type === 'PURCHASE' ? 'text-amber-400' : 'text-emerald-400'}>
+                                  <span className={tx.type === 'PURCHASE' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
                                     {tx.type === 'PURCHASE' ? '+' : '-'}{tx.hasAmount.toFixed(3)} gr
                                   </span>
                                 ) : '—'}
                               </td>
-                              <td className="px-3 py-3 text-right font-mono font-bold">
+                              <td className={`${THEME.TABLE.TD} text-right font-mono font-bold`}>
                                 {tx.tlAmount > 0 ? (
-                                  <span className={tx.type === 'PURCHASE' ? 'text-amber-400' : 'text-emerald-400'}>
+                                  <span className={tx.type === 'PURCHASE' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
                                     {tx.type === 'PURCHASE' ? '+' : '-'}₺{Math.round(tx.tlAmount).toLocaleString('tr-TR')}
                                   </span>
                                 ) : '—'}
                               </td>
-                              <td className="px-3 py-3 text-right text-gray-400">
+                              <td className={`${THEME.TABLE.TD} text-right text-slate-500 dark:text-slate-400`}>
                                 {tx.employeeName || '—'}
                               </td>
                             </tr>
@@ -808,7 +773,7 @@ export default function SuppliersPage() {
                 </div>
               </motion.div>
             ) : (
-              <div className={`${THEME.GLASS_CARD} p-12 text-center text-gray-500 text-xs`}>
+              <div className={`${THEME.GLASS_CARD} p-12 text-center text-slate-500 dark:text-slate-400 text-xs`}>
                 İşlemlerini görmek için sol menüden bir toptancı seçin.
               </div>
             )}
@@ -820,14 +785,14 @@ export default function SuppliersPage() {
       {activeTab === 'purchasing' && (
         <motion.div
           {...ANIM.FADE_UP}
-          className={`${THEME.GLASS_CARD} p-6 border border-gray-800 max-w-4xl mx-auto space-y-6`}
+          className={`${THEME.GLASS_CARD} p-6 border border-slate-200 dark:border-amber-500/15 max-w-4xl mx-auto space-y-6`}
         >
-          <div className="border-b border-gray-800 pb-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Receipt className="text-yellow-400" size={22} />
+          <div className="border-b border-slate-200 dark:border-amber-500/20 pb-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Receipt className="text-amber-500 dark:text-yellow-400" size={22} />
               Yeni Toptancı Mal Alım Faturası / Girişi
             </h2>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Toptancıdan alınan Has, ziynet veya mamül altınların tutarlarını toptancının cari hesabına borç olarak işleyin.
             </p>
           </div>
@@ -865,8 +830,8 @@ export default function SuppliersPage() {
             </div>
 
             {/* HAS ALTIN MAL ALIM KIRILIMI */}
-            <div className="bg-gray-950/60 p-5 rounded-2xl border border-gray-800 space-y-4">
-              <h3 className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-slate-50 dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200 dark:border-amber-500/15 space-y-4">
+              <h3 className="text-xs font-bold text-amber-600 dark:text-yellow-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Coins size={16} /> Has Altın & İşçilik Kırılımı (Has Borcu Oluşturan)
               </h3>
 
@@ -931,7 +896,7 @@ export default function SuppliersPage() {
               </div>
 
               {/* NAKİT / TL MAL ALIM TUTARI */}
-              <div className="pt-2 border-t border-gray-800/60 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={THEME.LABEL}>Nakit / TL Borç Tutarı (₺)</label>
                   <input
@@ -957,18 +922,18 @@ export default function SuppliersPage() {
             </div>
 
             {/* ANLIK MATEMATİKSEL FATURA ÖZETİ */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl font-mono text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl font-mono text-center">
               <div>
-                <span className="text-[10px] text-gray-400 uppercase font-bold block">Toptancıya Eklenecek Has Borcu</span>
-                <span className="text-lg font-black text-amber-400">{calculatedHasAmount.toFixed(3)} gr Has</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">Toptancıya Eklenecek Has Borcu</span>
+                <span className="text-lg font-black text-amber-600 dark:text-amber-400">{calculatedHasAmount.toFixed(3)} gr Has</span>
               </div>
               <div>
-                <span className="text-[10px] text-gray-400 uppercase font-bold block">Toptancıya Eklenecek TL Borcu</span>
-                <span className="text-lg font-black text-emerald-400">₺{Math.round(calculatedTlAmount).toLocaleString('tr-TR')}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">Toptancıya Eklenecek TL Borcu</span>
+                <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">₺{Math.round(calculatedTlAmount).toLocaleString('tr-TR')}</span>
               </div>
               <div>
-                <span className="text-[10px] text-gray-400 uppercase font-bold block">Tahmini TL Karşılığı</span>
-                <span className="text-lg font-black text-yellow-400">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold block">Tahmini TL Karşılığı</span>
+                <span className="text-lg font-black text-amber-600 dark:text-yellow-400">
                   ₺{Math.round((hasPrice?.ask || 0) * calculatedHasAmount + calculatedTlAmount).toLocaleString('tr-TR')}
                 </span>
               </div>
@@ -977,7 +942,7 @@ export default function SuppliersPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full py-3.5 bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold text-sm rounded-xl transition-colors shadow-xl shadow-yellow-500/20 disabled:opacity-50"
+              className={`${THEME.BTN_PRIMARY} w-full py-3.5 text-sm`}
             >
               {saving ? 'Kaydediliyor...' : 'Mal Alımını Kaydet ve Toptancı Cari Hesabına İşle'}
             </button>
@@ -988,16 +953,16 @@ export default function SuppliersPage() {
       {/* MODAL 1: YENİ TOPTANCI EKLE */}
       <AnimatePresence>
         {showAddSupplierModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className={THEME.MODAL.BACKDROP}>
             <motion.div
               {...ANIM.SCALE_UP}
-              className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-2xl"
+              className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-amber-500/20 rounded-2xl p-6 space-y-4 shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Building2 size={18} className="text-yellow-400" /> Yeni Toptancı Tanımla
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-amber-500/20 pb-3">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Building2 size={18} className="text-amber-500 dark:text-yellow-400" /> Yeni Toptancı Tanımla
                 </h3>
-                <button onClick={() => setShowAddSupplierModal(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setShowAddSupplierModal(false)} className={THEME.MODAL.CLOSE_BTN}>
                   <X size={18} />
                 </button>
               </div>
@@ -1065,14 +1030,14 @@ export default function SuppliersPage() {
                   <button
                     type="button"
                     onClick={() => setShowAddSupplierModal(false)}
-                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                    className={`${THEME.BTN_SECONDARY} flex-1`}
                   >
                     İptal
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 py-2.5 bg-yellow-500 text-black font-bold text-xs rounded-xl hover:bg-yellow-400 disabled:opacity-50"
+                    className={`${THEME.BTN_PRIMARY} flex-1`}
                   >
                     {saving ? 'Kaydediliyor...' : 'Toptancıyı Kaydet'}
                   </button>
@@ -1086,19 +1051,19 @@ export default function SuppliersPage() {
       {/* MODAL 2: ÖDEME YAP / BORÇ DÜŞ */}
       <AnimatePresence>
         {showPaymentModal && selectedSupplier && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className={THEME.MODAL.BACKDROP}>
             <motion.div
               {...ANIM.SCALE_UP}
-              className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-2xl"
+              className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-amber-500/20 rounded-2xl p-6 space-y-4 shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-amber-500/20 pb-3">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <Coins size={18} className="text-emerald-400" /> Toptancı Ödemesi / Borç Düşme
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Coins size={18} className="text-emerald-500 dark:text-emerald-400" /> Toptancı Ödemesi / Borç Düşme
                   </h3>
-                  <p className="text-xs text-gray-400">{selectedSupplier.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{selectedSupplier.name}</p>
                 </div>
-                <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setShowPaymentModal(false)} className={THEME.MODAL.CLOSE_BTN}>
                   <X size={18} />
                 </button>
               </div>
@@ -1198,14 +1163,14 @@ export default function SuppliersPage() {
                   <button
                     type="button"
                     onClick={() => setShowPaymentModal(false)}
-                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                    className={`${THEME.BTN_SECONDARY} flex-1`}
                   >
                     İptal
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-500 disabled:opacity-50"
+                    className="flex-1 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-500 disabled:opacity-50 min-h-[44px] cursor-pointer"
                   >
                     {saving ? 'İşleniyor...' : 'Ödemeyi Kaydet ve Borçtan Düş'}
                   </button>
@@ -1217,19 +1182,19 @@ export default function SuppliersPage() {
 
         {/* ─── TOPTANCI VİRMAN TRANSFERİ MODALI ─── */}
         {showVirmanModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className={THEME.MODAL.BACKDROP}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900 border border-purple-500/30 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4"
+              className="bg-white dark:bg-slate-900 border border-purple-500/30 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4"
             >
-              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+              <div className="flex justify-between items-center border-b border-slate-200 dark:border-amber-500/20 pb-3">
                 <div className="flex items-center gap-2">
-                  <ArrowRightLeft className="text-purple-400" size={20} />
-                  <h2 className="text-lg font-bold text-white">Toptancılar Arası Virman Transferi</h2>
+                  <ArrowRightLeft className="text-purple-600 dark:text-purple-400" size={20} />
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Toptancılar Arası Virman Transferi</h2>
                 </div>
-                <button onClick={() => setShowVirmanModal(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setShowVirmanModal(false)} className={THEME.MODAL.CLOSE_BTN}>
                   <X size={20} />
                 </button>
               </div>
@@ -1314,14 +1279,14 @@ export default function SuppliersPage() {
                   <button
                     type="button"
                     onClick={() => setShowVirmanModal(false)}
-                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                    className={`${THEME.BTN_SECONDARY} flex-1`}
                   >
                     İptal
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 py-2.5 bg-purple-600 text-white font-bold text-xs rounded-xl hover:bg-purple-500 flex items-center justify-center gap-1.5 shadow-lg shadow-purple-600/20 disabled:opacity-50"
+                    className="flex-1 py-2.5 bg-purple-600 text-white font-bold text-xs rounded-xl hover:bg-purple-500 flex items-center justify-center gap-1.5 shadow-lg shadow-purple-600/20 disabled:opacity-50 min-h-[44px] cursor-pointer"
                   >
                     {saving ? 'Virman Yapılıyor...' : 'Virmanı Onayla ve Aktar'}
                   </button>

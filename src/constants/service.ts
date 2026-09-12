@@ -52,3 +52,24 @@ export const SERVICE_COMMON_ISSUES = [
   'Özel İmalat / Atölye Yenileme',
   'İp / Misina Dizimi (İnci/Mercan)',
 ] as const;
+
+export const SERVICE_PHOTO_TYPES = {
+  INTAKE: 'INTAKE',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  DEFECT: 'DEFECT',
+} as const;
+
+export type ServicePhotoType = (typeof SERVICE_PHOTO_TYPES)[keyof typeof SERVICE_PHOTO_TYPES];
+
+export const SERVICE_PHOTO_CONFIG = {
+  MAX_PHOTO_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
+} as const;
+
+export const CUSTOMER_APPROVAL_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+

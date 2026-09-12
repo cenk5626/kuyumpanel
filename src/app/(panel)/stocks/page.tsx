@@ -39,7 +39,6 @@ import {
   STOCK_ALERT_LEVELS,
   type TurnoverCategory,
 } from '@/constants/stocks';
-import HeaderActions from '@/components/HeaderActions';
 import KelebekLabelModal from '@/components/KelebekLabelModal';
 import BatchLabelPrintModal from '@/components/BatchLabelPrintModal';
 import CriticalStockBadge, { TurnoverBadge } from '@/components/CriticalStockBadge';
@@ -47,6 +46,9 @@ import ReorderDraftModal from '@/components/ReorderDraftModal';
 import CameraScannerModal from '@/components/CameraScannerModal';
 import DiamondCertificateModal from '@/components/DiamondCertificateModal';
 import ScaleButton from '@/components/ScaleButton';
+import PageHeader from '@/components/PageHeader';
+import LuxuryTabs from '@/components/LuxuryTabs';
+import StatCard from '@/components/StatCard';
 import { DIAMOND_COLORS, DIAMOND_CLARITIES, DIAMOND_CUTS, CERTIFICATE_ORGS } from '@/constants/diamond';
 import type { StockTurnoverItem, TurnoverAnalyticsSummary } from '@/lib/stocks/analytics';
 
@@ -136,24 +138,6 @@ const STATUS_BADGES: Record<string, string> = {
 
 // ─── Alt Bileşenler ──────────────────────────────────────────────────────────
 
-function StatCard({ title, value, icon: Icon, color }: {
-  title: string;
-  value: string | number;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  color: string;
-}) {
-  return (
-    <div className={`${THEME.GLASS_CARD} p-5 flex items-center gap-4`}>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} shadow-xs`}>
-        <Icon size={22} className="text-slate-800 dark:text-white" />
-      </div>
-      <div>
-        <p className="text-slate-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider">{title}</p>
-        <p className="text-slate-900 dark:text-white text-xl font-black font-mono mt-0.5">{value}</p>
-      </div>
-    </div>
-  );
-}
 
 function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
   stock: Stock;
@@ -169,11 +153,11 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
   return (
     <motion.div
       layout
-      className={`flex items-center justify-between py-3.5 px-6 hover:bg-amber-500/5 transition-colors border-b border-slate-100 dark:border-gray-800/40 last:border-b-0 ${isLow ? 'bg-rose-50/50 dark:bg-red-500/5' : ''}`}
+      className={`flex items-center justify-between py-3.5 px-6 hover:bg-amber-500/5 transition-colors border-b border-slate-100 dark:border-slate-800/40 last:border-b-0 ${isLow ? 'bg-rose-50/50 dark:bg-red-500/5' : ''}`}
     >
       <div className="flex-1 min-w-0 mr-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-slate-900 dark:text-gray-100 font-bold text-sm">{stock.label}</p>
+          <p className="text-slate-900 dark:text-slate-100 font-bold text-sm">{stock.label}</p>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
             stock.type === FILTER_SARRAFIYE
               ? 'bg-amber-500/10 text-amber-800 dark:text-yellow-400 border-amber-500/20'
@@ -194,7 +178,7 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
             />
           )}
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-gray-500 font-mono mt-1 flex-wrap">
+        <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-500 font-mono mt-1 flex-wrap">
           <span>Güncelleme: {new Date(stock.updatedAt).toLocaleString('tr-TR')}</span>
           {turnoverItem && turnoverItem.daysToStockout !== Infinity && (
             <span>• Tahmini Tükenme: {turnoverItem.daysToStockout > 0 ? `${turnoverItem.daysToStockout} gün` : 'Tükendi'}</span>
@@ -208,7 +192,7 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
       <div className="flex items-center gap-6 flex-shrink-0">
         {livePrice && stock.amount > 0 && (
           <div className="text-right hidden md:block w-32">
-            <p className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold">Tahmini TL Değer</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">Tahmini TL Değer</p>
             <p className="text-amber-700 dark:text-yellow-400 text-sm font-black font-mono">
               {totalValueBid != null ? `₺${Math.round(totalValueBid).toLocaleString('tr-TR')}` : '—'}
             </p>
@@ -216,7 +200,7 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
         )}
 
         <div className="text-right w-24">
-          <p className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold">Stok</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">Stok</p>
           <p className={`text-sm font-black font-mono ${isLow ? 'text-rose-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
             {stock.amount % 1 === 0 ? stock.amount.toFixed(0) : stock.amount.toFixed(2)} {unit !== 'Adet' ? unit : ''}
           </p>
@@ -224,7 +208,7 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
 
         <button
           onClick={() => onEdit(stock)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-gray-300 bg-slate-100 dark:bg-gray-800/60 hover:bg-amber-100 dark:hover:bg-yellow-500/20 hover:text-amber-900 dark:hover:text-yellow-400 border border-slate-200 dark:border-gray-700/50 hover:border-amber-300 dark:hover:border-yellow-500/30 transition-all shadow-xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/60 hover:bg-amber-100 dark:hover:bg-yellow-500/20 hover:text-amber-900 dark:hover:text-yellow-400 border border-slate-200 dark:border-slate-700/50 hover:border-amber-300 dark:hover:border-yellow-500/30 transition-all shadow-xs"
         >
           <Edit3 size={12} />
           {MESSAGES.STOCKS_EDIT}
@@ -901,19 +885,24 @@ export default function StocksPage() {
   return (
     <>
       {/* HEADER */}
-      <header className={THEME.HEADER}>
-        <div className="flex justify-between items-center w-full flex-wrap gap-3">
-          <motion.div {...ANIM.FADE_UP} transition={{ duration: ANIM.DURATION.NORMAL }} className="flex items-center gap-3">
-            <h1 className={THEME.HEADER_TITLE}>{MESSAGES.STOCKS_TITLE}</h1>
-          </motion.div>
-          
-          <div className="flex items-center gap-2">
+      <PageHeader
+        icon={<Package className="w-6 h-6 text-amber-500" />}
+        title={MESSAGES.STOCKS_TITLE}
+        subtitle="Sarrafiye, döviz, takı ve barkodlu altın envanteri yönetimi"
+        badges={[
+          { label: `${stocks.length + productItems.length} Toplam Kalem`, variant: 'gold' },
+          ...(analyticsSummary && analyticsSummary.totalCriticalCount > 0
+            ? [{ label: `${analyticsSummary.totalCriticalCount} Kritik Stok`, variant: 'danger' }]
+            : [{ label: 'Stok Seviyeleri Normal', variant: 'success' }]),
+        ]}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             {/* Sipariş Taslağı Aksiyon Butonu */}
             <button
               onClick={() => setShowReorderModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-extrabold rounded-xl text-sm flex items-center transition-all shadow-lg shadow-amber-500/10"
+              className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-extrabold rounded-xl text-sm flex items-center transition-all shadow-lg shadow-amber-500/10 active:scale-95"
             >
-              <Truck size={15} className="mr-1.5 text-black" />
+              <Truck size={16} className="mr-1.5 text-black" />
               Sipariş Taslağı
               {analyticsSummary && analyticsSummary.totalCriticalCount > 0 && (
                 <span className="ml-2 px-1.5 py-0.5 bg-red-600 text-white text-[10px] font-mono font-black rounded-full">
@@ -925,59 +914,44 @@ export default function StocksPage() {
             {/* Kamera İle Barkod Tara */}
             <button
               onClick={() => setShowCameraScanner(true)}
-              className="px-3.5 py-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 hover:text-slate-900 dark:hover:text-white rounded-xl text-sm font-bold flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-gray-700/60 shadow-xs"
+              className="px-3.5 py-2.5 min-h-[44px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white rounded-xl text-sm font-bold flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-700/60 shadow-xs active:scale-95"
               title="Kamera Barkod Okut"
             >
-              <Camera size={15} />
+              <Camera size={16} />
               Kamera
             </button>
 
             {activeView === 'barcode' && (
               <button
                 onClick={() => setShowProductModal(true)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-sm font-bold flex items-center transition-all shadow-md shadow-amber-500/20"
+                className="px-4 py-2.5 min-h-[44px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm flex items-center transition-all shadow-md shadow-amber-500/20 active:scale-95"
               >
-                <Plus size={15} className="mr-2 text-slate-950" />
+                <Plus size={16} className="mr-1.5 text-slate-950" />
                 Yeni Ürün Kartı
               </button>
             )}
             <button
               onClick={fetchAll}
-              className={`${THEME.BTN_SECONDARY} flex items-center gap-2`}
+              className={`${THEME.BTN_SECONDARY} min-h-[44px] flex items-center gap-2`}
             >
-              <RefreshCw size={15} />
+              <RefreshCw size={16} />
               Yenile
             </button>
-            <HeaderActions />
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="p-3.5 sm:p-6 flex flex-col gap-4 sm:gap-6 min-w-0">
+      <div className="flex flex-col gap-4 sm:gap-6 min-w-0">
         
         {/* Main View Switcher */}
-        <div className="flex border-b border-slate-200 dark:border-gray-800/40 pb-px gap-4 sm:gap-6 overflow-x-auto">
-          <button
-            onClick={() => setActiveView('standard')}
-            className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
-              activeView === 'standard'
-                ? 'border-amber-500 text-amber-700 dark:text-yellow-500'
-                : 'border-transparent text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-gray-300'
-            }`}
-          >
-            <Package size={16} /> Genel Stok (Sarrafiye & Döviz)
-          </button>
-          <button
-            onClick={() => setActiveView('barcode')}
-            className={`pb-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-all ${
-              activeView === 'barcode'
-                ? 'border-amber-500 text-amber-700 dark:text-yellow-500'
-                : 'border-transparent text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-gray-300'
-            }`}
-          >
-            <Barcode size={16} className="text-amber-600 dark:text-yellow-400" /> Takı & Barkod Yönetimi
-          </button>
-        </div>
+        <LuxuryTabs<'standard' | 'barcode'>
+          tabs={[
+            { id: 'standard', label: '1. Genel Stok (Sarrafiye & Döviz)', icon: <Package className="w-4 h-4" />, count: stocks.length },
+            { id: 'barcode', label: '2. Takı & Barkod Yönetimi', icon: <Barcode className="w-4 h-4" />, count: inStockBarcodeCount },
+          ]}
+          activeTab={activeView}
+          onChange={(tab) => setActiveView(tab)}
+        />
 
         {activeView === 'standard' ? (
           /* ========================================== */
@@ -995,15 +969,15 @@ export default function StocksPage() {
             {/* Filtre Sekmeleri */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
               {/* Tür Filtreleri */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {([FILTER_ALL, FILTER_SARRAFIYE, FILTER_DOVIZ] as const).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setFilter(tab)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    className={`px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all ${
                       filter === tab
-                        ? 'bg-amber-100/90 dark:bg-yellow-500/20 text-amber-900 dark:text-yellow-400 border border-amber-300 dark:border-yellow-500/30 font-bold shadow-xs'
-                        : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-200 bg-white dark:bg-gray-800/40 border border-slate-200 dark:border-gray-700/30 hover:border-slate-300 dark:hover:border-gray-600/40 shadow-xs'
+                        ? 'bg-amber-100/90 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 font-bold shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
                     }`}
                   >
                     {tab === FILTER_ALL ? 'Tümü' : tab === FILTER_SARRAFIYE ? 'Sarrafiye' : 'Döviz'}
@@ -1012,45 +986,45 @@ export default function StocksPage() {
               </div>
 
               {/* Stok Seviyesi Filtreleri */}
-              <div className="flex items-center gap-2 bg-slate-100 dark:bg-gray-950/60 p-1 rounded-xl border border-slate-200 dark:border-gray-800 flex-wrap shadow-xs">
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex-wrap shadow-xs">
                 <button
                   onClick={() => setLevelFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-3 py-2 min-h-[40px] rounded-lg text-xs font-bold transition-all ${
                     levelFilter === 'all'
-                      ? 'bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-200'
+                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   Tüm Seviyeler
                 </button>
                 <button
                   onClick={() => setLevelFilter('critical')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  className={`px-3 py-2 min-h-[40px] rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                     levelFilter === 'critical'
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      : 'text-gray-400 hover:text-red-400'
+                      ? 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'
                   }`}
                 >
-                  <AlertTriangle size={13} />
+                  <AlertTriangle size={14} />
                   Kritik Seviye
                   {analyticsSummary && analyticsSummary.totalCriticalCount > 0 && (
-                    <span className="px-1.5 py-0.2 bg-red-600 text-white text-[10px] font-mono rounded-full">
+                    <span className="px-1.5 py-0.5 bg-rose-600 text-white text-[10px] font-mono rounded-full font-bold">
                       {analyticsSummary.totalCriticalCount}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={() => setLevelFilter('stagnant')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  className={`px-3 py-2 min-h-[40px] rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                     levelFilter === 'stagnant'
-                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                      : 'text-gray-400 hover:text-purple-400'
+                      ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-500/30'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-purple-500 dark:hover:text-purple-400'
                   }`}
                 >
-                  <Hourglass size={13} />
+                  <Hourglass size={14} />
                   Hareketsiz Stok
                   {analyticsSummary && analyticsSummary.categoryCounts[TURNOVER_CATEGORIES.HAREKETSIZ] > 0 && (
-                    <span className="px-1.5 py-0.2 bg-purple-600 text-white text-[10px] font-mono rounded-full">
+                    <span className="px-1.5 py-0.5 bg-purple-600 text-white text-[10px] font-mono rounded-full font-bold">
                       {analyticsSummary.categoryCounts[TURNOVER_CATEGORIES.HAREKETSIZ]}
                     </span>
                   )}
@@ -1064,7 +1038,7 @@ export default function StocksPage() {
               transition={{ duration: ANIM.DURATION.NORMAL }}
               className={`${THEME.GLASS_CARD} overflow-hidden`}
             >
-              <div className="px-5 py-4 border-b border-slate-200 dark:border-gray-800/40 flex items-center justify-between flex-wrap gap-2">
+              <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800/40 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <Package size={18} className="text-amber-500" />
                   <h2 className="text-slate-900 dark:text-white font-bold text-base">Sarrafiye & Döviz Stok Listesi</h2>
@@ -1080,13 +1054,13 @@ export default function StocksPage() {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-16 text-gray-500">
+                <div className="flex items-center justify-center py-16 text-slate-500">
                   <RefreshCw size={20} className="animate-spin mr-2" /> Yükleniyor...
                 </div>
               ) : filteredStocks.length === 0 ? (
-                <div className="text-center py-16 text-gray-500">{MESSAGES.STOCKS_EMPTY}</div>
+                <div className="text-center py-16 text-slate-500">{MESSAGES.STOCKS_EMPTY}</div>
               ) : (
-                <div className="divide-y divide-gray-800/40">
+                <div className="divide-y divide-slate-800/40">
                   {filteredStocks.map(stock => (
                     <StockRow
                       key={stock.id}
@@ -1113,30 +1087,30 @@ export default function StocksPage() {
               transition={{ delay: 0.1, duration: ANIM.DURATION.NORMAL }}
               className={`${THEME.GLASS_CARD} overflow-hidden`}
             >
-              <div className="px-5 py-4 border-b border-gray-800/40 flex items-center gap-3">
+              <div className="px-5 py-4 border-b border-slate-800/40 flex items-center gap-3">
                 <TrendingUp size={18} className="text-purple-400" />
                 <h2 className="text-white font-bold text-base">Son İşlemler</h2>
               </div>
 
               {transactions.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">{MESSAGES.TX_EMPTY}</div>
+                <div className="text-center py-10 text-slate-500">{MESSAGES.TX_EMPTY}</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-800/40">
-                        <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Tarih</th>
-                        <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Tür</th>
-                        <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Ürün</th>
-                        <th className="px-5 py-3 text-right text-xs text-gray-500 font-bold uppercase tracking-wider">Miktar</th>
-                        <th className="px-5 py-3 text-right text-xs text-gray-500 font-bold uppercase tracking-wider">Birim Fiyat</th>
-                        <th className="px-5 py-3 text-right text-xs text-gray-500 font-bold uppercase tracking-wider">Toplam</th>
+                      <tr className="border-b border-slate-800/40">
+                        <th className="px-5 py-3 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">Tarih</th>
+                        <th className="px-5 py-3 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">Tür</th>
+                        <th className="px-5 py-3 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">Ürün</th>
+                        <th className="px-5 py-3 text-right text-xs text-slate-500 font-bold uppercase tracking-wider">Miktar</th>
+                        <th className="px-5 py-3 text-right text-xs text-slate-500 font-bold uppercase tracking-wider">Birim Fiyat</th>
+                        <th className="px-5 py-3 text-right text-xs text-slate-500 font-bold uppercase tracking-wider">Toplam</th>
                       </tr>
                     </thead>
                     <tbody>
                       {transactions.slice(0, 20).map(tx => (
-                        <tr key={tx.id} className="border-b border-gray-800/30 hover:bg-yellow-500/3 transition-colors">
-                          <td className="px-5 py-3 text-gray-400 text-xs font-mono">
+                        <tr key={tx.id} className="border-b border-slate-800/30 hover:bg-yellow-500/3 transition-colors">
+                          <td className="px-5 py-3 text-slate-400 text-xs font-mono">
                             {new Date(tx.createdAt).toLocaleString('tr-TR')}
                           </td>
                           <td className="px-5 py-3">
@@ -1148,9 +1122,9 @@ export default function StocksPage() {
                               {tx.type === 'buy' ? '⬆ Alış' : '⬇ Satış'}
                             </span>
                           </td>
-                          <td className="px-5 py-3 text-gray-200 font-medium">{tx.productCode}</td>
-                          <td className="px-5 py-3 text-right text-gray-300 font-mono">{tx.quantity}</td>
-                          <td className="px-5 py-3 text-right text-gray-300 font-mono">
+                          <td className="px-5 py-3 text-slate-200 font-medium">{tx.productCode}</td>
+                          <td className="px-5 py-3 text-right text-slate-300 font-mono">{tx.quantity}</td>
+                          <td className="px-5 py-3 text-right text-slate-300 font-mono">
                             ₺{tx.price.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </td>
                           <td className="px-5 py-3 text-right text-yellow-400 font-bold font-mono">
@@ -1194,7 +1168,7 @@ export default function StocksPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSelectedProductIds([])}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white bg-gray-800 transition-colors"
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 transition-colors"
                   >
                     Seçimi Temizle
                   </button>
@@ -1211,14 +1185,14 @@ export default function StocksPage() {
             {/* Arama Barı */}
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Search size={18} className="text-gray-500" />
+                <Search size={18} className="text-slate-500" />
               </span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Barkod kodu veya ürün açıklaması ile ara..."
-                className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500/50 transition-colors"
               />
             </div>
 
@@ -1231,41 +1205,41 @@ export default function StocksPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-800/40 bg-gray-900/20">
-                      <th className="px-4 py-3 text-center text-xs text-gray-500 font-bold uppercase tracking-wider w-10">
+                    <tr className="border-b border-slate-800/40 bg-slate-900/20">
+                      <th className="px-4 py-3 text-center text-xs text-slate-500 font-bold uppercase tracking-wider w-10">
                         <input
                           type="checkbox"
                           checked={filteredProducts.length > 0 && selectedProductIds.length === filteredProducts.length}
                           onChange={handleSelectAllProducts}
-                          className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
+                          className="rounded bg-slate-800 border-slate-700 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
                           title="Tümünü Seç / Kaldır"
                         />
                       </th>
-                      <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Barkod</th>
-                      <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Kategori Detayı</th>
-                      <th className="px-5 py-3 text-left text-xs text-gray-500 font-bold uppercase tracking-wider">Toptancı</th>
-                      <th className="px-5 py-3 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">Ayar</th>
-                      <th className="px-5 py-3 text-right text-xs text-gray-500 font-bold uppercase tracking-wider">Adet</th>
-                      <th className="px-5 py-3 text-right text-xs text-gray-500 font-bold uppercase tracking-wider">Ağırlık</th>
-                      <th className="px-5 py-3 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">Ölçü</th>
-                      <th className="px-5 py-3 text-right text-xs text-gray-500 font-bold uppercase tracking-wider">Maliyet Milyem</th>
+                      <th className="px-5 py-3 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">Barkod</th>
+                      <th className="px-5 py-3 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">Kategori Detayı</th>
+                      <th className="px-5 py-3 text-left text-xs text-slate-500 font-bold uppercase tracking-wider">Toptancı</th>
+                      <th className="px-5 py-3 text-center text-xs text-slate-500 font-bold uppercase tracking-wider">Ayar</th>
+                      <th className="px-5 py-3 text-right text-xs text-slate-500 font-bold uppercase tracking-wider">Adet</th>
+                      <th className="px-5 py-3 text-right text-xs text-slate-500 font-bold uppercase tracking-wider">Ağırlık</th>
+                      <th className="px-5 py-3 text-center text-xs text-slate-500 font-bold uppercase tracking-wider">Ölçü</th>
+                      <th className="px-5 py-3 text-right text-xs text-slate-500 font-bold uppercase tracking-wider">Maliyet Milyem</th>
                       <th className="px-5 py-3 text-right text-xs text-yellow-400 font-extrabold uppercase tracking-wider">Satış Milyemi</th>
                       <th className="px-5 py-3 text-right text-xs text-yellow-400 font-extrabold uppercase tracking-wider">Satış Has Çarpanı</th>
                       <th className="px-5 py-3 text-right text-xs text-emerald-400 font-extrabold uppercase tracking-wider">Satış Fiyatı (TL)</th>
-                      <th className="px-5 py-3 text-center text-xs text-gray-500 font-bold uppercase tracking-wider">Durum</th>
-                      <th className="px-5 py-3 text-right text-xs text-gray-500 font-bold uppercase tracking-wider">İşlemler</th>
+                      <th className="px-5 py-3 text-center text-xs text-slate-500 font-bold uppercase tracking-wider">Durum</th>
+                      <th className="px-5 py-3 text-right text-xs text-slate-500 font-bold uppercase tracking-wider">İşlemler</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={14} className="px-5 py-12 text-center text-gray-500">
+                        <td colSpan={14} className="px-5 py-12 text-center text-slate-500">
                           <RefreshCw size={18} className="animate-spin inline mr-2" /> Yükleniyor...
                         </td>
                       </tr>
                     ) : filteredProducts.length === 0 ? (
                       <tr>
-                        <td colSpan={14} className="px-5 py-12 text-center text-gray-500">
+                        <td colSpan={14} className="px-5 py-12 text-center text-slate-500">
                           Barkodlu ürün bulunamadı.
                         </td>
                       </tr>
@@ -1279,19 +1253,19 @@ export default function StocksPage() {
                         const itemSellingTL = (hasPrice?.ask || 0) * itemSellingHas;
 
                         return (
-                          <tr key={item.id} className="border-b border-gray-800/30 hover:bg-yellow-500/3 transition-colors">
+                          <tr key={item.id} className="border-b border-slate-800/30 hover:bg-yellow-500/3 transition-colors">
                             <td className="px-4 py-3 text-center">
                               <input
                                 type="checkbox"
                                 checked={selectedProductIds.includes(item.id)}
                                 onChange={() => handleToggleSelectProduct(item.id)}
-                                className="rounded bg-gray-800 border-gray-700 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
+                                className="rounded bg-slate-800 border-slate-700 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
                               />
                             </td>
                             <td className="px-5 py-3 font-mono font-bold text-yellow-500 text-sm">
                               {item.barcode}
                             </td>
-                            <td className="px-5 py-3 text-gray-300">
+                            <td className="px-5 py-3 text-slate-300">
                               <div className="text-xs font-bold text-white flex items-center gap-1.5">
                                 {item.category || '—'}
                                 {item.isDiamond && (
@@ -1300,16 +1274,16 @@ export default function StocksPage() {
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[11px] text-gray-400 font-medium">{[item.subType, item.subSubType].filter(Boolean).join(' › ') || '—'}</div>
+                              <div className="text-[11px] text-slate-400 font-medium">{[item.subType, item.subSubType].filter(Boolean).join(' › ') || '—'}</div>
                               {item.description && (
-                                <div className="text-[10px] text-gray-500 line-clamp-1 mt-0.5">{item.description}</div>
+                                <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">{item.description}</div>
                               )}
                             </td>
-                            <td className="px-5 py-3 text-xs font-semibold text-gray-300">
+                            <td className="px-5 py-3 text-xs font-semibold text-slate-300">
                               {item.supplierName || '—'}
                             </td>
                             <td className="px-5 py-3 text-center">
-                              <span className="bg-gray-800 text-gray-300 border border-gray-700 px-2 py-0.5 rounded text-xs font-bold">
+                              <span className="bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded text-xs font-bold">
                                 {item.carat} Ayar
                               </span>
                             </td>
@@ -1319,14 +1293,14 @@ export default function StocksPage() {
                             <td className="px-5 py-3 text-right text-white font-mono">
                               {item.weight.toFixed(2)} gr
                             </td>
-                            <td className="px-5 py-3 text-center text-gray-300 font-mono text-xs">
+                            <td className="px-5 py-3 text-center text-slate-300 font-mono text-xs">
                               {item.size || '—'}
                             </td>
-                            <td className="px-5 py-3 text-right text-xs font-mono text-gray-300">
+                            <td className="px-5 py-3 text-right text-xs font-mono text-slate-300">
                               {totalMilyem > 0 ? (
                                 <div>
                                   <span className="text-white font-bold">{totalMilyem.toFixed(3)}</span>
-                                  <div className="text-[10px] text-gray-500">({item.costMilyem} + {item.laborMilyem})</div>
+                                  <div className="text-[10px] text-slate-500">({item.costMilyem} + {item.laborMilyem})</div>
                                 </div>
                               ) : '—'}
                             </td>
@@ -1360,21 +1334,21 @@ export default function StocksPage() {
                                 )}
                                 <button
                                   onClick={() => openEditProductModal(item)}
-                                  className="p-1.5 rounded-lg bg-gray-800 text-yellow-400 hover:bg-yellow-500/20 border border-gray-700 transition-colors"
+                                  className="p-1.5 rounded-lg bg-slate-800 text-yellow-400 hover:bg-yellow-500/20 border border-slate-700 transition-colors"
                                   title="Ürün Kartını Düzenle"
                                 >
                                   <Pencil size={14} />
                                 </button>
                                 <button
                                   onClick={() => handlePrintLabel(item)}
-                                  className="p-1.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-yellow-500/20 hover:text-yellow-400 border border-gray-700 transition-colors"
+                                  className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-yellow-500/20 hover:text-yellow-400 border border-slate-700 transition-colors"
                                   title="Etiket Yazdır"
                                 >
                                   <Printer size={14} />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteProductItem(item.id)}
-                                  className="p-1.5 rounded-lg bg-gray-800 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 transition-colors"
+                                  className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:bg-red-500/20 hover:text-red-400 border border-slate-700 transition-colors"
                                   title="Sil"
                                 >
                                   <Trash2 size={14} />
@@ -1403,10 +1377,10 @@ export default function StocksPage() {
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-gray-900 border border-yellow-700/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4"
+              className="bg-slate-900 border border-yellow-700/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div>
                   <h3 className="text-white font-bold text-lg flex items-center gap-2">
                     <Package className="text-yellow-400" size={20} />
@@ -1414,20 +1388,20 @@ export default function StocksPage() {
                   </h3>
                   <p className="text-yellow-500/80 text-xs font-semibold mt-0.5">{editStock.label} ({editStock.id})</p>
                 </div>
-                <button onClick={() => setEditStock(null)} className="text-gray-400 hover:text-white p-1 rounded-lg">
+                <button onClick={() => setEditStock(null)} className="text-slate-400 hover:text-white p-1 rounded-lg">
                   <X size={20} />
                 </button>
               </div>
 
               {/* İşlem Modu Seçimi */}
-              <div className="grid grid-cols-3 gap-1.5 p-1 bg-gray-950 rounded-xl border border-gray-800">
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditOperation('SET')}
                   className={`py-2 text-xs font-bold rounded-lg transition-all ${
                     editOperation === 'SET'
-                      ? 'bg-yellow-500 text-gray-950 shadow-md'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'bg-yellow-500 text-slate-950 shadow-md'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
                   = Net Eşitle
@@ -1437,8 +1411,8 @@ export default function StocksPage() {
                   onClick={() => setEditOperation('ADD')}
                   className={`py-2 text-xs font-bold rounded-lg transition-all ${
                     editOperation === 'ADD'
-                      ? 'bg-emerald-500 text-gray-950 shadow-md'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'bg-emerald-500 text-slate-950 shadow-md'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
                   + Hızlı Ekle
@@ -1449,7 +1423,7 @@ export default function StocksPage() {
                   className={`py-2 text-xs font-bold rounded-lg transition-all ${
                     editOperation === 'SUBTRACT'
                       ? 'bg-red-500 text-white shadow-md'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
                   - Hızlı Çıkar
@@ -1459,7 +1433,7 @@ export default function StocksPage() {
               {/* Değer Girişi */}
               {editOperation === 'SET' ? (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
                     Yeni Net Stok Miktarı ({UNIT_MAP[editStock.id] || 'Adet'})
                   </label>
                   <input
@@ -1468,13 +1442,13 @@ export default function StocksPage() {
                     value={editAmount}
                     onChange={e => setEditAmount(e.target.value)}
                     autoFocus
-                    className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-xl text-white text-xl font-mono text-right focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/30"
+                    className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-xl font-mono text-right focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/30"
                     placeholder="0"
                   />
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  <label className="block text-xs font-semibold text-gray-300">
+                  <label className="block text-xs font-semibold text-slate-300">
                     {editOperation === 'ADD' ? 'Stoğa Eklenecek Miktar' : 'Stoktan Düşülecek Miktar'}
                   </label>
                   <input
@@ -1484,7 +1458,7 @@ export default function StocksPage() {
                     value={editDelta}
                     onChange={e => setEditDelta(e.target.value)}
                     autoFocus
-                    className={`w-full px-4 py-3 bg-gray-950 border rounded-xl text-white text-xl font-mono text-right focus:outline-none ${
+                    className={`w-full px-4 py-3 bg-slate-950 border rounded-xl text-white text-xl font-mono text-right focus:outline-none ${
                       editOperation === 'ADD'
                         ? 'border-emerald-500/50 focus:border-emerald-400'
                         : 'border-red-500/50 focus:border-red-400'
@@ -1498,7 +1472,7 @@ export default function StocksPage() {
                         key={val}
                         type="button"
                         onClick={() => setEditDelta(String(val))}
-                        className="px-2.5 py-1 text-xs font-mono font-bold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700"
+                        className="px-2.5 py-1 text-xs font-mono font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
                       >
                         {editOperation === 'ADD' ? `+${val}` : `-${val}`}
                       </button>
@@ -1508,8 +1482,8 @@ export default function StocksPage() {
               )}
 
               {/* Kritik Stok Eşiği */}
-              <div className="pt-2 border-t border-gray-800/80">
-                <label className="block text-xs font-semibold text-gray-400 mb-1">
+              <div className="pt-2 border-t border-slate-800/80">
+                <label className="block text-xs font-semibold text-slate-400 mb-1">
                   Kritik Stok Uyarı Eşiği (minThreshold)
                 </label>
                 <input
@@ -1518,10 +1492,10 @@ export default function StocksPage() {
                   step="1"
                   value={editMinThreshold}
                   onChange={e => setEditMinThreshold(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-yellow-400 text-sm font-mono"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-yellow-400 text-sm font-mono"
                   placeholder="5"
                 />
-                <span className="text-[10px] text-gray-500 mt-1 block">
+                <span className="text-[10px] text-slate-500 mt-1 block">
                   Stok bu sayının altına düştüğünde ana sayfada ve listede kırmızı uyarı verir.
                 </span>
               </div>
@@ -1531,7 +1505,7 @@ export default function StocksPage() {
                 <button
                   type="button"
                   onClick={() => setEditStock(null)}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 bg-gray-800 hover:bg-gray-700 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-800 hover:bg-slate-700 transition-colors"
                 >
                   İptal
                 </button>
@@ -1539,7 +1513,7 @@ export default function StocksPage() {
                   type="button"
                   onClick={handleEditSave}
                   disabled={savingStock}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-950 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/20 disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/20 disabled:opacity-50"
                 >
                   {savingStock ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
                   Stoku Güncelle
@@ -1556,21 +1530,21 @@ export default function StocksPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-gray-900 border border-yellow-700/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4"
+              className="bg-slate-900 border border-yellow-700/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="text-white font-bold text-base flex items-center gap-2">
                   <Plus className="text-yellow-400" size={18} />
                   Yeni Sarrafiye / Döviz Stoğu Tanımla
                 </h3>
-                <button onClick={() => setShowCustomStockModal(false)} className="text-gray-400 hover:text-white p-1">
+                <button onClick={() => setShowCustomStockModal(false)} className="text-slate-400 hover:text-white p-1">
                   <X size={18} />
                 </button>
               </div>
 
               <form onSubmit={handleCreateCustomStock} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Ürün Kodu *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ürün Kodu *</label>
                   <input
                     type="text"
                     required
@@ -1581,7 +1555,7 @@ export default function StocksPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Ürün Adı / Açıklaması *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ürün Adı / Açıklaması *</label>
                   <input
                     type="text"
                     required
@@ -1593,7 +1567,7 @@ export default function StocksPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Kategori</label>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Kategori</label>
                     <select
                       value={customStockForm.type}
                       onChange={e => setCustomStockForm({ ...customStockForm, type: e.target.value as any })}
@@ -1604,7 +1578,7 @@ export default function StocksPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Başlangıç Stoğu</label>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Başlangıç Stoğu</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1616,7 +1590,7 @@ export default function StocksPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Kritik Stok Eşiği</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Kritik Stok Eşiği</label>
                   <input
                     type="number"
                     min="0"
@@ -1631,14 +1605,14 @@ export default function StocksPage() {
                   <button
                     type="button"
                     onClick={() => setShowCustomStockModal(false)}
-                    className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 bg-gray-800 hover:bg-gray-700"
+                    className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-800 hover:bg-slate-700"
                   >
                     İptal
                   </button>
                   <button
                     type="submit"
                     disabled={savingStock}
-                    className="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-950 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/20"
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/20"
                   >
                     {savingStock ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
                     Stoğu Ekle
@@ -1658,10 +1632,10 @@ export default function StocksPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl p-4 sm:p-8 shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
+              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl p-4 sm:p-8 shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
             >
               {/* Modal Başlığı */}
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800/60">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800/60">
                 <div className="flex items-center gap-2">
                   <Barcode className="text-yellow-500" size={22} />
                   <h2 className="text-xl font-extrabold text-white">Yeni Takı Girişi (Barkodlu Stok)</h2>
@@ -1674,7 +1648,7 @@ export default function StocksPage() {
               <form onSubmit={handleAddProductItem} className="space-y-5">
                 
                 {/* TOPTANCI (SUPPLIER) YÖNETİMİ */}
-                <div className="bg-gray-950/40 border border-gray-850 p-5 rounded-2xl">
+                <div className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl">
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Toptancı Seçimi</label>
                     <button
@@ -1697,8 +1671,8 @@ export default function StocksPage() {
                   </select>
 
                   {/* VİTRİN DURUMU & TOPTANCI CARİ BORÇLANDIRMA */}
-                  <div className="mt-4 pt-3 border-t border-gray-850/80">
-                    <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block mb-2">
+                  <div className="mt-4 pt-3 border-t border-slate-850/80">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-2">
                       Stok / Vitrin Durumu & Toptancı Cari Hesabı
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1707,7 +1681,7 @@ export default function StocksPage() {
                         className={`p-3 rounded-xl border cursor-pointer transition-all ${
                           !productFormData.inShowcase
                             ? 'bg-purple-500/15 border-purple-500/50 text-white shadow-lg shadow-purple-500/5'
-                            : 'bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                       >
                         <div className="flex items-center gap-2 font-bold text-xs">
@@ -1720,7 +1694,7 @@ export default function StocksPage() {
                           />
                           <span className="text-purple-300">Mal Vitrinde Yok (Toptancıdan Yeni Geldi)</span>
                         </div>
-                        <p className="text-[11px] text-gray-400 mt-1 pl-5">
+                        <p className="text-[11px] text-slate-400 mt-1 pl-5">
                           Toptancı carisine <strong>Giriş Milyemi (Geliş + İşçilik)</strong> üzerinden Has Borç işlenir.
                         </p>
                       </div>
@@ -1730,7 +1704,7 @@ export default function StocksPage() {
                         className={`p-3 rounded-xl border cursor-pointer transition-all ${
                           productFormData.inShowcase
                             ? 'bg-yellow-500/15 border-yellow-500/50 text-white shadow-lg shadow-yellow-500/5'
-                            : 'bg-gray-900/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                       >
                         <div className="flex items-center gap-2 font-bold text-xs">
@@ -1743,7 +1717,7 @@ export default function StocksPage() {
                           />
                           <span className="text-yellow-400">Mal Zaten Vitrinde Var</span>
                         </div>
-                        <p className="text-[11px] text-gray-400 mt-1 pl-5">
+                        <p className="text-[11px] text-slate-400 mt-1 pl-5">
                           Ürün sadece stok kartı olarak kaydedilir, Toptancı carisine borç işlenmez.
                         </p>
                       </div>
@@ -1753,7 +1727,7 @@ export default function StocksPage() {
                       <div className="mt-3 p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-xs text-purple-300 flex items-center justify-between font-mono">
                         <div>
                           <span className="font-bold block text-white">{productFormData.supplierName} Carisine Eklenecek Has Borç:</span>
-                          <span className="text-[11px] text-gray-400 font-sans">
+                          <span className="text-[11px] text-slate-400 font-sans">
                             Hesaplama: {productFormData.weight || '0'} gr × ({productFormData.costMilyem || '0'} Geliş + {productFormData.laborMilyem || '0'} İşçilik) × {productFormData.quantity || '1'} Adet
                           </span>
                         </div>
@@ -1774,8 +1748,8 @@ export default function StocksPage() {
                 </div>
 
                 {/* KATEGORİ & ALT TÜRLER BÖLÜMÜ */}
-                <div className="bg-gray-950/40 border border-gray-850 p-5 rounded-2xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-850 pb-2">
+                <div className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-850 pb-2">
                     <h3 className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Kategori & Detaylar</h3>
                     <div className="flex gap-2">
                       <button
@@ -1851,16 +1825,16 @@ export default function StocksPage() {
                   </div>
 
                   {/* Satır 2: Barkod ve Manuel Seçimi */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-850/60 pt-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-850/60 pt-3">
                     <div className="flex items-center gap-2 pt-6">
                       <input
                         type="checkbox"
                         id="useAutoBarcode"
                         checked={productFormData.useAutoBarcode}
                         onChange={e => setProductFormData({ ...productFormData, useAutoBarcode: e.target.checked })}
-                        className="rounded bg-gray-850 border-gray-750 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
+                        className="rounded bg-slate-850 border-slate-750 text-yellow-500 focus:ring-0 cursor-pointer w-4 h-4"
                       />
-                      <label htmlFor="useAutoBarcode" className="text-sm font-semibold text-gray-300 cursor-pointer select-none">
+                      <label htmlFor="useAutoBarcode" className="text-sm font-semibold text-slate-300 cursor-pointer select-none">
                         Barkodu Otomatik Üret (Format: Ayar + Kısaltma + 000X)
                       </label>
                     </div>
@@ -1873,20 +1847,20 @@ export default function StocksPage() {
                         placeholder={productFormData.useAutoBarcode ? `Önizleme: ${productFormData.carat}${productFormData.categoryCode || 'KOD'}00001` : "Barkodu el ile girin"}
                         value={productFormData.useAutoBarcode ? "" : productFormData.customBarcode}
                         onChange={e => setProductFormData({ ...productFormData, customBarcode: e.target.value })}
-                        className={`${THEME.INPUT} font-mono disabled:opacity-40 disabled:bg-gray-950/40`}
+                        className={`${THEME.INPUT} font-mono disabled:opacity-40 disabled:bg-slate-950/40`}
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* MİLYEM, İŞÇİLİK & KAR MARJI HESAPLAMA PANELİ */}
-                <div className="bg-gray-950/40 border border-gray-850 p-5 rounded-2xl space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-900 border border-gray-800 rounded-xl gap-3">
+                <div className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-900 border border-slate-800 rounded-xl gap-3">
                     <div>
                       <span className="text-xs font-bold text-white block flex items-center gap-1.5">
                         <Sliders size={14} className="text-yellow-400" /> Kâr / İşçilik Hesaplama Yöntemi
                       </span>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[11px] text-slate-400">
                         {productFormData.laborType === 'milyem' 
                           ? 'Milyem bazlı işçilik ekle (Satış Milyemi = Geliş + İşçilik Milyemi)' 
                           : 'Yüzdelik kâr marjı ekle (Satış Milyemi = Geliş × (1 + %Kâr))'}
@@ -1900,7 +1874,7 @@ export default function StocksPage() {
                         profitMargin: '0',
                         laborMilyem: '0.000'
                       }))}
-                      className="flex items-center bg-gray-950 p-1 rounded-xl cursor-pointer border border-gray-800 relative w-56 select-none shrink-0"
+                      className="flex items-center bg-slate-950 p-1 rounded-xl cursor-pointer border border-slate-800 relative w-56 select-none shrink-0"
                     >
                       <div
                         className={`absolute top-1 bottom-1 rounded-lg bg-yellow-500 transition-all duration-200 shadow-md ${
@@ -1908,12 +1882,12 @@ export default function StocksPage() {
                         }`}
                       />
                       <span className={`relative z-10 w-1/2 text-center text-xs font-bold transition-colors ${
-                        productFormData.laborType === 'milyem' ? 'text-black font-extrabold' : 'text-gray-400'
+                        productFormData.laborType === 'milyem' ? 'text-black font-extrabold' : 'text-slate-400'
                       }`}>
                         Milyem Bazlı
                       </span>
                       <span className={`relative z-10 w-1/2 text-center text-xs font-bold transition-colors ${
-                        productFormData.laborType === 'percentage' ? 'text-black font-extrabold' : 'text-gray-400'
+                        productFormData.laborType === 'percentage' ? 'text-black font-extrabold' : 'text-slate-400'
                       }`}>
                         Yüzdelik (%)
                       </span>
@@ -2013,7 +1987,7 @@ export default function StocksPage() {
                         placeholder="Örn: 0.931"
                         value={productFormData.sellingMilyem}
                         onChange={e => setProductFormData({ ...productFormData, sellingMilyem: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-gray-900 border-2 border-yellow-500/60 rounded-xl text-yellow-400 font-mono font-bold text-sm focus:outline-none focus:border-yellow-400 shadow-inner"
+                        className="w-full px-3.5 py-2.5 bg-slate-900 border-2 border-yellow-500/60 rounded-xl text-yellow-400 font-mono font-bold text-sm focus:outline-none focus:border-yellow-400 shadow-inner"
                       />
                     </div>
                   </div>
@@ -2050,13 +2024,13 @@ export default function StocksPage() {
                   </div>
 
                   {/* ANLIK MATEMATİKSEL RAPOR */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-gray-900/50 border border-gray-800 p-4 rounded-xl text-center font-mono">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-slate-900/50 border border-slate-800 p-4 rounded-xl text-center font-mono">
                     <div>
-                      <p className="text-[10px] text-gray-500">Maliyet Milyem</p>
+                      <p className="text-[10px] text-slate-500">Maliyet Milyem</p>
                       <p className="text-sm font-bold text-white">{totalCostMilyem.toFixed(4)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-500">Satış Milyem</p>
+                      <p className="text-[10px] text-slate-500">Satış Milyem</p>
                       <p className="text-sm font-bold text-yellow-400">{sellingMilyemNum.toFixed(4)}</p>
                     </div>
                     <div>
@@ -2064,13 +2038,13 @@ export default function StocksPage() {
                       <p className="text-sm font-extrabold text-yellow-400">{sellingHasMultiplier.toFixed(3)} gr</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-500">Maliyet (TL)</p>
+                      <p className="text-[10px] text-slate-500">Maliyet (TL)</p>
                       <p className="text-sm font-bold text-emerald-400">
                         ₺{Math.round(costPriceEstimate).toLocaleString('tr-TR')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-500">Tahmini Satış (TL)</p>
+                      <p className="text-[10px] text-slate-500">Tahmini Satış (TL)</p>
                       <p className="text-sm font-bold text-yellow-500">
                         ₺{Math.round(sellingPriceEstimate).toLocaleString('tr-TR')}
                       </p>
@@ -2079,14 +2053,14 @@ export default function StocksPage() {
                 </div>
 
                 {/* PIRLANTA VE DEĞERLİ TAŞ (4C) BÖLÜMÜ */}
-                <div className="bg-gray-950/40 border border-blue-500/20 p-5 rounded-2xl space-y-4">
+                <div className="bg-slate-950/40 border border-blue-500/20 p-5 rounded-2xl space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={productFormData.isDiamond}
                         onChange={e => setProductFormData({ ...productFormData, isDiamond: e.target.checked })}
-                        className="rounded bg-gray-850 border-gray-750 text-blue-500 focus:ring-0 cursor-pointer w-4 h-4"
+                        className="rounded bg-slate-850 border-slate-750 text-blue-500 focus:ring-0 cursor-pointer w-4 h-4"
                       />
                       <span className="text-xs font-black text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                         <Gem size={14} /> Pırlanta / Değerli Taş Ürünü (4C ve Sertifika)
@@ -2098,7 +2072,7 @@ export default function StocksPage() {
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="space-y-4 pt-3 border-t border-gray-800"
+                      className="space-y-4 pt-3 border-t border-slate-800"
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                         <div>
@@ -2220,7 +2194,7 @@ export default function StocksPage() {
                 )}
 
                 {/* Form Butonları */}
-                <div className="flex gap-3 pt-2 border-t border-gray-800/60">
+                <div className="flex gap-3 pt-2 border-t border-slate-800/60">
                   <button type="submit" disabled={saving} className={`${THEME.BTN_PRIMARY} flex-1 justify-center py-3 text-sm`}>
                     {saving ? 'Ekleniyor...' : 'Takı Kartını Kaydet'}
                   </button>
@@ -2242,10 +2216,10 @@ export default function StocksPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl p-4 sm:p-8 shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
+              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl p-4 sm:p-8 shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
             >
               {/* Modal Başlığı */}
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800/60">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800/60">
                 <div className="flex items-center gap-2">
                   <Pencil className="text-yellow-500" size={22} />
                   <div>
@@ -2261,7 +2235,7 @@ export default function StocksPage() {
               <form onSubmit={handleUpdateProductItem} className="space-y-5">
                 
                 {/* TOPTANCI (SUPPLIER) YÖNETİMİ */}
-                <div className="bg-gray-950/40 border border-gray-850 p-5 rounded-2xl">
+                <div className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl">
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Toptancı Seçimi</label>
                   </div>
@@ -2278,7 +2252,7 @@ export default function StocksPage() {
                 </div>
 
                 {/* KATEGORİ SEÇİMİ */}
-                <div className="bg-gray-950/40 border border-gray-850 p-5 rounded-2xl space-y-4">
+                <div className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Kategori Seçimi</label>
                   </div>
@@ -2351,13 +2325,13 @@ export default function StocksPage() {
                 </div>
 
                 {/* MİLYEM & İŞÇİLİK HESAPLAYICI */}
-                <div className="bg-gray-950/40 border border-gray-850 p-5 rounded-2xl space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-900 border border-gray-800 rounded-xl gap-3">
+                <div className="bg-slate-950/40 border border-slate-850 p-5 rounded-2xl space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-900 border border-slate-800 rounded-xl gap-3">
                     <div>
                       <span className="text-xs font-bold text-white block flex items-center gap-1.5">
                         <Sliders size={14} className="text-yellow-400" /> Kâr / İşçilik Hesaplama Yöntemi
                       </span>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[11px] text-slate-400">
                         {editProductFormData.laborType === 'milyem' 
                           ? 'Milyem bazlı işçilik ekle (Satış Milyemi = Geliş + İşçilik Milyemi)' 
                           : 'Yüzdelik kâr marjı ekle (Satış Milyemi = Geliş × (1 + %Kâr))'}
@@ -2371,7 +2345,7 @@ export default function StocksPage() {
                         profitMargin: '0',
                         laborMilyem: '0.000'
                       }))}
-                      className="flex items-center bg-gray-950 p-1 rounded-xl cursor-pointer border border-gray-800 relative w-56 select-none shrink-0"
+                      className="flex items-center bg-slate-950 p-1 rounded-xl cursor-pointer border border-slate-800 relative w-56 select-none shrink-0"
                     >
                       <div
                         className={`absolute top-1 bottom-1 rounded-lg bg-yellow-500 transition-all duration-200 shadow-md ${
@@ -2379,12 +2353,12 @@ export default function StocksPage() {
                         }`}
                       />
                       <span className={`relative z-10 w-1/2 text-center text-xs font-bold transition-colors ${
-                        editProductFormData.laborType === 'milyem' ? 'text-black font-extrabold' : 'text-gray-400'
+                        editProductFormData.laborType === 'milyem' ? 'text-black font-extrabold' : 'text-slate-400'
                       }`}>
                         Milyem Bazlı
                       </span>
                       <span className={`relative z-10 w-1/2 text-center text-xs font-bold transition-colors ${
-                        editProductFormData.laborType === 'percentage' ? 'text-black font-extrabold' : 'text-gray-400'
+                        editProductFormData.laborType === 'percentage' ? 'text-black font-extrabold' : 'text-slate-400'
                       }`}>
                         Yüzdelik (%)
                       </span>
@@ -2503,7 +2477,7 @@ export default function StocksPage() {
                         placeholder="Örn: 0.931"
                         value={editProductFormData.sellingMilyem}
                         onChange={e => setEditProductFormData({ ...editProductFormData, sellingMilyem: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-gray-900 border-2 border-yellow-500/60 rounded-xl text-yellow-400 font-mono font-bold text-sm focus:outline-none focus:border-yellow-400 shadow-inner"
+                        className="w-full px-3.5 py-2.5 bg-slate-900 border-2 border-yellow-500/60 rounded-xl text-yellow-400 font-mono font-bold text-sm focus:outline-none focus:border-yellow-400 shadow-inner"
                       />
                     </div>
                   </div>
@@ -2545,13 +2519,13 @@ export default function StocksPage() {
                     const eSellTL = (hasPrice?.ask || 0) * eSellHas;
 
                     return (
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-gray-900/50 border border-gray-800 p-4 rounded-xl text-center font-mono">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-slate-900/50 border border-slate-800 p-4 rounded-xl text-center font-mono">
                         <div>
-                          <p className="text-[10px] text-gray-500">Maliyet Milyem</p>
+                          <p className="text-[10px] text-slate-500">Maliyet Milyem</p>
                           <p className="text-sm font-bold text-white">{eCostMil.toFixed(4)}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-500">Satış Milyem</p>
+                          <p className="text-[10px] text-slate-500">Satış Milyem</p>
                           <p className="text-sm font-bold text-yellow-400">{eSellMil.toFixed(4)}</p>
                         </div>
                         <div>
@@ -2559,13 +2533,13 @@ export default function StocksPage() {
                           <p className="text-sm font-extrabold text-yellow-400">{eSellHas.toFixed(3)} gr</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-500">Maliyet (TL)</p>
+                          <p className="text-[10px] text-slate-500">Maliyet (TL)</p>
                           <p className="text-sm font-bold text-emerald-400">
                             ₺{Math.round(eCostTL).toLocaleString('tr-TR')}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-500">Tahmini Satış (TL)</p>
+                          <p className="text-[10px] text-slate-500">Tahmini Satış (TL)</p>
                           <p className="text-sm font-bold text-yellow-500">
                             ₺{Math.round(eSellTL).toLocaleString('tr-TR')}
                           </p>
@@ -2576,14 +2550,14 @@ export default function StocksPage() {
                 </div>
 
                 {/* PIRLANTA VE DEĞERLİ TAŞ (4C) BÖLÜMÜ */}
-                <div className="bg-gray-950/40 border border-blue-500/20 p-5 rounded-2xl space-y-4">
+                <div className="bg-slate-950/40 border border-blue-500/20 p-5 rounded-2xl space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={editProductFormData.isDiamond}
                         onChange={e => setEditProductFormData({ ...editProductFormData, isDiamond: e.target.checked })}
-                        className="rounded bg-gray-850 border-gray-750 text-blue-500 focus:ring-0 cursor-pointer w-4 h-4"
+                        className="rounded bg-slate-850 border-slate-750 text-blue-500 focus:ring-0 cursor-pointer w-4 h-4"
                       />
                       <span className="text-xs font-black text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                         <Gem size={14} /> Pırlanta / Değerli Taş Ürünü (4C ve Sertifika)
@@ -2595,7 +2569,7 @@ export default function StocksPage() {
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="space-y-4 pt-3 border-t border-gray-800"
+                      className="space-y-4 pt-3 border-t border-slate-800"
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                         <div>
@@ -2724,7 +2698,7 @@ export default function StocksPage() {
                 </div>
 
                 {/* Form Butonları */}
-                <div className="flex gap-3 pt-2 border-t border-gray-800/60">
+                <div className="flex gap-3 pt-2 border-t border-slate-800/60">
                   <button type="submit" disabled={saving} className={`${THEME.BTN_PRIMARY} flex-1 justify-center py-3 text-sm`}>
                     {saving ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
                   </button>
@@ -2746,18 +2720,18 @@ export default function StocksPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl"
+              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl"
             >
-              <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+              <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
                 <h3 className="text-base font-bold text-white">Kategorileri Yönet</h3>
-                <button onClick={() => setShowCategoryDialog(false)} className="text-gray-500 hover:text-white">
+                <button onClick={() => setShowCategoryDialog(false)} className="text-slate-500 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
 
               <div className="space-y-4">
                 {/* Kategori Ekleme Formu */}
-                <div className="space-y-2.5 bg-gray-950/40 p-3 rounded-xl border border-gray-850">
+                <div className="space-y-2.5 bg-slate-950/40 p-3 rounded-xl border border-slate-850">
                   <p className="text-xs font-bold text-yellow-500 uppercase">Kategori Ekle</p>
                   <input
                     type="text"
@@ -2784,12 +2758,12 @@ export default function StocksPage() {
 
                 {/* Kategori Listesi */}
                 <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase">Kayıtlı Kategoriler</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase">Kayıtlı Kategoriler</p>
                   {categories.map(c => (
-                    <div key={c.id} className="flex justify-between items-center bg-gray-900 border border-gray-800 p-2.5 rounded-lg">
+                    <div key={c.id} className="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
                       <div>
                         <span className="text-sm font-semibold text-white">{c.name}</span>
-                        <span className="text-[10px] font-bold text-gray-500 bg-gray-950 px-1.5 py-0.5 rounded border border-gray-850 ml-2">{c.code}</span>
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-850 ml-2">{c.code}</span>
                       </div>
                       <button
                         onClick={() => handleDeleteCategory(c.id)}
@@ -2814,21 +2788,21 @@ export default function StocksPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl"
+              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl"
             >
-              <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+              <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
                 <div>
                   <h3 className="text-base font-bold text-white">Alt Kategorileri Yönet</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Kategori: <span className="text-yellow-500 font-bold">{productFormData.category}</span></p>
+                  <p className="text-xs text-slate-500 mt-0.5">Kategori: <span className="text-yellow-500 font-bold">{productFormData.category}</span></p>
                 </div>
-                <button onClick={() => setShowSubCategoryDialog(false)} className="text-gray-500 hover:text-white">
+                <button onClick={() => setShowSubCategoryDialog(false)} className="text-slate-500 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
 
               <div className="space-y-4">
                 {/* Alt Kategori Ekleme Formu */}
-                <div className="space-y-2.5 bg-gray-950/40 p-3 rounded-xl border border-gray-850">
+                <div className="space-y-2.5 bg-slate-950/40 p-3 rounded-xl border border-slate-850">
                   <p className="text-xs font-bold text-purple-400 uppercase">Alt Kategori Ekle</p>
                   <input
                     type="text"
@@ -2851,12 +2825,12 @@ export default function StocksPage() {
 
                 {/* Alt Kategori Listesi */}
                 <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase">Kayıtlı Alt Kategoriler</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase">Kayıtlı Alt Kategoriler</p>
                   {activeSubCategories.length === 0 ? (
-                    <p className="text-xs text-gray-500 italic py-2">Henüz alt kategori eklenmemiş.</p>
+                    <p className="text-xs text-slate-500 italic py-2">Henüz alt kategori eklenmemiş.</p>
                   ) : (
                     activeSubCategories.map((s: any) => (
-                      <div key={s.id} className="flex justify-between items-center bg-gray-900 border border-gray-800 p-2.5 rounded-lg">
+                      <div key={s.id} className="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
                         <span className="text-sm font-semibold text-white">{s.name}</span>
                         <button
                           onClick={() => handleDeleteSubCategory(s.id)}
@@ -2882,18 +2856,18 @@ export default function StocksPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl"
+              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl"
             >
-              <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+              <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
                 <h3 className="text-base font-bold text-white">Toptancıları Yönet</h3>
-                <button onClick={() => setShowSupplierDialog(false)} className="text-gray-500 hover:text-white">
+                <button onClick={() => setShowSupplierDialog(false)} className="text-slate-500 hover:text-white">
                   <X size={18} />
                 </button>
               </div>
 
               <div className="space-y-4">
                 {/* Toptancı Ekleme Formu */}
-                <div className="space-y-2.5 bg-gray-950/40 p-3 rounded-xl border border-gray-850">
+                <div className="space-y-2.5 bg-slate-950/40 p-3 rounded-xl border border-slate-850">
                   <p className="text-xs font-bold text-emerald-400 uppercase">Toptancı Ekle</p>
                   <input
                     type="text"
@@ -2913,12 +2887,12 @@ export default function StocksPage() {
 
                 {/* Toptancı Listesi */}
                 <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                  <p className="text-xs font-bold text-gray-500 uppercase">Kayıtlı Toptancılar</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase">Kayıtlı Toptancılar</p>
                   {suppliers.length === 0 ? (
-                    <p className="text-xs text-gray-500 italic py-2">Henüz toptancı eklenmemiş.</p>
+                    <p className="text-xs text-slate-500 italic py-2">Henüz toptancı eklenmemiş.</p>
                   ) : (
                     suppliers.map(s => (
-                      <div key={s.id} className="flex justify-between items-center bg-gray-900 border border-gray-800 p-2.5 rounded-lg">
+                      <div key={s.id} className="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
                         <span className="text-sm font-semibold text-white">{s.name}</span>
                         <button
                           onClick={() => handleDeleteSupplier(s.id)}

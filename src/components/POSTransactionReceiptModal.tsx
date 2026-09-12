@@ -179,51 +179,51 @@ export default function POSTransactionReceiptModal({
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex justify-center bg-slate-950/60 print:bg-white print:p-0">
             <div
               id="printable-pos-receipt"
-              className={`bg-white text-black p-4 sm:p-6 shadow-xl border border-gray-200 font-mono text-xs leading-tight print:shadow-none print:border-none print:p-2 ${
+              className={`bg-white text-black p-4 sm:p-6 shadow-xl border border-slate-200 font-mono text-xs leading-tight print:shadow-none print:border-none print:p-2 ${
                 is58mm ? 'w-[280px] text-[11px]' : 'w-[360px]'
               }`}
             >
               {/* Mağaza Başlığı */}
-              <div className="text-center pb-3 border-b-2 border-dashed border-gray-400">
+              <div className="text-center pb-3 border-b-2 border-dashed border-slate-400">
                 <h1 className="font-extrabold text-sm sm:text-base tracking-tight uppercase">{storeName}</h1>
-                <p className="text-[10px] text-gray-700 mt-1 font-sans">{storeAddress}</p>
-                <p className="text-[10px] text-gray-700 font-sans">Tel: {storePhone}</p>
+                <p className="text-[10px] text-slate-700 mt-1 font-sans">{storeAddress}</p>
+                <p className="text-[10px] text-slate-700 font-sans">Tel: {storePhone}</p>
                 <div className="mt-2 inline-block px-3 py-0.5 bg-black text-white font-sans font-bold text-[11px] rounded uppercase">
                   {receiptData.isInfoOnly ? 'BİLGİ FİŞİ' : 'SATIŞ İŞLEM FİŞİ'}
                 </div>
               </div>
 
               {/* Fiş Üst Bilgileri */}
-              <div className="py-2.5 border-b border-dashed border-gray-300 text-[11px] space-y-1">
+              <div className="py-2.5 border-b border-dashed border-slate-300 text-[11px] space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Fiş No:</span>
+                  <span className="text-slate-600">Fiş No:</span>
                   <span className="font-bold font-mono">{receiptData.receiptNo}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tarih / Saat:</span>
+                  <span className="text-slate-600">Tarih / Saat:</span>
                   <span className="font-mono">{dateStr}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Kasiyer:</span>
+                  <span className="text-slate-600">Kasiyer:</span>
                   <span className="font-bold">{receiptData.employeeName}</span>
                 </div>
                 {receiptData.customerName && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Müşteri / Not:</span>
+                    <span className="text-slate-600">Müşteri / Not:</span>
                     <span className="font-bold">{receiptData.customerName}</span>
                   </div>
                 )}
               </div>
 
               {/* Ürün Listesi Tablosu */}
-              <div className="py-2 border-b-2 border-dashed border-gray-400">
-                <div className="grid grid-cols-12 font-bold text-[10px] text-gray-600 pb-1 border-b border-gray-300">
+              <div className="py-2 border-b-2 border-dashed border-slate-400">
+                <div className="grid grid-cols-12 font-bold text-[10px] text-slate-600 pb-1 border-b border-slate-300">
                   <span className="col-span-6">ÜRÜN</span>
                   <span className="col-span-2 text-center">ADET</span>
                   <span className="col-span-4 text-right">TUTAR</span>
                 </div>
 
-                <div className="divide-y divide-gray-200 mt-1">
+                <div className="divide-y divide-slate-200 mt-1">
                   {receiptData.items.map((item, idx) => (
                     <div key={idx} className="py-1.5">
                       <div className="grid grid-cols-12 items-center font-bold">
@@ -234,7 +234,7 @@ export default function POSTransactionReceiptModal({
                         </span>
                       </div>
                       {(item.carat || item.weight) && (
-                        <div className="text-[10px] text-gray-500 font-sans">
+                        <div className="text-[10px] text-slate-500 font-sans">
                           {item.carat ? `${item.carat} Ayar` : ''} {item.weight ? `• ${item.weight} gr` : ''}
                         </div>
                       )}
@@ -244,20 +244,20 @@ export default function POSTransactionReceiptModal({
               </div>
 
               {/* Finansal Toplamlar */}
-              <div className="py-2.5 border-b-2 border-dashed border-gray-400 space-y-1 text-[11px]">
-                <div className="flex justify-between text-gray-600">
+              <div className="py-2.5 border-b-2 border-dashed border-slate-400 space-y-1 text-[11px]">
+                <div className="flex justify-between text-slate-600">
                   <span>Ara Toplam:</span>
                   <span className="font-mono">₺{receiptData.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
                 </div>
 
                 {receiptData.feeAmount ? (
-                  <div className="flex justify-between text-gray-600">
+                  <div className="flex justify-between text-slate-600">
                     <span>Kart Komisyonu:</span>
                     <span className="font-mono">₺{receiptData.feeAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
                   </div>
                 ) : null}
 
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-slate-600">
                   <span>Ödeme Türü:</span>
                   <span className="font-bold">{receiptData.paymentMethod}</span>
                 </div>
@@ -269,7 +269,7 @@ export default function POSTransactionReceiptModal({
                   </div>
                 ) : null}
 
-                <div className="flex justify-between font-extrabold text-sm sm:text-base pt-1 border-t border-gray-300">
+                <div className="flex justify-between font-extrabold text-sm sm:text-base pt-1 border-t border-slate-300">
                   <span>GENEL TOPLAM:</span>
                   <span className="font-mono">₺{receiptData.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
                 </div>
@@ -277,9 +277,9 @@ export default function POSTransactionReceiptModal({
 
               {/* Barkod / QR ve Dipnot */}
               <div className="pt-3 text-center space-y-1">
-                <p className="text-[9px] text-gray-500">Mali Değeri Yoktur - Bilgi Fişidir</p>
+                <p className="text-[9px] text-slate-500">Mali Değeri Yoktur - Bilgi Fişidir</p>
                 <p className="text-[10px] font-bold">Bizi Tercih Ettiğiniz İçin Teşekkür Ederiz!</p>
-                <div className="pt-1 flex justify-center text-gray-400">
+                <div className="pt-1 flex justify-center text-slate-400">
                   <span className="font-mono text-[9px]">*{receiptData.receiptNo}*</span>
                 </div>
               </div>

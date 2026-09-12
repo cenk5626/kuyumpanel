@@ -29,7 +29,6 @@ import {
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { THEME, ANIM } from '@/constants/theme';
-import HeaderActions from '@/components/HeaderActions';
 import ReorderDraftModal from '@/components/ReorderDraftModal';
 
 interface SupplierItem {
@@ -130,7 +129,6 @@ export default function DashboardClient({
           <motion.div {...ANIM.FADE_UP} transition={{ duration: ANIM.DURATION.NORMAL }}>
             <h1 className={THEME.HEADER_TITLE}>{MESSAGES.DASHBOARD_TITLE}</h1>
           </motion.div>
-          <HeaderActions />
         </div>
       </header>
 
@@ -155,21 +153,21 @@ export default function DashboardClient({
                   {userName}
                 </span>
               </h2>
-              <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-1 font-medium">
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 font-medium">
                 Güncel piyasa fiyatları, stok durumu, toptancı cari bakiyeleri ve kasa takibi genel özeti.
               </p>
             </div>
 
             {/* ANLIK HAS ALTIN FİYAT TİCKER */}
             {hasPrice && (
-              <div className="bg-white/95 dark:bg-gray-950/70 border border-amber-300/60 dark:border-yellow-500/30 p-4 rounded-2xl flex items-center gap-4 shrink-0 shadow-md shadow-amber-500/5 dark:shadow-lg">
+              <div className="bg-white/95 dark:bg-slate-950/70 border border-amber-300/60 dark:border-yellow-500/30 p-4 rounded-2xl flex items-center gap-4 shrink-0 shadow-md shadow-amber-500/5 dark:shadow-lg">
                 <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-yellow-400">
                   <Coins size={24} className="animate-pulse" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider block">Canlı Has Altın (TL/gr)</span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Canlı Has Altın (TL/gr)</span>
                   <div className="flex items-center gap-3 font-mono mt-0.5">
-                    <span className="text-xs text-slate-600 dark:text-gray-400">Alış: <strong className="text-slate-900 dark:text-white">₺{hasPrice.bid.toFixed(2)}</strong></span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Alış: <strong className="text-slate-900 dark:text-white">₺{hasPrice.bid.toFixed(2)}</strong></span>
                     <span className="text-xs text-amber-700 dark:text-yellow-400 font-bold">Satış: ₺{hasPrice.ask.toFixed(2)}</span>
                   </div>
                 </div>
@@ -180,7 +178,7 @@ export default function DashboardClient({
 
         {/* HIZLI ERİŞİM KISAYOLLARI */}
         <div>
-          <h3 className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
             <Activity size={16} className="text-amber-500" /> Hızlı Erişim Kısayolları
           </h3>
 
@@ -230,7 +228,7 @@ export default function DashboardClient({
                     {criticalStockCount} Ürün
                   </span>
                 </div>
-                <p className="text-xs text-rose-800/80 dark:text-gray-300 mt-0.5 font-medium">
+                <p className="text-xs text-rose-800/80 dark:text-slate-300 mt-0.5 font-medium">
                   Minimum emniyet seviyesinin altına düşen sarrafiye veya altın ürünleri için toptancı ikmal siparişi oluşturulmalıdır.
                 </p>
               </div>
@@ -245,7 +243,7 @@ export default function DashboardClient({
               </button>
               <Link
                 href={ROUTES.STOCKS}
-                className="flex-1 sm:flex-none px-3.5 py-2.5 bg-white dark:bg-gray-900/80 hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white font-bold text-xs rounded-xl border border-slate-300 dark:border-gray-700 text-center transition-colors shadow-xs"
+                className="flex-1 sm:flex-none px-3.5 py-2.5 bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold text-xs rounded-xl border border-slate-300 dark:border-slate-700 text-center transition-colors shadow-xs"
               >
                 Stokları İncele
               </Link>
@@ -272,7 +270,7 @@ export default function DashboardClient({
             </div>
             <p className={THEME.STAT_LABEL}>Stok Altın Miktarı</p>
             <h3 className={THEME.STAT_VALUE}>{totalStockWeight.toFixed(2)} gr</h3>
-            <p className="text-xs text-gray-500 font-mono mt-1">{totalStockCount} adet barkodlu takı ürünü</p>
+            <p className="text-xs text-slate-500 font-mono mt-1">{totalStockCount} adet barkodlu takı ürünü</p>
           </motion.div>
 
           {/* Toptancı Has Borcu Kartı */}
@@ -309,7 +307,7 @@ export default function DashboardClient({
             </div>
             <p className={THEME.STAT_LABEL}>Kullanıcı Sayısı</p>
             <h3 className={THEME.STAT_VALUE}>{totalUsers}</h3>
-            <p className="text-xs text-gray-500 font-mono mt-1">{adminCount} yetkili yönetici hesabı</p>
+            <p className="text-xs text-slate-500 font-mono mt-1">{adminCount} yetkili yönetici hesabı</p>
           </motion.div>
 
           {/* Sistem Durumu Kartı */}
@@ -337,7 +335,7 @@ export default function DashboardClient({
             {...ANIM.FADE_UP}
             className={`${THEME.GLASS_CARD} p-4 sm:p-6 lg:col-span-7 space-y-4`}
           >
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Clock className="text-yellow-400" size={18} /> Son Alış / Satış İşlemleri
               </h3>
@@ -350,14 +348,14 @@ export default function DashboardClient({
             </div>
 
             {recentTransactions.length === 0 ? (
-              <div className="text-center py-10 text-gray-500 text-xs">
+              <div className="text-center py-10 text-slate-500 text-xs">
                 Henüz alış/satış işlemi gerçekleştirilmedi.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-gray-800 text-gray-500 uppercase text-[10px] font-bold">
+                    <tr className="border-b border-slate-800 text-slate-500 uppercase text-[10px] font-bold">
                       <th className="px-3 py-2 text-left">Tarih</th>
                       <th className="px-3 py-2 text-left">İşlem</th>
                       <th className="px-3 py-2 text-left">Ürün Kodu</th>
@@ -370,8 +368,8 @@ export default function DashboardClient({
                     {recentTransactions.map(tx => {
                       const isSell = tx.type === 'sell';
                       return (
-                        <tr key={tx.id} className="border-b border-gray-800/40 hover:bg-yellow-500/5 transition-colors">
-                          <td className="px-3 py-2.5 text-gray-400 font-mono">
+                        <tr key={tx.id} className="border-b border-slate-800/40 hover:bg-yellow-500/5 transition-colors">
+                          <td className="px-3 py-2.5 text-slate-400 font-mono">
                             {new Date(tx.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                           </td>
                           <td className="px-3 py-2.5 font-bold">
@@ -393,7 +391,7 @@ export default function DashboardClient({
                           <td className="px-3 py-2.5 text-right font-mono font-extrabold text-white">
                             ₺{Math.round(tx.total).toLocaleString('tr-TR')}
                           </td>
-                          <td className="px-3 py-2.5 text-right text-gray-400">
+                          <td className="px-3 py-2.5 text-right text-slate-400">
                             {tx.employeeName || '—'}
                           </td>
                         </tr>
@@ -411,7 +409,7 @@ export default function DashboardClient({
             className={`${THEME.GLASS_CARD} p-6 lg:col-span-5 space-y-4 flex flex-col justify-between`}
           >
             <div>
-              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Building2 className="text-yellow-400" size={18} /> Atölye & Toptancı Bakiyeleri Özeti
                 </h3>
@@ -424,7 +422,7 @@ export default function DashboardClient({
               </div>
 
               {suppliers.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-xs">
+                <div className="text-center py-10 text-slate-500 text-xs">
                   Henüz kayıtlı toptancı veya atölye bulunmuyor.
                 </div>
               ) : (
@@ -432,11 +430,11 @@ export default function DashboardClient({
                   {suppliers.map(s => (
                     <div
                       key={s.id}
-                      className="p-3 bg-gray-950/60 border border-gray-800/80 rounded-xl flex items-center justify-between"
+                      className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl flex items-center justify-between"
                     >
                       <div>
                         <span className="font-bold text-xs text-white block">{s.name}</span>
-                        <span className="text-[10px] text-gray-400">{s.phone || 'Telefon yok'}</span>
+                        <span className="text-[10px] text-slate-400">{s.phone || 'Telefon yok'}</span>
                       </div>
 
                       <div className="text-right font-mono">
@@ -456,8 +454,8 @@ export default function DashboardClient({
             </div>
 
             {/* ALT TOPTANCI ÖZET BARI */}
-            <div className="pt-3 border-t border-gray-800 flex items-center justify-between text-xs font-mono">
-              <span className="text-gray-400">Toplam Atölye Has Borcu:</span>
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+              <span className="text-slate-400">Toplam Atölye Has Borcu:</span>
               <span className="font-extrabold text-amber-400 text-sm">
                 {totalSupplierHasBalance.toFixed(3)} gr Has
               </span>

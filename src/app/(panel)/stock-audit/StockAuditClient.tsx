@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
-import HeaderActions from '@/components/HeaderActions';
 
 interface InventoryProduct {
   id: string;
@@ -197,7 +196,7 @@ export default function StockAuditClient() {
             </div>
             <div>
               <h1 className={THEME.HEADER_TITLE}>{MESSAGES.AUDIT_TITLE}</h1>
-              <p className="text-gray-400 text-xs mt-0.5">{MESSAGES.AUDIT_SUBTITLE}</p>
+              <p className="text-slate-400 text-xs mt-0.5">{MESSAGES.AUDIT_SUBTITLE}</p>
             </div>
           </div>
 
@@ -208,7 +207,6 @@ export default function StockAuditClient() {
             >
               <Printer size={14} /> Yazdır
             </button>
-            <HeaderActions />
           </div>
         </div>
       </header>
@@ -217,13 +215,13 @@ export default function StockAuditClient() {
         {/* ─── KAPSAM VE KATEGORİ SEÇİMİ ─── */}
         <div className={`${THEME.GLASS_CARD} p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4`}>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mr-2">Sayım Kapsamı:</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">Sayım Kapsamı:</span>
             <button
               onClick={() => handleCategoryChange('ALL')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 selectedCategory === 'ALL'
-                  ? 'bg-yellow-500 text-gray-950 shadow-md shadow-yellow-500/20'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-yellow-500 text-slate-950 shadow-md shadow-yellow-500/20'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
               Tüm Vitrin ({expectedInventory.length})
@@ -235,8 +233,8 @@ export default function StockAuditClient() {
                 onClick={() => handleCategoryChange(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   selectedCategory === cat
-                    ? 'bg-yellow-500 text-gray-950 shadow-md shadow-yellow-500/20'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-yellow-500 text-slate-950 shadow-md shadow-yellow-500/20'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
                 {cat}
@@ -248,7 +246,7 @@ export default function StockAuditClient() {
             <button
               onClick={handleSaveAudit}
               disabled={saving || scannedBarcodes.length === 0}
-              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-gray-950 font-black text-xs rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-black text-xs rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
             >
               <CheckCircle2 size={16} />
               {saving ? 'Kaydediliyor...' : 'Sayımı Onayla & Kaydet'}
@@ -257,7 +255,7 @@ export default function StockAuditClient() {
         </div>
 
         {/* ─── CANLI SAYIM & BARKOD TARAYICI GİRİŞİ ─── */}
-        <div className={`${THEME.GLASS_CARD} p-6 border-2 border-yellow-500/30 bg-gradient-to-r from-gray-950 via-gray-900 to-yellow-950/10`}>
+        <div className={`${THEME.GLASS_CARD} p-6 border-2 border-yellow-500/30 bg-gradient-to-r from-slate-950 via-slate-900 to-yellow-950/10`}>
           <form onSubmit={handleBarcodeSubmit} className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <ScanBarcode size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-yellow-400" />
@@ -268,12 +266,12 @@ export default function StockAuditClient() {
                 placeholder="Barkod okutunuz veya yazıp Enter'a basınız..."
                 value={barcodeInput}
                 onChange={(e) => setBarcodeInput(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-gray-950 border border-yellow-500/40 rounded-2xl text-white font-mono font-bold text-base sm:text-lg focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 shadow-inner"
+                className="w-full pl-12 pr-4 py-3.5 bg-slate-950 border border-yellow-500/40 rounded-2xl text-white font-mono font-bold text-base sm:text-lg focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 shadow-inner"
               />
             </div>
             <button
               type="submit"
-              className="px-6 py-3.5 bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md shadow-yellow-500/20 shrink-0"
+              className="px-6 py-3.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-sm rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md shadow-yellow-500/20 shrink-0"
             >
               <ScanBarcode size={18} /> Okut
             </button>
@@ -286,7 +284,7 @@ export default function StockAuditClient() {
           <div className={`${THEME.STAT_CARD} border-l-4 border-l-blue-500`}>
             <span className={THEME.STAT_LABEL}>Vitrinde Olması Gereken</span>
             <h3 className={THEME.STAT_VALUE}>{expectedInventory.length} Adet</h3>
-            <p className="text-xs text-gray-500 font-mono mt-1">{expectedWeight.toFixed(2)} gr Toplam</p>
+            <p className="text-xs text-slate-500 font-mono mt-1">{expectedWeight.toFixed(2)} gr Toplam</p>
           </div>
 
           {/* Fiilen Sayılan */}
@@ -301,7 +299,7 @@ export default function StockAuditClient() {
           {/* Eksik / Kayıp Şüphesi */}
           <div className={`${THEME.STAT_CARD} border-l-4 border-l-red-500 bg-red-500/[0.02]`}>
             <span className={THEME.STAT_LABEL}>Eksik / Kayıp Şüphesi</span>
-            <h3 className={`text-2xl sm:text-3xl font-black font-mono ${missingList.length > 0 ? 'text-red-400 animate-pulse' : 'text-gray-400'}`}>
+            <h3 className={`text-2xl sm:text-3xl font-black font-mono ${missingList.length > 0 ? 'text-red-400 animate-pulse' : 'text-slate-400'}`}>
               {missingList.length} Adet
             </h3>
             <p className="text-xs text-red-400 font-mono mt-1">
@@ -315,20 +313,20 @@ export default function StockAuditClient() {
             <h3 className="text-2xl sm:text-3xl font-black text-white font-mono">
               {weightDiff > 0 ? `+${weightDiff}` : weightDiff} gr
             </h3>
-            <p className="text-xs text-gray-500 font-mono mt-1">
+            <p className="text-xs text-slate-500 font-mono mt-1">
               {weightDiff === 0 ? 'Tam mutabakat' : weightDiff < 0 ? 'Gramaj eksiği var' : 'Fazla gramaj'}
             </p>
           </div>
         </div>
 
         {/* ─── SEKMELİ DETAY TABLOSU ─── */}
-        <div className="flex gap-2 border-b border-gray-800 pb-2">
+        <div className="flex gap-2 border-b border-slate-800 pb-2">
           <button
             onClick={() => setActiveTab('counting')}
             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'counting'
-                ? 'bg-yellow-500 text-gray-950'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-yellow-500 text-slate-950'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             Aktif Sayım Akışı ({scannedBarcodes.length})
@@ -348,7 +346,7 @@ export default function StockAuditClient() {
             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'counted'
                 ? 'bg-emerald-600 text-white'
-                : 'text-gray-400 hover:text-white'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             Eşleşen Ürünler ({countedList.length})
@@ -358,7 +356,7 @@ export default function StockAuditClient() {
             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'history'
                 ? 'bg-purple-600 text-white'
-                : 'text-gray-400 hover:text-white'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             <History size={14} className="inline mr-1" /> Geçmiş Sayım Raporları ({pastSessions.length})
@@ -368,8 +366,8 @@ export default function StockAuditClient() {
         {/* TAB 1: AKTİF BARKOD AKIŞI */}
         {activeTab === 'counting' && (
           <div className={`${THEME.GLASS_CARD} overflow-hidden`}>
-            <div className="p-4 border-b border-gray-800 flex justify-between items-center">
-              <span className="text-xs font-bold text-gray-400">Son Okutulan Barkodlar</span>
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+              <span className="text-xs font-bold text-slate-400">Son Okutulan Barkodlar</span>
               {scannedBarcodes.length > 0 && (
                 <button
                   onClick={() => setScannedBarcodes([])}
@@ -381,7 +379,7 @@ export default function StockAuditClient() {
             </div>
 
             {scannedBarcodes.length === 0 ? (
-              <div className="p-12 text-center text-gray-500 text-xs">
+              <div className="p-12 text-center text-slate-500 text-xs">
                 Barkod tabancası ile ürünleri peş peşe okutmaya başlayınız.
               </div>
             ) : (
@@ -439,13 +437,13 @@ export default function StockAuditClient() {
                   </thead>
                   <tbody>
                     {missingList.map((p) => (
-                      <tr key={p.id} className="border-b border-gray-800/40 bg-red-500/[0.02] hover:bg-red-500/[0.06]">
+                      <tr key={p.id} className="border-b border-slate-800/40 bg-red-500/[0.02] hover:bg-red-500/[0.06]">
                         <td className="px-4 py-3 font-mono font-black text-red-400">{p.barcode}</td>
                         <td className="px-4 py-3 font-bold text-white">{p.title || p.category}</td>
-                        <td className="px-4 py-3 text-gray-400">{p.category} / {p.subType || '-'}</td>
+                        <td className="px-4 py-3 text-slate-400">{p.category} / {p.subType || '-'}</td>
                         <td className="px-4 py-3 font-mono text-yellow-500">{p.carat}K</td>
                         <td className="px-4 py-3 font-mono font-bold text-white">{p.weight} gr</td>
-                        <td className="px-4 py-3 font-mono text-gray-400">₺{(p.costPrice || 0).toLocaleString('tr-TR')}</td>
+                        <td className="px-4 py-3 font-mono text-slate-400">₺{(p.costPrice || 0).toLocaleString('tr-TR')}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -471,10 +469,10 @@ export default function StockAuditClient() {
                 </thead>
                 <tbody>
                   {countedList.map((p) => (
-                    <tr key={p.id} className="border-b border-gray-800/40 hover:bg-yellow-500/5">
+                    <tr key={p.id} className="border-b border-slate-800/40 hover:bg-yellow-500/5">
                       <td className="px-4 py-3 font-mono font-black text-emerald-400">{p.barcode}</td>
                       <td className="px-4 py-3 font-bold text-white">{p.title || p.category}</td>
-                      <td className="px-4 py-3 text-gray-400">{p.category}</td>
+                      <td className="px-4 py-3 text-slate-400">{p.category}</td>
                       <td className="px-4 py-3 font-mono text-yellow-500">{p.carat}K</td>
                       <td className="px-4 py-3 font-mono font-bold text-white">{p.weight} gr</td>
                     </tr>
@@ -492,30 +490,30 @@ export default function StockAuditClient() {
               <div key={session.id} className={`${THEME.GLASS_CARD} p-5 space-y-3`}>
                 <div className="flex justify-between items-center">
                   <span className="font-mono font-black text-yellow-400 text-sm">{session.sessionNumber}</span>
-                  <span className="text-[10px] text-gray-500 font-mono">
+                  <span className="text-[10px] text-slate-500 font-mono">
                     {new Date(session.createdAt).toLocaleString('tr-TR')}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-xs bg-gray-950/60 p-3 rounded-xl border border-gray-800">
+                <div className="grid grid-cols-3 gap-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800">
                   <div>
-                    <span className="text-gray-500 block text-[10px]">Beklenen:</span>
+                    <span className="text-slate-500 block text-[10px]">Beklenen:</span>
                     <span className="font-bold text-white">{session.totalExpected} adet</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block text-[10px]">Sayılan:</span>
+                    <span className="text-slate-500 block text-[10px]">Sayılan:</span>
                     <span className="font-bold text-emerald-400">{session.totalCounted} adet</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block text-[10px]">Eksik:</span>
-                    <span className={`font-bold ${session.totalMissing > 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                    <span className="text-slate-500 block text-[10px]">Eksik:</span>
+                    <span className={`font-bold ${session.totalMissing > 0 ? 'text-red-400' : 'text-slate-400'}`}>
                       {session.totalMissing} adet
                     </span>
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-400">{session.notes}</p>
-                <div className="text-[10px] text-gray-500">Sayımı Yapan: {session.auditedBy}</div>
+                <p className="text-xs text-slate-400">{session.notes}</p>
+                <div className="text-[10px] text-slate-500">Sayımı Yapan: {session.auditedBy}</div>
               </div>
             ))}
           </div>

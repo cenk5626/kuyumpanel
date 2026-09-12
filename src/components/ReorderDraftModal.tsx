@@ -139,10 +139,10 @@ export default function ReorderDraftModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <motion.div
           {...ANIM.SCALE_UP}
-          className="w-full max-w-3xl bg-gray-900 border border-yellow-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+          className="w-full max-w-3xl bg-slate-900 border border-yellow-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
         >
           {/* MODAL BAŞLIĞI */}
-          <div className="px-6 py-4 bg-gray-950 border-b border-gray-800 flex items-center justify-between">
+          <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-400">
                 <Truck size={22} />
@@ -154,7 +154,7 @@ export default function ReorderDraftModal({
                     {items.length} Kritik Kalem
                   </span>
                 </h3>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-slate-400">
                   Minimum eşik altına düşen sarrafiye ve ziynet stokları için otomatik ikmal siparişi
                 </p>
               </div>
@@ -165,13 +165,13 @@ export default function ReorderDraftModal({
                 onClick={fetchReorderDraft}
                 disabled={loading}
                 title="Yenile"
-                className="p-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors disabled:opacity-50"
+                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 transition-colors disabled:opacity-50"
               >
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               </button>
               <button
                 onClick={onClose}
-                className="p-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 hover:text-white transition-colors"
+                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 hover:text-white transition-colors"
               >
                 <X size={18} />
               </button>
@@ -181,9 +181,9 @@ export default function ReorderDraftModal({
           {/* MODAL GÖVDESİ */}
           <div className="p-6 overflow-y-auto space-y-6 flex-1">
             {/* TEDARİKÇİ BİLGİ FORMU */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-950/60 rounded-2xl border border-gray-800/80">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-950/60 rounded-2xl border border-slate-800/80">
               <div>
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
                   <Building size={13} className="text-yellow-500" /> Tedarikçi / Atölye Adı
                 </label>
                 <input
@@ -191,12 +191,12 @@ export default function ReorderDraftModal({
                   value={supplierName}
                   onChange={(e) => setSupplierName(e.target.value)}
                   placeholder="Örn: Kapalıçarşı Darphane, Ahlatçı..."
-                  className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-yellow-500/50"
+                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-yellow-500/50"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
                   <Phone size={13} className="text-emerald-400" /> WhatsApp Telefon Numarası
                 </label>
                 <input
@@ -204,20 +204,20 @@ export default function ReorderDraftModal({
                   value={supplierPhone}
                   onChange={(e) => setSupplierPhone(e.target.value)}
                   placeholder="0532 123 45 67 (İsteğe bağlı)"
-                  className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-yellow-500/50"
+                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-yellow-500/50"
                 />
               </div>
             </div>
 
             {/* SİPARİŞ KALEMLERİ TABLOSU */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-400 px-2 uppercase tracking-wider">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 px-2 uppercase tracking-wider">
                 <span>Ürün & Mevcut Durum</span>
                 <span>Önerilen Sipariş Miktarı</span>
               </div>
 
               {loading ? (
-                <div className="p-8 text-center text-gray-400 text-xs">
+                <div className="p-8 text-center text-slate-400 text-xs">
                   Kritik stok verileri taranıyor...
                 </div>
               ) : items.length === 0 ? (
@@ -229,17 +229,17 @@ export default function ReorderDraftModal({
                   {items.map((item) => (
                     <div
                       key={item.productCode}
-                      className="p-4 bg-gray-950/70 hover:bg-gray-950 border border-gray-800/80 rounded-2xl flex items-center justify-between gap-4 transition-colors"
+                      className="p-4 bg-slate-950/70 hover:bg-slate-950 border border-slate-800/80 rounded-2xl flex items-center justify-between gap-4 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <h4 className="text-sm font-bold text-white truncate">{item.label}</h4>
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300">
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
                             {item.productCode}
                           </span>
                           <CriticalStockBadge amount={item.currentAmount} minThreshold={item.minThreshold} size="sm" />
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-400 font-mono">
+                        <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
                           <span>Mevcut: <strong className="text-white">{item.currentAmount}</strong> {item.unit}</span>
                           <span>•</span>
                           <span>Kritik Eşik: <strong className="text-amber-400">{item.minThreshold}</strong></span>
@@ -256,7 +256,7 @@ export default function ReorderDraftModal({
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           onClick={() => handleUpdateQuantity(item.productCode, -1)}
-                          className="w-8 h-8 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
+                          className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
                         >
                           <Minus size={14} />
                         </button>
@@ -265,7 +265,7 @@ export default function ReorderDraftModal({
                         </span>
                         <button
                           onClick={() => handleUpdateQuantity(item.productCode, 1)}
-                          className="w-8 h-8 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
+                          className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
                         >
                           <Plus size={14} />
                         </button>
@@ -273,7 +273,7 @@ export default function ReorderDraftModal({
                         <button
                           onClick={() => handleRemoveItem(item.productCode)}
                           title="Listeden Çıkar"
-                          className="p-2 text-gray-500 hover:text-red-400 rounded-xl transition-colors ml-1"
+                          className="p-2 text-slate-500 hover:text-red-400 rounded-xl transition-colors ml-1"
                         >
                           <X size={16} />
                         </button>
@@ -286,7 +286,7 @@ export default function ReorderDraftModal({
 
             {/* SİPARİŞ NOTU */}
             <div>
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
                 Sipariş Ek Notu (Opsiyonel)
               </label>
               <textarea
@@ -294,14 +294,14 @@ export default function ReorderDraftModal({
                 value={orderNote}
                 onChange={(e) => setOrderNote(e.target.value)}
                 placeholder="Örn: Acil teslimat rica olunur, yeni tarihli çeyrekler tercih edilir..."
-                className="w-full px-3.5 py-2.5 bg-gray-950/60 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-yellow-500/50"
+                className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-yellow-500/50"
               />
             </div>
           </div>
 
           {/* MODAL ALTI AKSİYONLAR */}
-          <div className="px-6 py-4 bg-gray-950 border-t border-gray-800 flex items-center justify-between gap-4 flex-wrap">
-            <div className="text-xs text-gray-400">
+          <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+            <div className="text-xs text-slate-400">
               Toplam: <strong className="text-white text-sm">{items.length}</strong> kalem /{' '}
               <strong className="text-yellow-400 text-sm">{totalQuantity}</strong> adet
             </div>
@@ -310,7 +310,7 @@ export default function ReorderDraftModal({
               <button
                 onClick={handlePrintReorderList}
                 disabled={items.length === 0}
-                className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-colors disabled:opacity-40"
+                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-colors disabled:opacity-40"
               >
                 <Printer size={15} /> Yazdır / PDF
               </button>

@@ -52,6 +52,12 @@ import { registerF37OmnichannelEcommerceTests } from './tier1/f37_omnichannel_ec
 import { registerF38ComplianceMasakAmlTests } from './tier1/f38_compliance_masak_aml.test';
 import { registerF39OpenBankingPosSettlementTests } from './tier1/f39_open_banking_pos_settlement.test';
 import { registerF40UserPagePermissionsTests } from './tier1/f40_user_page_permissions.test';
+import { registerF41HistoryRatesTests } from './tier1/f41_history_rates.test';
+import { registerF42PurchaseOrderWhatsAppTests } from './tier1/f42_purchase_order_whatsapp.test';
+import { registerF43BusinessBankAccountsTests } from './tier1/f43_business_bank_accounts.test';
+import { registerF44CustomerIdentityVaultTests } from './tier1/f44_customer_identity_vault.test';
+import { registerF45JewelerNotebookTests } from './tier1/f45_jeweler_notebook.test';
+import { registerF46ServiceRepairExtendedTests } from './tier1/f46_service_repair_extended.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -106,6 +112,12 @@ const FEATURE_NAMES: Record<number, string> = {
   38: 'MASAK & AML Compliance Management',
   39: 'Open Banking & POS Settlement Reconciliation',
   40: 'Granular Page Authorization & User Permissions',
+  41: 'Geçmiş Kurlar ve Milyem Geçmişi',
+  42: 'Toptancı Sipariş Takibi ve WhatsApp İletimi',
+  43: 'İşletme IBAN Kayıt Yönetimi',
+  44: 'Müşteri Kimlik Havuzu (TCKN Vault)',
+  45: 'Kuyumcu Defteri ve Operasyon Notları',
+  46: 'Servis ve Tamirat Fotoğraf & Fiş Takibi',
 };
 
 async function main() {
@@ -156,6 +168,12 @@ async function main() {
   registerF38ComplianceMasakAmlTests();
   registerF39OpenBankingPosSettlementTests();
   registerF40UserPagePermissionsTests();
+  registerF41HistoryRatesTests();
+  registerF42PurchaseOrderWhatsAppTests();
+  registerF43BusinessBankAccountsTests();
+  registerF44CustomerIdentityVaultTests();
+  registerF45JewelerNotebookTests();
+  registerF46ServiceRepairExtendedTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();
@@ -185,7 +203,7 @@ async function main() {
 
   // Group by Feature
   const featureMatrix: Record<number, { featureName: string; tier1: number; tier2: number; tier3: number; tier4: number; passed: boolean }> = {};
-  for (let i = 1; i <= 39; i++) {
+  for (let i = 1; i <= 46; i++) {
     featureMatrix[i] = {
       featureName: FEATURE_NAMES[i] || `Feature ${i}`,
       tier1: 0,
@@ -253,10 +271,10 @@ async function main() {
   }
 
   console.log('-'.repeat(80));
-  console.log('FEATURE MATRIX COVERAGE (All 27 Features):');
+  console.log('FEATURE MATRIX COVERAGE (All 46 Features):');
   console.log('ID | Feature Name                                | T1 | T2 | T3 | T4 | Status');
   console.log('---+---------------------------------------------+----+----+----+----+-------');
-  for (let i = 1; i <= 27; i++) {
+  for (let i = 1; i <= 46; i++) {
     const f = featureMatrix[i];
     const idStr = String(i).padStart(2);
     const nameStr = f.featureName.padEnd(43);

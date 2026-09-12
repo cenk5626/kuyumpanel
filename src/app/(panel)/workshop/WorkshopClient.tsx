@@ -39,6 +39,9 @@ import {
   CUSTOMER_DEPOSIT_STATUS_LABELS,
 } from '@/constants/workshop';
 import ScaleButton from '@/components/ScaleButton';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
 import { calculateTakozMilyem, calculateWorkshopLoss } from '@/lib/workshop/takoz-calculator';
 
 interface WorkshopJobRecord {
@@ -440,138 +443,100 @@ export default function WorkshopClient({
     : null;
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1920px] mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Üst Başlık */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-amber-500/20 pb-5">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            <Flame className="w-6 h-6" />
+      <PageHeader
+        title="Hurda Sandığı, Takoz & Atölye Ramat Takibi"
+        subtitle="Pota eritme ağırlıklı ortalama milyem formülü, atölye fire limitleri ve Cetasoft karşılaştırmalı emanet kasası."
+        icon={<Flame className="w-6 h-6 text-amber-500" />}
+        badges={
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            Ramat & Pota Motoru
+          </span>
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            {activeTab === 'workshop' && (
+              <button
+                onClick={() => setIsNewJobModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-500/20 min-h-[44px]"
+              >
+                <Plus className="w-4 h-4" /> Yeni İş Emri Aç
+              </button>
+            )}
+            {activeTab === 'emanet' && (
+              <button
+                onClick={() => setIsDepositModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-500/20 min-h-[44px]"
+              >
+                <Plus className="w-4 h-4" /> Emanet Altın Al
+              </button>
+            )}
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Hurda Sandığı, Takoz & Atölye Ramat Takibi
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Pota eritme ağırlıklı ortalama milyem formülü, atölye fire limitleri ve Cetasoft karşılaştırmalı emanet kasası.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {activeTab === 'workshop' && (
-            <button
-              onClick={() => setIsNewJobModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-500/20"
-            >
-              <Plus className="w-4 h-4" /> Yeni İş Emri Aç
-            </button>
-          )}
-          {activeTab === 'emanet' && (
-            <button
-              onClick={() => setIsDepositModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-500/20"
-            >
-              <Plus className="w-4 h-4" /> Emanet Altın Al
-            </button>
-          )}
-        </div>
-      </div>
+        }
+      />
 
       {/* KPI İstatistik Kartları */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Sandıktaki Hurda</span>
-            <Coins className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono">
-            {totalScrapGross.toFixed(2)} gr
-          </div>
-          <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-semibold">
-            Has Karşılığı: {totalScrapPure.toFixed(3)} gr
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Atölyede Üretimde</span>
-            <Hammer className="w-4 h-4 text-blue-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 font-mono">
-            {activeJobs.length} İş Emri
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Verilen: {activeJobsWeight.toFixed(2)} gr Altın</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Azami Fire Toleransı</span>
-            <Percent className="w-4 h-4 text-purple-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400 font-mono">
-            %{WORKSHOP_LIMITS.DEFAULT_MAX_FIRE_PERCENT}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">%{WORKSHOP_LIMITS.CRITICAL_FIRE_PERCENT} üstü kritik şüpheli</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Müşteri Emanet Kasası</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-            {totalEmanetGold.toFixed(3)} gr Has
-          </div>
-          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">Cetasoft Entegrasyonu</div>
-        </div>
+        <StatCard
+          title="Sandıktaki Hurda"
+          value={`${totalScrapGross.toFixed(2)} gr`}
+          subtitle={`Has Karşılığı: ${totalScrapPure.toFixed(3)} gr`}
+          icon={Coins}
+          iconColor="gold"
+        />
+        <StatCard
+          title="Atölyede Üretimde"
+          value={`${activeJobs.length} İş Emri`}
+          subtitle={`Verilen: ${activeJobsWeight.toFixed(2)} gr Altın`}
+          icon={Hammer}
+          iconColor="blue"
+        />
+        <StatCard
+          title="Azami Fire Toleransı"
+          value={`%${WORKSHOP_LIMITS.DEFAULT_MAX_FIRE_PERCENT}`}
+          subtitle={`%${WORKSHOP_LIMITS.CRITICAL_FIRE_PERCENT} üstü kritik şüpheli`}
+          icon={Percent}
+          iconColor="purple"
+        />
+        <StatCard
+          title="Müşteri Emanet Kasası"
+          value={`${totalEmanetGold.toFixed(3)} gr Has`}
+          subtitle="Cetasoft Entegrasyonu"
+          icon={ShieldCheck}
+          iconColor="emerald"
+        />
       </div>
 
       {/* Tab Seçici */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-amber-500/20 rounded-2xl w-full sm:w-fit">
-        <button
-          onClick={() => setActiveTab('workshop')}
-          className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'workshop'
-              ? 'bg-amber-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Hammer className="w-4 h-4" /> Atölye İş Emirleri & Ramat ({jobs.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('scrap')}
-          className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'scrap'
-              ? 'bg-amber-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Layers className="w-4 h-4" /> Hurda Sandığı (Ayar Bazlı)
-        </button>
-
-        <button
-          onClick={() => setActiveTab('takoz')}
-          className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'takoz'
-              ? 'bg-amber-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Flame className="w-4 h-4" /> Pota Takoz Hesaplayıcı
-        </button>
-
-        <button
-          onClick={() => setActiveTab('emanet')}
-          className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === 'emanet'
-              ? 'bg-amber-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <UserCheck className="w-4 h-4" /> Emanet Altın Kasası ({deposits.length})
-        </button>
-      </div>
+      <LuxuryTabs<'workshop' | 'scrap' | 'takoz' | 'emanet'>
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          {
+            id: 'workshop',
+            label: 'Atölye İş Emirleri & Ramat',
+            icon: <Hammer className="w-4 h-4" />,
+            count: jobs.length,
+          },
+          {
+            id: 'scrap',
+            label: 'Hurda Sandığı (Ayar Bazlı)',
+            icon: <Layers className="w-4 h-4" />,
+          },
+          {
+            id: 'takoz',
+            label: 'Pota Takoz Hesaplayıcı',
+            icon: <Flame className="w-4 h-4" />,
+          },
+          {
+            id: 'emanet',
+            label: 'Emanet Altın Kasası',
+            icon: <UserCheck className="w-4 h-4" />,
+            count: deposits.length,
+          },
+        ]}
+      />
 
       {/* TAB 1: ATÖLYE İŞ EMİRLERİ & RAMAT (FİRE) */}
       {activeTab === 'workshop' && (

@@ -31,6 +31,9 @@ import {
   INSTALLMENT_DEFAULTS,
 } from '@/constants/installment';
 import { PAYMENT_METHODS } from '@/constants/kasa';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
 
 interface InstallmentItem {
   id: string;
@@ -121,6 +124,18 @@ export default function InstallmentsClient({
   const [newNotes, setNewNotes] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
+  const today = new Date();
+
+  // Gecikmedeki senet sayısı (vadesi geçmiş ve henüz tam ödenmemiş)
+  let overdueItemsCount = 0;
+  for (const p of plans) {
+    for (const it of p.items) {
+      if (new Date(it.dueDate) < today && it.status !== INSTALLMENT_STATUS.PAID) {
+        overdueItemsCount++;
+      }
+    }
+  }
+
   // Filtreleme
   const filteredPlans = plans.filter((p) => {
     const matchesSearch =
@@ -128,7 +143,16 @@ export default function InstallmentsClient({
       p.planNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.customer.phone && p.customer.phone.includes(searchQuery));
 
-    const matchesStatus = statusFilter === 'ALL' || p.status === statusFilter;
+    let matchesStatus = true;
+    if (statusFilter === 'ALL') {
+      matchesStatus = true;
+    } else if (statusFilter === 'OVERDUE') {
+      matchesStatus = p.items.some(
+        (it) => new Date(it.dueDate) < today && it.status !== INSTALLMENT_STATUS.PAID
+      );
+    } else {
+      matchesStatus = p.status === statusFilter;
+    }
     return matchesSearch && matchesStatus;
   });
 
@@ -139,17 +163,6 @@ export default function InstallmentsClient({
     return s + p.downPayment + itemsPaid;
   }, 0);
   const totalRemainingDebt = Math.max(0, totalSalesAmount - totalPaidAmount);
-
-  // Gecikmedeki senet sayısı (vadesi geçmiş ve henüz tam ödenmemiş)
-  const today = new Date();
-  let overdueItemsCount = 0;
-  for (const p of plans) {
-    for (const it of p.items) {
-      if (new Date(it.dueDate) < today && it.status !== INSTALLMENT_STATUS.PAID) {
-        overdueItemsCount++;
-      }
-    }
-  }
 
   // Tahsilat Açma
   const openPayModal = (plan: InstallmentPlanRecord, item: InstallmentItem) => {
@@ -272,102 +285,93 @@ export default function InstallmentsClient({
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1920px] mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Başlık & Üst Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-amber-500/20 pb-5">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            <CalendarClock className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Taksitli Satış, Senet & Vade Hatırlatıcı
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Türk Ticaret Kanunu (TTK) uyumlu matbu senetler, WhatsApp otomatik vade bildirimleri ve taksit tahsilatı.
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setIsNewPlanModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Yeni Taksit Planı Oluştur</span>
-        </button>
-      </div>
+      <PageHeader
+        title="Taksitli Satış, Senet & Vade Hatırlatıcı"
+        subtitle="Türk Ticaret Kanunu (TTK) uyumlu matbu senetler, WhatsApp otomatik vade bildirimleri ve taksit tahsilatı."
+        icon={<CalendarClock className="w-6 h-6 text-amber-500" />}
+        badges={
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            TTK Uyumlu Senet
+          </span>
+        }
+        actions={
+          <button
+            onClick={() => setIsNewPlanModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all text-sm min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Yeni Taksit Planı Oluştur</span>
+          </button>
+        }
+      />
 
       {/* KPI İstatistik Kartları */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Toplam Taksitli Satış</span>
-            <Banknote className="w-4 h-4 text-blue-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono">
-            {totalSalesAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">{plans.length} Plan Açıldı</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Tahsil Edilen Tutar</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-            {totalPaidAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺
-          </div>
-          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">Peşinat + Taksitler</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Kalan Açık Senet Alacağı</span>
-            <Clock className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
-            {totalRemainingDebt.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">Ödenmesi Beklenen</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">
-            <span>Gecikmedeki Senetler</span>
-            <AlertTriangle className="w-4 h-4 text-rose-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">
-            {overdueItemsCount} Adet
-          </div>
-          <div className="text-[10px] text-rose-600 dark:text-rose-400 mt-1 font-semibold">Vadesi Geçen Taksitler</div>
-        </div>
+        <StatCard
+          label="Toplam Taksitli Satış"
+          value={`${totalSalesAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺`}
+          subtitle={`${plans.length} Plan Açıldı`}
+          icon={<Banknote className="w-5 h-5 text-blue-500" />}
+        />
+        <StatCard
+          label="Tahsil Edilen Tutar"
+          value={`${totalPaidAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺`}
+          subtitle="Peşinat + Taksitler"
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+        />
+        <StatCard
+          label="Kalan Açık Senet Alacağı"
+          value={`${totalRemainingDebt.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} ₺`}
+          subtitle="Ödenmesi Beklenen"
+          icon={<Clock className="w-5 h-5 text-amber-500" />}
+        />
+        <StatCard
+          label="Gecikmedeki Senetler"
+          value={`${overdueItemsCount} Adet`}
+          subtitle="Vadesi Geçen Taksitler"
+          icon={<AlertTriangle className="w-5 h-5 text-rose-500" />}
+        />
       </div>
 
+      {/* LuxuryTabs Segment Kontrolü */}
+      <LuxuryTabs
+        tabs={[
+          { id: 'ALL', label: 'Tüm Planlar', count: plans.length },
+          {
+            id: INSTALLMENT_STATUS.PENDING,
+            label: 'Devam Eden / Açık',
+            count: plans.filter((p) => p.status === INSTALLMENT_STATUS.PENDING).length,
+          },
+          {
+            id: 'OVERDUE',
+            label: 'Gecikmedeki Senetler',
+            count: plans.filter((p) =>
+              p.items.some((it) => new Date(it.dueDate) < today && it.status !== INSTALLMENT_STATUS.PAID)
+            ).length,
+          },
+          {
+            id: INSTALLMENT_STATUS.PAID,
+            label: 'Tamamlanan',
+            count: plans.filter((p) => p.status === INSTALLMENT_STATUS.PAID).length,
+          },
+        ]}
+        activeTab={statusFilter}
+        onChange={setStatusFilter}
+      />
+
       {/* Arama & Filtreleme */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-amber-500/20">
-        <div className="relative w-full sm:w-80">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-amber-500/20">
+        <div className="relative w-full sm:flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Müşteri adı veya plan no ara..."
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500"
+            className="w-full pl-9 pr-3 py-2 min-h-[44px] bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500"
           />
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 focus:outline-none"
-          >
-            <option value="ALL">Tüm Durumlar</option>
-            <option value={INSTALLMENT_STATUS.PENDING}>Açık / Devam Eden</option>
-            <option value={INSTALLMENT_STATUS.PAID}>Tamamen Ödenen</option>
-          </select>
         </div>
       </div>
 
@@ -518,24 +522,24 @@ export default function InstallmentsClient({
                                       : 'Vadesi Bekliyor'}
                                   </span>
                                 </td>
-                                <td className="p-2.5 text-right space-x-1.5">
+                                <td className="p-2.5 text-right space-x-1.5 whitespace-nowrap">
                                   {/* Matbu Senet Yazdır */}
                                   <button
                                     onClick={() => setPrintSenetItem({ plan, item })}
-                                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-amber-500 hover:bg-amber-500/10 transition-colors inline-flex items-center justify-center min-h-[36px] min-w-[36px]"
                                     title="Matbu Bono (Senet) Yazdır"
                                   >
-                                    <Printer className="w-3.5 h-3.5" />
+                                    <Printer className="w-4 h-4" />
                                   </button>
 
                                   {/* WhatsApp Hatırlatıcı */}
                                   {!isPaid && (
                                     <button
                                       onClick={() => handleSendWhatsApp(plan, item)}
-                                      className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors"
+                                      className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors inline-flex items-center justify-center min-h-[36px] min-w-[36px]"
                                       title="Tek Tıkla WhatsApp Vade Hatırlatıcı Gönder"
                                     >
-                                      <MessageCircle className="w-3.5 h-3.5" />
+                                      <MessageCircle className="w-4 h-4" />
                                     </button>
                                   )}
 
@@ -543,7 +547,7 @@ export default function InstallmentsClient({
                                   {!isPaid && (
                                     <button
                                       onClick={() => openPayModal(plan, item)}
-                                      className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-[11px] shadow-sm transition-all"
+                                      className="px-3 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-amber-500/20 transition-all min-h-[36px]"
                                     >
                                       Tahsil Et
                                     </button>
@@ -696,14 +700,14 @@ export default function InstallmentsClient({
                 <button
                   type="button"
                   onClick={() => setIsNewPlanModalOpen(false)}
-                  className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+                  className="px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl min-h-[44px]"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="px-5 py-2 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                  className="px-5 py-2.5 text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 rounded-xl shadow-lg shadow-amber-500/20 disabled:opacity-50 min-h-[44px]"
                 >
                   {isCreating ? 'Oluşturuluyor...' : 'Planı & Senetleri Oluştur'}
                 </button>
@@ -782,14 +786,14 @@ export default function InstallmentsClient({
                 <button
                   type="button"
                   onClick={() => setPayModalItem(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+                  className="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl min-h-[44px]"
                 >
                   Vazgeç
                 </button>
                 <button
                   type="submit"
                   disabled={isPaying}
-                  className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-600/20 disabled:opacity-50"
+                  className="px-5 py-2.5 text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50 min-h-[44px]"
                 >
                   {isPaying ? 'İşleniyor...' : 'Tahsilatı Onayla'}
                 </button>

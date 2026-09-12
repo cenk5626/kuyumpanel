@@ -29,8 +29,10 @@ import {
   Eye,
 } from 'lucide-react';
 import { THEME } from '@/constants/theme';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
 import { ROUTES } from '@/constants/routes';
-import HeaderActions from '@/components/HeaderActions';
 import {
   CUSTOMER_TRANSACTION_TYPES,
   ASSET_TYPES,
@@ -193,6 +195,8 @@ export default function CustomersClient({
   const [tableCurrencyView, setTableCurrencyView] = useState<'DETAILED' | 'TL' | 'HAS' | 'USD' | 'EUR'>('DETAILED');
   // Müşteri Ekstresi & Yürüyen Bakiye Para Birimi Görünüm Modu ('DETAILED' | 'TL' | 'HAS' | 'USD' | 'EUR')
   const [statementCurrencyView, setStatementCurrencyView] = useState<'DETAILED' | 'TL' | 'HAS' | 'USD' | 'EUR'>('DETAILED');
+  // Müşteri Kategori Sekmesi
+  const [customerCategoryTab, setCustomerCategoryTab] = useState<'ALL' | 'DEBTORS' | 'CREDITORS' | 'ACTIVE_TX'>('ALL');
 
   // Canlı fiyatları periyodik yenile
   const fetchLivePrices = useCallback(async () => {
@@ -520,13 +524,30 @@ export default function CustomersClient({
     );
   }, [statementCustomer, statementData]);
 
+  // Kategori Sayımları
+  const debtorsCount = useMemo(() => customers.filter((c) => c.tlBalance > 0 || (c.hasBalance && c.hasBalance > 0) || c.totalHasEquivalent > 0).length, [customers]);
+  const creditorsCount = useMemo(() => customers.filter((c) => c.tlBalance < 0 || (c.hasBalance && c.hasBalance < 0) || c.totalHasEquivalent < 0).length, [customers]);
+  const activeTxCount = useMemo(() => customers.filter((c) => c.transactionCount > 0).length, [customers]);
+
   // Filtrelenmiş Müşteriler
-  const filteredCustomers = customers.filter(
-    (c) =>
+  const filteredCustomers = customers.filter((c) => {
+    const matchesSearch =
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (c.phone && c.phone.includes(searchQuery)) ||
-      (c.tcNo && c.tcNo.includes(searchQuery))
-  );
+      (c.tcNo && c.tcNo.includes(searchQuery));
+    if (!matchesSearch) return false;
+
+    if (customerCategoryTab === 'DEBTORS') {
+      return c.tlBalance > 0 || (c.hasBalance && c.hasBalance > 0) || c.totalHasEquivalent > 0;
+    }
+    if (customerCategoryTab === 'CREDITORS') {
+      return c.tlBalance < 0 || (c.hasBalance && c.hasBalance < 0) || c.totalHasEquivalent < 0;
+    }
+    if (customerCategoryTab === 'ACTIVE_TX') {
+      return c.transactionCount > 0;
+    }
+    return true;
+  });
 
   // Toplam Alacak Özetleri (Tüm bayideki alacaklarımız)
   const totalTlDebt = customers.reduce((acc, c) => acc + c.tlBalance, 0);
@@ -550,186 +571,138 @@ export default function CustomersClient({
   return (
     <div className="space-y-6">
       {/* ── HEADER & TOPLAM ALACAK ÖZET KARTLARI ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Users className="text-yellow-400" size={28} />
-            Müşteriler & Has / Altın Cari & Veresiye Takibi
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Fiziki Gram Has Altın, Ziynet ve TL bazında çift bakiye, anlık altın değerlemesi ve detaylı yürüyen ekstreler.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+      <PageHeader
+        icon={<Users className="w-6 h-6 text-amber-500" />}
+        title="Müşteriler & Has / Altın Cari & Veresiye Takibi"
+        subtitle="Fiziki Gram Has Altın, Ziynet ve TL bazında çift bakiye, anlık altın değerlemesi ve detaylı yürüyen ekstreler."
+        badges={[
+          { label: `${customers.length} Müşteri`, variant: 'gold' },
+          { label: `Spot Has: ₺${hasPrice.toLocaleString('tr-TR')}/gr`, variant: 'success' },
+        ]}
+        actions={
           <button
             onClick={() => {
               resetCustomerForm();
               setShowCustomerModal(true);
             }}
-            className={`${THEME.BTN_PRIMARY} gap-2 text-sm px-5 py-2.5`}
+            className={`${THEME.BTN_PRIMARY} min-h-[44px] flex items-center justify-center gap-2`}
           >
             <UserPlus size={18} />
             Yeni Müşteri Ekle
           </button>
-          <HeaderActions />
-        </div>
-      </div>
+        }
+      />
 
       {/* ÖZET KARTLARI (Çift Bakiye & Portföy Değerlemesi) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Toplam Has Altın Alacak */}
-        <div className={THEME.STAT_CARD}>
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <span className={THEME.STAT_LABEL}>Toplam Has Altın Alacak</span>
-              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 mt-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-medium">
-                <Sparkles size={10} /> Canlı Spot: ₺{hasPrice.toLocaleString('tr-TR')}/gr
-              </span>
-            </div>
-            <div className={THEME.STAT_ICON_WRAPPER}>
-              <Scale size={20} />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-yellow-400 font-mono">
-            {formatGoldGram(totalHasDebt)}
-          </div>
-          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
-            <span>Canlı TL Karşılığı:</span>
-            <span className="font-bold text-yellow-300 font-mono">
-              {formatCurrency(totalHasDebt * hasPrice, 'TL')}
-            </span>
-          </div>
-        </div>
+        <StatCard
+          title="Toplam Has Altın Alacak"
+          value={formatGoldGram(totalHasDebt)}
+          icon={Scale}
+          iconColor="gold"
+          subtitle={`TL Karşılığı: ${formatCurrency(totalHasDebt * hasPrice, 'TL')}`}
+        />
 
         {/* Net TL Borç Bakiyesi */}
-        <div className={THEME.STAT_CARD}>
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <span className={THEME.STAT_LABEL}>Net TL Borç Bakiyesi</span>
-              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 mt-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                <TrendingUp size={10} /> Müşteri Veresiyesi
-              </span>
-            </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400 font-bold">
-              ₺
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-400 font-mono">
-            {formatCurrency(totalTlDebt, 'TL')}
-          </div>
-          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
-            <span>Has Eşdeğeri:</span>
-            <span className="font-bold text-emerald-300 font-mono">
-              ~{hasPrice > 0 ? formatGoldGram(totalTlDebt / hasPrice) : '0,000 gr'}
-            </span>
-          </div>
-        </div>
+        <StatCard
+          title="Net TL Borç Bakiyesi"
+          value={formatCurrency(totalTlDebt, 'TL')}
+          icon={<span className="text-emerald-500 font-bold text-lg leading-none">₺</span>}
+          subtitle={`Has Eşdeğeri: ~${hasPrice > 0 ? formatGoldGram(totalTlDebt / hasPrice) : '0,000 gr'}`}
+        />
 
-        {/* Toplam Dolar Bakiyesi */}
-        <div className={THEME.STAT_CARD}>
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <span className={THEME.STAT_LABEL}>Net Dolar Bakiyesi</span>
-              <span className="text-[11px] text-gray-500 block mt-0.5">USD/TRY: ₺{usdPrice.toFixed(2)}</span>
-            </div>
-            <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20 text-green-400">
-              <DollarSign size={20} />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-green-400 font-mono">
-            {formatCurrency(totalUsdDebt, 'USD')}
-          </div>
-          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
-            <span>TL Karşılığı:</span>
-            <span className="font-bold text-green-300 font-mono">
-              {formatCurrency(totalUsdDebt * usdPrice, 'TL')}
-            </span>
-          </div>
-        </div>
+        {/* Net Dolar Bakiyesi */}
+        <StatCard
+          title="Net Dolar Bakiyesi"
+          value={formatCurrency(totalUsdDebt, 'USD')}
+          icon={DollarSign}
+          iconColor="emerald"
+          subtitle={`TL Karşılığı: ${formatCurrency(totalUsdDebt * usdPrice, 'TL')}`}
+        />
 
-        {/* Toplam Euro Bakiyesi */}
-        <div className={THEME.STAT_CARD}>
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <span className={THEME.STAT_LABEL}>Net Euro Bakiyesi</span>
-              <span className="text-[11px] text-gray-500 block mt-0.5">EUR/TRY: ₺{eurPrice.toFixed(2)}</span>
-            </div>
-            <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
-              <Euro size={20} />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-blue-400 font-mono">
-            {formatCurrency(totalEurDebt, 'EUR')}
-          </div>
-          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-800/60">
-            <span>TL Karşılığı:</span>
-            <span className="font-bold text-blue-300 font-mono">
-              {formatCurrency(totalEurDebt * eurPrice, 'TL')}
-            </span>
-          </div>
-        </div>
+        {/* Net Euro Bakiyesi */}
+        <StatCard
+          title="Net Euro Bakiyesi"
+          value={formatCurrency(totalEurDebt, 'EUR')}
+          icon={Euro}
+          iconColor="blue"
+          subtitle={`TL Karşılığı: ${formatCurrency(totalEurDebt * eurPrice, 'TL')}`}
+        />
       </div>
 
       {/* ── GENEL KONSOLİDE TOPLAM ALACAK BANNERI (4 TEMEL PARA BİRİMİNDE ANLIK DEĞERLEME) ── */}
-      <div className="bg-gradient-to-r from-yellow-500/15 via-emerald-500/10 to-blue-500/15 border border-yellow-500/30 rounded-2xl p-4 sm:p-5 shadow-lg">
+      <div className="bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-blue-500/15 border border-amber-500/30 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
           <div className="flex items-center gap-2">
-            <Coins className="text-yellow-400" size={20} />
-            <h3 className="text-base font-bold text-white">Mağaza Genel Konsolide Alacağı (Tüm Borçların Toplamı)</h3>
+            <Coins className="text-amber-500 dark:text-amber-400" size={20} />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Mağaza Genel Konsolide Alacağı (Tüm Borçların Toplamı)</h3>
           </div>
-          <span className="text-xs text-gray-400 font-mono">
+          <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
             Canlı Kurlar: Has ₺{hasPrice.toFixed(0)} | USD ₺{usdPrice.toFixed(2)} | EUR ₺{eurPrice.toFixed(2)}
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 bg-gray-950/80 rounded-xl border border-emerald-500/30">
-            <span className="text-[10px] uppercase font-bold text-emerald-400 block">₺ Tamamen TL İle</span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-emerald-300 block mt-0.5">
+          <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-xl border border-emerald-500/30 shadow-xs">
+            <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">₺ Tamamen TL İle</span>
+            <span className="text-lg sm:text-xl font-bold font-mono text-emerald-700 dark:text-emerald-300 block mt-0.5">
               {formatCurrency(storewideConsolidated.totalTL, 'TL')}
             </span>
-            <span className="text-[10px] text-gray-400">Tüm alacakların TL karşılığı</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Tüm alacakların TL karşılığı</span>
           </div>
-          <div className="p-3 bg-gray-950/80 rounded-xl border border-yellow-500/30">
-            <span className="text-[10px] uppercase font-bold text-yellow-400 block">👑 Tamamen Has Altın İle</span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-yellow-300 block mt-0.5">
+          <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-xl border border-amber-500/30 shadow-xs">
+            <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 block">👑 Tamamen Has Altın İle</span>
+            <span className="text-lg sm:text-xl font-bold font-mono text-amber-700 dark:text-amber-300 block mt-0.5">
               {formatGoldGram(storewideConsolidated.totalHas)}
             </span>
-            <span className="text-[10px] text-gray-400">Saf 24K Has karşılığı</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Saf 24K Has karşılığı</span>
           </div>
-          <div className="p-3 bg-gray-950/80 rounded-xl border border-green-500/30">
-            <span className="text-[10px] uppercase font-bold text-green-400 block">💵 Tamamen Dolar İle</span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-green-300 block mt-0.5">
+          <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-xl border border-green-500/30 shadow-xs">
+            <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">💵 Tamamen Dolar İle</span>
+            <span className="text-lg sm:text-xl font-bold font-mono text-emerald-700 dark:text-emerald-300 block mt-0.5">
               {formatCurrency(storewideConsolidated.totalUSD, 'USD')}
             </span>
-            <span className="text-[10px] text-gray-400">USD kuruyla hesaplanan</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">USD kuruyla hesaplanan</span>
           </div>
-          <div className="p-3 bg-gray-950/80 rounded-xl border border-blue-500/30">
-            <span className="text-[10px] uppercase font-bold text-blue-400 block">💶 Tamamen Euro İle</span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-blue-300 block mt-0.5">
+          <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-xl border border-blue-500/30 shadow-xs">
+            <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 block">💶 Tamamen Euro İle</span>
+            <span className="text-lg sm:text-xl font-bold font-mono text-blue-700 dark:text-blue-300 block mt-0.5">
               {formatCurrency(storewideConsolidated.totalEUR, 'EUR')}
             </span>
-            <span className="text-[10px] text-gray-400">EUR kuruyla hesaplanan</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">EUR kuruyla hesaplanan</span>
           </div>
         </div>
       </div>
+
+      {/* ── 4'LÜ MÜŞTERİ KATEGORİ SEÇİCİ (LUXURY TABS) ── */}
+      <LuxuryTabs<'ALL' | 'DEBTORS' | 'CREDITORS' | 'ACTIVE_TX'>
+        activeTab={customerCategoryTab}
+        onChange={setCustomerCategoryTab}
+        tabs={[
+          { id: 'ALL', label: '1. Tüm Müşteriler', icon: <Users size={16} />, count: customers.length },
+          { id: 'DEBTORS', label: '2. Veresiye & Borçlular', icon: <Scale size={16} />, count: debtorsCount },
+          { id: 'CREDITORS', label: '3. Emanet & Alacaklılar', icon: <Coins size={16} />, count: creditorsCount },
+          { id: 'ACTIVE_TX', label: '4. Aktif İşlem Görenler', icon: <TrendingUp size={16} />, count: activeTxCount },
+        ]}
+      />
 
       {/* ── ARAMA VE MÜŞTERİ LİSTESİ ── */}
       <div className={`${THEME.GLASS_CARD} p-4`}>
         <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-4">
           <div className="relative max-w-md w-full">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Müşteri adı, telefon veya TC No ara..."
-              className={`${THEME.INPUT} pl-10 text-sm py-2`}
+              className={`${THEME.INPUT} pl-10 text-sm py-2.5 min-h-[44px]`}
             />
           </div>
 
           {/* Para Birimi Görünüm Seçici Toolbar */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-gray-950 border border-gray-800 rounded-xl">
-            <span className="text-[11px] font-semibold text-gray-400 px-2 flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1">
               <Eye size={12} /> Görünüm:
             </span>
             {(
@@ -745,10 +718,10 @@ export default function CustomersClient({
                 key={tab.id}
                 type="button"
                 onClick={() => setTableCurrencyView(tab.id)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-2 min-h-[36px] rounded-lg text-xs font-semibold transition-all ${
                   tableCurrencyView === tab.id
-                    ? 'bg-yellow-500 text-black shadow-sm font-bold'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-900'
                 }`}
               >
                 {tab.label}
@@ -756,7 +729,7 @@ export default function CustomersClient({
             ))}
           </div>
 
-          <span className="text-xs text-gray-400 font-mono self-end md:self-center">
+          <span className="text-xs text-slate-400 font-mono self-end md:self-center">
             {filteredCustomers.length} müşteri
           </span>
         </div>
@@ -810,20 +783,20 @@ export default function CustomersClient({
                             {c.name}
                           </span>
                           {c.note && (
-                            <span className="text-[11px] text-gray-500 block truncate max-w-xs">{c.note}</span>
+                            <span className="text-[11px] text-slate-500 block truncate max-w-xs">{c.note}</span>
                           )}
                         </div>
                       </td>
 
                       {/* İletişim */}
                       <td className={THEME.TABLE.TD}>
-                        <div className="space-y-0.5 text-xs text-gray-400">
+                        <div className="space-y-0.5 text-xs text-slate-400">
                           {c.phone && (
                             <div className="flex items-center gap-1">
-                              <Phone size={12} className="text-gray-500" /> {c.phone}
+                              <Phone size={12} className="text-slate-500" /> {c.phone}
                             </div>
                           )}
-                          {c.tcNo && <div className="text-[10px] text-gray-500 font-mono">TC: {c.tcNo}</div>}
+                          {c.tcNo && <div className="text-[10px] text-slate-500 font-mono">TC: {c.tcNo}</div>}
                         </div>
                       </td>
 
@@ -836,7 +809,7 @@ export default function CustomersClient({
                                 ? 'text-yellow-400'
                                 : effectiveHas < 0
                                 ? 'text-emerald-400'
-                                : 'text-gray-400'
+                                : 'text-slate-400'
                             }`}
                           >
                             {formatGoldGram(effectiveHas)}
@@ -858,14 +831,14 @@ export default function CustomersClient({
                                 ? 'text-red-400'
                                 : c.tlBalance < 0
                                 ? 'text-emerald-400'
-                                : 'text-gray-400'
+                                : 'text-slate-400'
                             }`}
                           >
                             {formatCurrency(c.tlBalance, 'TL')}
                           </span>
                           {c.creditLimitTL != null && c.creditLimitTL > 0 && (
                             <div className="mt-0.5">
-                              <span className="text-[10px] text-gray-500 block font-mono">
+                              <span className="text-[10px] text-slate-500 block font-mono">
                                 Limit: ₺{c.creditLimitTL.toLocaleString('tr-TR')}
                               </span>
                               {c.tlBalance > c.creditLimitTL && (
@@ -884,7 +857,7 @@ export default function CustomersClient({
                           {c.usdBalance !== 0 && (
                             <span className="text-green-400 font-bold">
                               {formatCurrency(c.usdBalance, 'USD')}{' '}
-                              <span className="text-[10px] text-gray-500 font-normal">
+                              <span className="text-[10px] text-slate-500 font-normal">
                                 ({formatCurrency(c.usdBalance * usdPrice, 'TL')})
                               </span>
                             </span>
@@ -892,12 +865,12 @@ export default function CustomersClient({
                           {c.eurBalance !== 0 && (
                             <span className="text-blue-400 font-bold">
                               {formatCurrency(c.eurBalance, 'EUR')}{' '}
-                              <span className="text-[10px] text-gray-500 font-normal">
+                              <span className="text-[10px] text-slate-500 font-normal">
                                 ({formatCurrency(c.eurBalance * eurPrice, 'TL')})
                               </span>
                             </span>
                           )}
-                          {c.usdBalance === 0 && c.eurBalance === 0 && <span className="text-gray-500">—</span>}
+                          {c.usdBalance === 0 && c.eurBalance === 0 && <span className="text-slate-500">—</span>}
                         </div>
                       </td>
 
@@ -926,7 +899,7 @@ export default function CustomersClient({
                             <div className="text-base font-bold font-mono text-emerald-400">
                               {formatCurrency(cDebt.totalTL, 'TL')}
                             </div>
-                            <span className="text-[10px] text-gray-400 block font-mono">
+                            <span className="text-[10px] text-slate-400 block font-mono">
                               Has + TL + USD + EUR Toplamı
                             </span>
                           </div>
@@ -946,7 +919,7 @@ export default function CustomersClient({
                             <div className="text-base font-bold font-mono text-green-400">
                               {formatCurrency(cDebt.totalUSD, 'USD')}
                             </div>
-                            <span className="text-[10px] text-gray-400 block font-mono">
+                            <span className="text-[10px] text-slate-400 block font-mono">
                               ₺{usdPrice.toFixed(2)} kuruyla
                             </span>
                           </div>
@@ -956,7 +929,7 @@ export default function CustomersClient({
                             <div className="text-base font-bold font-mono text-blue-400">
                               {formatCurrency(cDebt.totalEUR, 'EUR')}
                             </div>
-                            <span className="text-[10px] text-gray-400 block font-mono">
+                            <span className="text-[10px] text-slate-400 block font-mono">
                               ₺{eurPrice.toFixed(2)} kuruyla
                             </span>
                           </div>
@@ -1010,7 +983,7 @@ export default function CustomersClient({
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
                     Henüz kayıtlı müşteri bulunamadı.
                   </td>
                 </tr>
@@ -1120,7 +1093,7 @@ export default function CustomersClient({
                       <Coins size={14} />
                       Açılış / Devir Borç Bakiyeleri (İsteğe Bağlı)
                     </div>
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-[11px] text-slate-400">
                       Müşterinizin önceki dönemden devreden borcu varsa buradan tek seferde girebilirsiniz. Otomatik veresiye ekstresi açılır.
                     </p>
                     <div className="grid grid-cols-2 gap-2.5">
@@ -1188,7 +1161,7 @@ export default function CustomersClient({
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-gray-300 mb-1">Maks. TL Borç Limiti (₺)</label>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Maks. TL Borç Limiti (₺)</label>
                       <input
                         type="number"
                         min="0"
@@ -1200,7 +1173,7 @@ export default function CustomersClient({
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-gray-300 mb-1">Maks. Has Borç Limiti (gr)</label>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">Maks. Has Borç Limiti (gr)</label>
                       <input
                         type="number"
                         min="0"
@@ -1244,7 +1217,7 @@ export default function CustomersClient({
               exit={{ opacity: 0, scale: 0.95 }}
               className={`${THEME.GLASS_CARD} w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto`}
             >
-              <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
+              <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
                 <div>
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
                     <CreditCard size={20} className="text-yellow-400" />
@@ -1268,7 +1241,7 @@ export default function CustomersClient({
                     className={`py-3 rounded-xl font-bold text-sm border flex items-center justify-center gap-2 transition-all ${
                       txFormData.type === CUSTOMER_TRANSACTION_TYPES.BORC
                         ? 'bg-red-500/20 text-red-400 border-red-500/50 shadow-lg shadow-red-500/10'
-                        : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
                     <ArrowUpRight size={18} />
@@ -1281,7 +1254,7 @@ export default function CustomersClient({
                     className={`py-3 rounded-xl font-bold text-sm border flex items-center justify-center gap-2 transition-all ${
                       txFormData.type === CUSTOMER_TRANSACTION_TYPES.TAHSILAT
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-lg shadow-emerald-500/10'
-                        : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
                     <ArrowDownLeft size={18} />
@@ -1301,7 +1274,7 @@ export default function CustomersClient({
                         className={`p-2 rounded-xl text-xs font-semibold border text-center transition-all ${
                           selectedCategory === cat.id
                             ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50 shadow-sm'
-                            : 'bg-gray-950 border-gray-800 text-gray-400 hover:bg-gray-900'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900'
                         }`}
                       >
                         <div className="text-base mb-0.5">{cat.icon}</div>
@@ -1327,9 +1300,9 @@ export default function CustomersClient({
                 {selectedCategory === 'TL' && (
                   <div>
                     <label className={THEME.LABEL}>Varlık Türü</label>
-                    <div className="p-3 bg-gray-950 border border-gray-800 rounded-xl text-sm font-bold text-emerald-400 flex items-center justify-between">
+                    <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm font-bold text-emerald-400 flex items-center justify-between">
                       <span>Türk Lirası (₺)</span>
-                      <span className="text-xs text-gray-500">Nakit / Havale / Kasa</span>
+                      <span className="text-xs text-slate-500">Nakit / Havale / Kasa</span>
                     </div>
                   </div>
                 )}
@@ -1352,7 +1325,7 @@ export default function CustomersClient({
                           className={`p-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
                             txFormData.assetType === f.id
                               ? 'bg-green-500/20 text-green-400 border-green-500/50 shadow-sm'
-                              : 'bg-gray-950 border-gray-800 text-gray-400 hover:bg-gray-900'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900'
                           }`}
                         >
                           <span className="text-sm">{f.symbol}</span>
@@ -1466,7 +1439,7 @@ export default function CustomersClient({
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-gray-300 pt-1 border-t border-yellow-500/20">
+                    <div className="flex items-center justify-between text-slate-300 pt-1 border-t border-yellow-500/20">
                       <span>Tahmini Canlı TL Değeri:</span>
                       <span className="font-mono font-semibold text-white">
                         {selectedCategory === 'TL'
@@ -1480,7 +1453,7 @@ export default function CustomersClient({
                       </span>
                     </div>
 
-                    <p className="text-gray-400 text-[11px] mt-1">
+                    <p className="text-slate-400 text-[11px] mt-1">
                       {selectedCategory === 'HAS'
                         ? `${txFormData.amount} gr Has Altın, doğrudan saf 24K Has Altın borç hesabına yazılacaktır.`
                         : selectedCategory === 'TL'
@@ -1537,7 +1510,7 @@ export default function CustomersClient({
               className={`${THEME.GLASS_CARD} w-full max-w-4xl p-4 sm:p-6 my-4 sm:my-8 max-h-[90vh] overflow-y-auto print:border-none print:shadow-none print:bg-white print:text-black print:my-0`}
             >
               {/* Ekstre Üst Başlık */}
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-5 border-b border-gray-800 print:border-black pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-5 border-b border-slate-800 print:border-black pb-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-yellow-400 print:text-black font-bold uppercase tracking-wider">
@@ -1550,7 +1523,7 @@ export default function CustomersClient({
                   <h2 className="text-2xl font-bold text-white print:text-black mt-1">
                     {statementCustomer.name}
                   </h2>
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400 print:text-gray-700 mt-1">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 print:text-slate-700 mt-1">
                     {statementCustomer.phone && <span>Tel: {statementCustomer.phone}</span>}
                     {statementCustomer.tcNo && <span>TC: {statementCustomer.tcNo}</span>}
                     {statementCustomer.address && <span>Adres: {statementCustomer.address}</span>}
@@ -1603,10 +1576,10 @@ export default function CustomersClient({
               </div>
 
               {/* Tarih Filtreleme Çubuğu (Print esnasında gizlenir) */}
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-5 p-3 bg-gray-950/80 rounded-xl border border-gray-800 print:hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-5 p-3 bg-slate-950/80 rounded-xl border border-slate-800 print:hidden">
                 <div className="flex items-center gap-1.5">
                   <Calendar size={16} className="text-yellow-400" />
-                  <span className="text-xs font-semibold text-gray-300">Tarih Aralığı:</span>
+                  <span className="text-xs font-semibold text-slate-300">Tarih Aralığı:</span>
                   <div className="flex gap-1 ml-2">
                     {(['ALL', 'TODAY', 'WEEK', 'MONTH'] as const).map((filterKey) => {
                       const labels = {
@@ -1622,7 +1595,7 @@ export default function CustomersClient({
                           className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                             quickDateFilter === filterKey
                               ? 'bg-yellow-500 text-black font-bold'
-                              : 'bg-gray-900 text-gray-400 hover:text-white'
+                              : 'bg-slate-900 text-slate-400 hover:text-white'
                           }`}
                         >
                           {labels[filterKey]}
@@ -1643,7 +1616,7 @@ export default function CustomersClient({
                     }}
                     className={`${THEME.INPUT} py-1 text-xs`}
                   />
-                  <span className="text-gray-500">-</span>
+                  <span className="text-slate-500">-</span>
                   <input
                     type="date"
                     value={endDate}
@@ -1673,7 +1646,7 @@ export default function CustomersClient({
                   effectiveEurRate
                 );
                 return (
-                  <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-blue-500/10 border border-amber-300/60 dark:border-yellow-500/30 rounded-2xl p-4 mb-5 print:border-gray-300 print:bg-gray-100">
+                  <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-blue-500/10 border border-amber-300/60 dark:border-yellow-500/30 rounded-2xl p-4 mb-5 print:border-slate-300 print:bg-slate-100">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                       <div className="flex items-center gap-2">
                         <Sparkles className="text-amber-600 dark:text-yellow-400 print:text-black" size={18} />
@@ -1682,7 +1655,7 @@ export default function CustomersClient({
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500 dark:text-gray-400 print:text-gray-600 font-mono font-medium">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 print:text-slate-600 font-mono font-medium">
                           Tabloyu dönüştürmek için bir para birimine tıklayın:
                         </span>
                         <button
@@ -1691,7 +1664,7 @@ export default function CustomersClient({
                           className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                             statementCurrencyView === 'DETAILED'
                               ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
-                              : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-gray-800'
+                              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
                           }`}
                         >
                           📋 Ayrıntılı / Tümü
@@ -1706,7 +1679,7 @@ export default function CustomersClient({
                         className={`p-3 rounded-xl border cursor-pointer transition-all ${
                           statementCurrencyView === 'TL'
                             ? 'bg-emerald-100/90 dark:bg-emerald-500/20 border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-400/50 shadow-md'
-                            : 'bg-white dark:bg-gray-950/90 print:bg-white border-emerald-200 dark:border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-gray-900 shadow-xs'
+                            : 'bg-white dark:bg-slate-950/90 print:bg-white border-emerald-200 dark:border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-slate-900 shadow-xs'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -1718,7 +1691,7 @@ export default function CustomersClient({
                         <div className="text-lg font-bold font-mono text-emerald-800 dark:text-emerald-300 print:text-black mt-1">
                           {formatCurrency(cDebt.totalTL, 'TL')}
                         </div>
-                        <span className="text-[10px] text-slate-500 dark:text-gray-400 print:text-gray-600 block mt-1">Yürüyen bakiye TL cinsinde</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600 block mt-1">Yürüyen bakiye TL cinsinde</span>
                       </div>
 
                       {/* Tamamen Has Altın */}
@@ -1727,7 +1700,7 @@ export default function CustomersClient({
                         className={`p-3 rounded-xl border cursor-pointer transition-all ${
                           statementCurrencyView === 'HAS'
                             ? 'bg-amber-100/90 dark:bg-yellow-500/20 border-amber-500 dark:border-yellow-400 ring-2 ring-amber-400/50 shadow-md'
-                            : 'bg-white dark:bg-gray-950/90 print:bg-white border-amber-200 dark:border-yellow-500/30 hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-gray-900 shadow-xs'
+                            : 'bg-white dark:bg-slate-950/90 print:bg-white border-amber-200 dark:border-yellow-500/30 hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-slate-900 shadow-xs'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -1739,7 +1712,7 @@ export default function CustomersClient({
                         <div className="text-lg font-bold font-mono text-amber-800 dark:text-yellow-300 print:text-black mt-1">
                           {formatGoldGram(cDebt.totalHas)}
                         </div>
-                        <span className="text-[10px] text-slate-500 dark:text-gray-400 print:text-gray-600 block mt-1">Yürüyen bakiye Has (gr) cinsinde</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600 block mt-1">Yürüyen bakiye Has (gr) cinsinde</span>
                       </div>
 
                       {/* Tamamen Dolar */}
@@ -1748,7 +1721,7 @@ export default function CustomersClient({
                         className={`p-3 rounded-xl border cursor-pointer transition-all ${
                           statementCurrencyView === 'USD'
                             ? 'bg-teal-100/90 dark:bg-green-500/20 border-teal-500 dark:border-green-400 ring-2 ring-teal-400/50 shadow-md'
-                            : 'bg-white dark:bg-gray-950/90 print:bg-white border-teal-200 dark:border-green-500/30 hover:border-teal-400 hover:bg-teal-50/50 dark:hover:bg-gray-900 shadow-xs'
+                            : 'bg-white dark:bg-slate-950/90 print:bg-white border-teal-200 dark:border-green-500/30 hover:border-teal-400 hover:bg-teal-50/50 dark:hover:bg-slate-900 shadow-xs'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -1760,7 +1733,7 @@ export default function CustomersClient({
                         <div className="text-lg font-bold font-mono text-teal-800 dark:text-green-300 print:text-black mt-1">
                           {formatCurrency(cDebt.totalUSD, 'USD')}
                         </div>
-                        <span className="text-[10px] text-slate-500 dark:text-gray-400 print:text-gray-600 block mt-1">₺{effectiveUsdRate.toFixed(2)} USD kuruyla</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600 block mt-1">₺{effectiveUsdRate.toFixed(2)} USD kuruyla</span>
                       </div>
 
                       {/* Tamamen Euro */}
@@ -1769,7 +1742,7 @@ export default function CustomersClient({
                         className={`p-3 rounded-xl border cursor-pointer transition-all ${
                           statementCurrencyView === 'EUR'
                             ? 'bg-blue-100/90 dark:bg-blue-500/20 border-blue-500 dark:border-blue-400 ring-2 ring-blue-400/50 shadow-md'
-                            : 'bg-white dark:bg-gray-950/90 print:bg-white border-blue-200 dark:border-blue-500/30 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-gray-900 shadow-xs'
+                            : 'bg-white dark:bg-slate-950/90 print:bg-white border-blue-200 dark:border-blue-500/30 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-900 shadow-xs'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -1781,7 +1754,7 @@ export default function CustomersClient({
                         <div className="text-lg font-bold font-mono text-blue-800 dark:text-blue-300 print:text-black mt-1">
                           {formatCurrency(cDebt.totalEUR, 'EUR')}
                         </div>
-                        <span className="text-[10px] text-slate-500 dark:text-gray-400 print:text-gray-600 block mt-1">₺{effectiveEurRate.toFixed(2)} EUR kuruyla</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600 block mt-1">₺{effectiveEurRate.toFixed(2)} EUR kuruyla</span>
                       </div>
                     </div>
                   </div>
@@ -1791,30 +1764,30 @@ export default function CustomersClient({
               {/* Bakiye Özet Kartları */}
               {statementData && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                  <div className="bg-slate-50/80 dark:bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-slate-200 dark:border-gray-800 print:border-gray-300 shadow-xs">
-                    <span className="text-[10px] text-slate-500 dark:text-gray-500 uppercase font-bold block">
+                  <div className="bg-slate-50/80 dark:bg-slate-950 print:bg-slate-100 p-3 rounded-xl border border-slate-200 dark:border-slate-800 print:border-slate-300 shadow-xs">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-500 uppercase font-bold block">
                       Net Has Altın Borcu
                     </span>
                     <span className="text-sm font-bold text-amber-700 dark:text-yellow-400 print:text-black font-mono block mt-0.5">
                       {formatGoldGram(statementData.summary.hasBalance)}
                     </span>
-                    <span className="text-[10px] text-amber-700/80 dark:text-yellow-300/70 print:text-gray-600 block">
+                    <span className="text-[10px] text-amber-700/80 dark:text-yellow-300/70 print:text-slate-600 block">
                       ~{formatCurrency(statementData.summary.hasBalance * (statementData.spotRate || hasPrice), 'TL')}
                     </span>
                   </div>
 
-                  <div className="bg-slate-50/80 dark:bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-slate-200 dark:border-gray-800 print:border-gray-300 shadow-xs">
-                    <span className="text-[10px] text-slate-500 dark:text-gray-500 uppercase font-bold block">
+                  <div className="bg-slate-50/80 dark:bg-slate-950 print:bg-slate-100 p-3 rounded-xl border border-slate-200 dark:border-slate-800 print:border-slate-300 shadow-xs">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-500 uppercase font-bold block">
                       Net TL Borç Bakiyesi
                     </span>
                     <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 print:text-black font-mono block mt-0.5">
                       {formatCurrency(statementData.summary.tlBalance, 'TL')}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-gray-500 block">Nakit Açık Hesap</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-500 block">Nakit Açık Hesap</span>
                   </div>
 
-                  <div className="bg-slate-50/80 dark:bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-slate-200 dark:border-gray-800 print:border-gray-300 shadow-xs">
-                    <span className="text-[10px] text-slate-500 dark:text-gray-500 uppercase font-bold block">
+                  <div className="bg-slate-50/80 dark:bg-slate-950 print:bg-slate-100 p-3 rounded-xl border border-slate-200 dark:border-slate-800 print:border-slate-300 shadow-xs">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-500 uppercase font-bold block">
                       Döviz Bakiyeleri
                     </span>
                     <span className="text-xs font-bold text-teal-700 dark:text-green-400 print:text-black font-mono block mt-0.5">
@@ -1829,14 +1802,14 @@ export default function CustomersClient({
                     </span>
                   </div>
 
-                  <div className="bg-slate-50/80 dark:bg-gray-950 print:bg-gray-100 p-3 rounded-xl border border-amber-300/60 dark:border-yellow-500/30 print:border-gray-300 shadow-xs">
+                  <div className="bg-slate-50/80 dark:bg-slate-950 print:bg-slate-100 p-3 rounded-xl border border-amber-300/60 dark:border-yellow-500/30 print:border-slate-300 shadow-xs">
                     <span className="text-[10px] text-amber-700 dark:text-yellow-400 print:text-black uppercase font-bold block">
                       Toplam Portföy Değeri
                     </span>
                     <span className="text-base font-bold text-amber-800 dark:text-yellow-300 print:text-black font-mono block mt-0.5">
                       {formatCurrency(statementData.summary.estimatedTotalTL, 'TL')}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-gray-400 block">Has + TL + Döviz</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Has + TL + Döviz</span>
                   </div>
                 </div>
               )}
@@ -1854,10 +1827,10 @@ export default function CustomersClient({
               ) : null}
 
               {/* Yürüyen Bakiye Modu Bilgilendirme Çubuğu */}
-              <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-100/90 dark:bg-gray-950/80 rounded-xl border border-slate-200 dark:border-gray-800 text-xs mb-3 print:hidden shadow-xs">
+              <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-100/90 dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800 text-xs mb-3 print:hidden shadow-xs">
                 <div className="flex items-center gap-2">
                   <Eye size={14} className="text-amber-600 dark:text-yellow-400" />
-                  <span className="text-slate-700 dark:text-gray-300 font-semibold">
+                  <span className="text-slate-700 dark:text-slate-300 font-semibold">
                     {statementCurrencyView === 'DETAILED' && '📋 Ayrıntılı Görünüm: Tüm varlıklar ayrık ve konsolide yürüyen bakiye ile gösteriliyor.'}
                     {statementCurrencyView === 'TL' && '₺ Türk Lirası Modu: Tüm işlemler ve yürüyen bakiye tamamen TL cinsine konsolide edildi.'}
                     {statementCurrencyView === 'HAS' && '👑 Has Altın Modu: Tüm işlemler ve yürüyen bakiye saf 24K Gram Has cinsine konsolide edildi.'}
@@ -1865,15 +1838,15 @@ export default function CustomersClient({
                     {statementCurrencyView === 'EUR' && `💶 Euro (€) Modu: Tüm işlemler ve yürüyen bakiye EUR cinsine konsolide edildi (Kur: ₺${(statementData?.summary.eurRate || eurPrice).toFixed(2)}).`}
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500 dark:text-gray-400 font-mono font-bold">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-bold">
                   {statementData?.rows.length || 0} hareket
                 </span>
               </div>
 
               {/* İşlem Hareketleri ve Yürüyen Bakiye Tablosu */}
-              <div className="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-slate-200 dark:border-gray-800 print:border-gray-300 mb-4 shadow-xs">
+              <div className="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 print:border-slate-300 mb-4 shadow-xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-100/90 dark:bg-gray-900 print:bg-gray-200 text-slate-700 dark:text-gray-400 print:text-black font-bold uppercase tracking-wider text-[11px] sticky top-0 border-b border-slate-200 dark:border-gray-800">
+                  <thead className="bg-slate-100/90 dark:bg-slate-900 print:bg-slate-200 text-slate-700 dark:text-slate-400 print:text-black font-bold uppercase tracking-wider text-[11px] sticky top-0 border-b border-slate-200 dark:border-slate-800">
                     {statementCurrencyView === 'DETAILED' ? (
                       <tr>
                         <th className="p-3">Tarih</th>
@@ -1947,10 +1920,10 @@ export default function CustomersClient({
                       </tr>
                     )}
                   </thead>
-                  <tbody className="divide-y divide-gray-800 print:divide-gray-300 text-gray-300 print:text-black">
+                  <tbody className="divide-y divide-slate-800 print:divide-slate-300 text-slate-300 print:text-black">
                     {loadingStatement ? (
                       <tr>
-                        <td colSpan={10} className="p-8 text-center text-gray-500">
+                        <td colSpan={10} className="p-8 text-center text-slate-500">
                           Ekstre ve yürüyen bakiyeler hesaplanıyor...
                         </td>
                       </tr>
@@ -1971,8 +1944,8 @@ export default function CustomersClient({
                         else rowItemValTL = (tx.hasEquivalent || 0) * effectiveSpot;
 
                         return (
-                          <tr key={tx.id || Math.random().toString()} className="hover:bg-gray-900/50">
-                            <td className="p-3 font-mono text-gray-400 print:text-gray-700">
+                          <tr key={tx.id || Math.random().toString()} className="hover:bg-slate-900/50">
+                            <td className="p-3 font-mono text-slate-400 print:text-slate-700">
                               {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('tr-TR') : '—'}
                             </td>
                             <td className="p-3 font-bold">
@@ -2011,7 +1984,7 @@ export default function CustomersClient({
                                   <div className="font-mono font-bold text-sm text-yellow-300 print:text-black">
                                     {formatCurrency(tx.runningConsolidatedTL, 'TL')}
                                   </div>
-                                  <div className="text-[10px] text-gray-400 print:text-gray-600 font-mono mt-0.5">
+                                  <div className="text-[10px] text-slate-400 print:text-slate-600 font-mono mt-0.5">
                                     👑 {formatGoldGram(tx.runningConsolidatedHas)} | ${formatCurrency(tx.runningConsolidatedUSD, 'USD')} | €{formatCurrency(tx.runningConsolidatedEUR, 'EUR')}
                                   </div>
                                 </td>
@@ -2024,7 +1997,7 @@ export default function CustomersClient({
                                 <td className="p-3 font-mono text-emerald-400 font-semibold">
                                   {formatCurrency(rowItemValTL, 'TL')}
                                 </td>
-                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                <td className="p-3 font-mono text-[11px] text-slate-400">
                                   Has: {formatGoldGram(tx.runningBalanceHas)} | USD: ${tx.runningBalanceUSD} | EUR: €{tx.runningBalanceEUR}
                                 </td>
                                 <td className="p-3 font-mono font-bold text-base text-emerald-400 bg-emerald-500/10 print:bg-transparent">
@@ -2039,12 +2012,12 @@ export default function CustomersClient({
                                 <td className="p-3 font-mono text-yellow-400 font-semibold">
                                   {formatGoldGram(effectiveSpot > 0 ? rowItemValTL / effectiveSpot : 0)}
                                 </td>
-                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                <td className="p-3 font-mono text-[11px] text-slate-400">
                                   TL: ₺{tx.runningBalanceTL} | USD: ${tx.runningBalanceUSD} | EUR: €{tx.runningBalanceEUR}
                                 </td>
                                 <td className="p-3 font-mono font-bold text-base text-yellow-300 bg-yellow-500/10 print:bg-transparent">
                                   {formatGoldGram(tx.runningConsolidatedHas)}
-                                  <span className="block text-[10px] text-gray-400 font-normal">
+                                  <span className="block text-[10px] text-slate-400 font-normal">
                                     ~{formatCurrency(tx.runningConsolidatedTL, 'TL')}
                                   </span>
                                 </td>
@@ -2057,12 +2030,12 @@ export default function CustomersClient({
                                 <td className="p-3 font-mono text-green-400 font-semibold">
                                   {formatCurrency(effectiveUsd > 0 ? rowItemValTL / effectiveUsd : 0, 'USD')}
                                 </td>
-                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                <td className="p-3 font-mono text-[11px] text-slate-400">
                                   Has: {formatGoldGram(tx.runningBalanceHas)} | TL: ₺{tx.runningBalanceTL} | EUR: €{tx.runningBalanceEUR}
                                 </td>
                                 <td className="p-3 font-mono font-bold text-base text-green-400 bg-green-500/10 print:bg-transparent">
                                   {formatCurrency(tx.runningConsolidatedUSD, 'USD')}
-                                  <span className="block text-[10px] text-gray-400 font-normal">
+                                  <span className="block text-[10px] text-slate-400 font-normal">
                                     ~{formatCurrency(tx.runningConsolidatedTL, 'TL')}
                                   </span>
                                 </td>
@@ -2075,19 +2048,19 @@ export default function CustomersClient({
                                 <td className="p-3 font-mono text-blue-400 font-semibold">
                                   {formatCurrency(effectiveEur > 0 ? rowItemValTL / effectiveEur : 0, 'EUR')}
                                 </td>
-                                <td className="p-3 font-mono text-[11px] text-gray-400">
+                                <td className="p-3 font-mono text-[11px] text-slate-400">
                                   Has: {formatGoldGram(tx.runningBalanceHas)} | TL: ₺{tx.runningBalanceTL} | USD: ${tx.runningBalanceUSD}
                                 </td>
                                 <td className="p-3 font-mono font-bold text-base text-blue-400 bg-blue-500/10 print:bg-transparent">
                                   {formatCurrency(tx.runningConsolidatedEUR, 'EUR')}
-                                  <span className="block text-[10px] text-gray-400 font-normal">
+                                  <span className="block text-[10px] text-slate-400 font-normal">
                                     ~{formatCurrency(tx.runningConsolidatedTL, 'TL')}
                                   </span>
                                 </td>
                               </>
                             )}
 
-                            <td className="p-3 text-gray-400 print:text-gray-700 max-w-xs truncate">
+                            <td className="p-3 text-slate-400 print:text-slate-700 max-w-xs truncate">
                               {tx.description || '—'}
                             </td>
                           </tr>
@@ -2095,7 +2068,7 @@ export default function CustomersClient({
                       })
                     ) : (
                       <tr>
-                        <td colSpan={10} className="p-8 text-center text-gray-500">
+                        <td colSpan={10} className="p-8 text-center text-slate-500">
                           Seçilen tarih aralığında işlem hareketi bulunamadı.
                         </td>
                       </tr>
@@ -2106,7 +2079,7 @@ export default function CustomersClient({
                   {statementData && statementData.rows.length > 0 && (() => {
                     const lastRow = statementData.rows[statementData.rows.length - 1];
                     return (
-                      <tfoot className="bg-slate-100/95 dark:bg-gray-900/90 print:bg-gray-200 border-t-2 border-amber-400/70 dark:border-yellow-500/30 text-slate-900 dark:text-white font-bold shadow-inner">
+                      <tfoot className="bg-slate-100/95 dark:bg-slate-900/90 print:bg-slate-200 border-t-2 border-amber-400/70 dark:border-yellow-500/30 text-slate-900 dark:text-white font-bold shadow-inner">
                         <tr>
                           <td colSpan={3} className="p-3 text-right uppercase tracking-wider text-xs text-amber-800 dark:text-yellow-400 print:text-black font-extrabold">
                             Dönem Sonu Konsolide Kapanış Borcu:
@@ -2150,7 +2123,7 @@ export default function CustomersClient({
 
               {/* Ekstre Alt Bilgi & Kapat */}
               <div className="flex justify-between items-center pt-2 print:hidden">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-500">
                   Ekstre Çıktısı: {new Date().toLocaleString('tr-TR')}
                 </span>
                 <button onClick={() => setShowStatementModal(false)} className={THEME.BTN_SECONDARY}>

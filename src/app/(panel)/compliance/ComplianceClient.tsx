@@ -25,6 +25,10 @@ import {
   MASAK_DEFAULTS,
 } from '@/constants/compliance';
 import { assessTransactionCompliance } from '@/lib/compliance/aml-engine';
+import { THEME } from '@/constants/theme';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
 
 interface ComplianceCaseItem {
   id: string;
@@ -292,129 +296,67 @@ export default function ComplianceClient({
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 dark:from-amber-400 dark:via-yellow-400 dark:to-amber-500 bg-clip-text text-transparent flex items-center gap-3">
-            <ShieldAlert className="w-8 h-8 text-amber-600 dark:text-amber-400" />
-            MASAK & AML Uyum Yönetimi
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            5549 Sayılı Kanun Kapsamında Kimlik Tespiti Eşiği, Parçalama (Smurfing) Takibi ve Şüpheli İşlem Bildirimi (ŞİB)
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
+      <PageHeader
+        icon={<ShieldAlert className="w-6 h-6 text-amber-500" />}
+        title="MASAK & AML Uyum Yönetimi"
+        subtitle="5549 Sayılı Kanun Kapsamında Kimlik Tespiti Eşiği, Parçalama (Smurfing) Takibi ve Şüpheli İşlem Bildirimi (ŞİB)"
+        badges={[
+          { label: `${cases.length} Toplam Vaka`, variant: 'gold' },
+          { label: '5549 Sayılı Kanun Uyumlu', variant: 'success' },
+        ]}
+        actions={
           <button
             onClick={() => setIsNewCaseModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium shadow-lg shadow-amber-600/20 transition-all text-sm"
+            className={`${THEME.BTN_PRIMARY} min-h-[44px] flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
             Şüpheli İşlem Bildir
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* KPI İstatistik Kartları */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Toplam MASAK Vakası
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            {cases.length}
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Kayıtlı tüm şüpheli işlemler</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-              Açık / İncelemede
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <Clock className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400">
-            {cases.filter((c) => c.status === COMPLIANCE_CASE_STATUS.OPEN || c.status === COMPLIANCE_CASE_STATUS.UNDER_REVIEW).length}
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">İnceleme bekleyen vakalar</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-              MASAK'a Bildirilen (ŞİB)
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-              <Send className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-purple-600 dark:text-purple-400">
-            {cases.filter((c) => c.status === COMPLIANCE_CASE_STATUS.REPORTED_TO_MASAK).length}
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Resmi ŞİB raporlanan</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-              Parçalama (Smurfing)
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400">
-            {cases.filter((c) => c.triggerType === AML_TRIGGER_TYPE.SMURFING_DETECTED).length}
-          </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Bölünmüş nakit işlemleri</p>
-        </div>
+        <StatCard
+          title="Toplam MASAK Vakası"
+          value={cases.length}
+          icon={ShieldAlert}
+          iconColor="gold"
+          subtitle="Kayıtlı tüm şüpheli işlemler"
+        />
+        <StatCard
+          title="Açık / İncelemede"
+          value={cases.filter((c) => c.status === COMPLIANCE_CASE_STATUS.OPEN || c.status === COMPLIANCE_CASE_STATUS.UNDER_REVIEW).length}
+          icon={Clock}
+          iconColor="gold"
+          subtitle="İnceleme bekleyen vakalar"
+        />
+        <StatCard
+          title="MASAK'a Bildirilen (ŞİB)"
+          value={cases.filter((c) => c.status === COMPLIANCE_CASE_STATUS.REPORTED_TO_MASAK).length}
+          icon={Send}
+          iconColor="purple"
+          subtitle="Resmi ŞİB raporlanan"
+        />
+        <StatCard
+          title="Parçalama (Smurfing)"
+          value={cases.filter((c) => c.triggerType === AML_TRIGGER_TYPE.SMURFING_DETECTED).length}
+          icon={AlertTriangle}
+          iconColor="rose"
+          subtitle="Bölünmüş nakit işlemleri"
+        />
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800">
-        <button
-          onClick={() => setActiveTab('cases')}
-          className={`px-5 py-3 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
-            activeTab === 'cases'
-              ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          Vakalar & ŞİB Havuzu ({cases.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('simulator')}
-          className={`px-5 py-3 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
-            activeTab === 'simulator'
-              ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          Canlı AML Risk Denetleyicisi
-        </button>
-
-        <button
-          onClick={() => setActiveTab('rules')}
-          className={`px-5 py-3 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
-            activeTab === 'rules'
-              ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Sliders className="w-4 h-4" />
-          MASAK Eşik Kuralları ({rules.length})
-        </button>
-      </div>
+      <LuxuryTabs<'cases' | 'simulator' | 'rules'>
+        tabs={[
+          { id: 'cases', label: '1. Vakalar & ŞİB Havuzu', icon: <FileText className="w-4 h-4" />, count: cases.length },
+          { id: 'simulator', label: '2. Canlı AML Risk Denetleyicisi', icon: <ShieldCheck className="w-4 h-4" /> },
+          { id: 'rules', label: '3. MASAK Eşik Kuralları', icon: <Sliders className="w-4 h-4" />, count: rules.length },
+        ]}
+        activeTab={activeTab}
+        onChange={(tab) => setActiveTab(tab)}
+      />
 
       {/* TAB 1: VAKALAR & ŞİB HAVUZU */}
       {activeTab === 'cases' && (

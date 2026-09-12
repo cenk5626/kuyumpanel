@@ -19,6 +19,10 @@ import {
   Share2,
 } from 'lucide-react';
 import ScaleButton from '@/components/ScaleButton';
+import PageHeader from '@/components/PageHeader';
+import StatCard from '@/components/StatCard';
+import LuxuryTabs from '@/components/LuxuryTabs';
+import { THEME } from '@/constants/theme';
 import {
   QUOTE_STATUS,
   QUOTE_STATUS_LABELS,
@@ -234,117 +238,90 @@ export default function QuotesClient({
   return (
     <div className="space-y-6 pb-12">
       {/* Üst Başlık & Eylemler */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-            <BadgePercent className="w-6 h-6 text-amber-500" />
-            Teklif Yönetimi & Özel İskonto
-          </h1>
-          <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-            Altın kuru toleranslı teklif hazırlama, iskonto yetki kontrolü ve tek tıkla satışa dönüştürme.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <div className="text-xs text-stone-500">Canlı Has Referans Kuru</div>
-            <div className="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">
-              ₺{liveGoldPrice.toLocaleString('tr-TR')}
-            </div>
-          </div>
-
+      <PageHeader
+        title="Teklif Yönetimi & Özel İskonto"
+        subtitle="Altın kuru toleranslı teklif hazırlama, iskonto yetki kontrolü ve tek tıkla satışa dönüştürme."
+        icon={BadgePercent}
+        badges={[
+          { label: `${totalCount} Teklif Kaydı`, variant: 'gold' },
+          { label: `Canlı Has: ₺${liveGoldPrice.toLocaleString('tr-TR')}`, variant: 'success' },
+          ...(pendingApprovalCount > 0 ? [{ label: `${pendingApprovalCount} Onay Bekliyor`, variant: 'warning' as const }] : []),
+        ]}
+        actions={
           <button
             onClick={() => setShowNewQuoteModal(true)}
-            className="px-4 py-2 text-sm font-semibold rounded-lg bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition flex items-center gap-1.5"
+            className={`${THEME.BTN_PRIMARY} min-h-[44px] flex items-center justify-center gap-2`}
           >
             <Plus className="w-4 h-4" />
-            Yeni Teklif Hazırla
+            <span>Yeni Teklif Hazırla</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* 4 KPI Kartı */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-stone-800/90 p-4 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-            <BadgePercent className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-stone-500 dark:text-stone-400">Toplam Teklif</div>
-            <div className="text-xl font-bold text-stone-900 dark:text-stone-100">{totalCount}</div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-stone-800/90 p-4 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-stone-500 dark:text-stone-400">Onay Bekleyenler</div>
-            <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              {pendingApprovalCount}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-stone-800/90 p-4 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-stone-500 dark:text-stone-400">Satışa Dönüşen</div>
-            <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-              {convertedCount}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-stone-800/90 p-4 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-stone-500 dark:text-stone-400">Süresi Dolan / Geçersiz</div>
-            <div className="text-xl font-bold text-red-600 dark:text-red-400">{invalidatedCount}</div>
-          </div>
-        </div>
+        <StatCard
+          title="Toplam Teklif"
+          value={totalCount}
+          subtitle="Tüm teklif arşivi"
+          icon={BadgePercent}
+          iconColor="gold"
+        />
+        <StatCard
+          title="Onay Bekleyenler"
+          value={pendingApprovalCount}
+          subtitle="İskonto yetki kontrolünde"
+          icon={ShieldAlert}
+          iconColor="blue"
+        />
+        <StatCard
+          title="Satışa Dönüşen"
+          value={convertedCount}
+          subtitle="Onaylanıp satılanlar"
+          icon={CheckCircle2}
+          iconColor="emerald"
+        />
+        <StatCard
+          title="Süresi Dolan / Geçersiz"
+          value={invalidatedCount}
+          subtitle="Kur toleransı aşılmış"
+          icon={Clock}
+          iconColor="rose"
+        />
       </div>
 
-      {/* Arama & Filtreleme */}
-      <div className="bg-white dark:bg-stone-800/90 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-stone-200 dark:border-stone-700 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+      {/* 4'lü Ana Tab Seçici (LuxuryTabs) */}
+      <LuxuryTabs<string>
+        tabs={[
+          { id: '', label: '1. Tüm Teklifler', count: totalCount },
+          { id: QUOTE_STATUS.PENDING_APPROVAL, label: '2. Onay Bekleyenler', count: pendingApprovalCount },
+          { id: QUOTE_STATUS.CONVERTED, label: '3. Satışa Dönüşenler', count: convertedCount },
+          { id: 'INVALIDATED', label: '4. Süresi Dolan / İptal', count: invalidatedCount },
+        ]}
+        activeTab={statusFilter}
+        onChange={(tab) => setStatusFilter(tab)}
+      />
+
+      {/* Arama & Tablo Konteyneri */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-amber-500/20 overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Teklif No veya Müşteri Ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-900 dark:text-stone-100"
+              className={`w-full pl-10 pr-3 min-h-[44px] ${THEME.INPUT}`}
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-sm px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200"
-            >
-              <option value="">Tüm Teklif Durumları</option>
-              {Object.entries(QUOTE_STATUS_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
         {/* Tablo */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-none">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-stone-50 dark:bg-stone-900/60 text-stone-500 dark:text-stone-400 border-b border-stone-200 dark:border-stone-700 text-xs">
+              <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-xs">
                 <th className="py-3 px-4">Teklif No</th>
                 <th className="py-3 px-4">Müşteri</th>
                 <th className="py-3 px-4">Toplam Tutar</th>
@@ -355,41 +332,43 @@ export default function QuotesClient({
                 <th className="py-3 px-4 text-right">Eylem</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {quotes
                 .filter((q) => {
                   const matchesSearch =
                     !searchQuery ||
                     q.quoteNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     q.customerName.toLowerCase().includes(searchQuery.toLowerCase());
-                  const matchesStatus = !statusFilter || q.status === statusFilter;
+                  const matchesStatus =
+                    !statusFilter ||
+                    (statusFilter === 'INVALIDATED' ? q.isInvalidated : q.status === statusFilter);
                   return matchesSearch && matchesStatus;
                 })
                 .map((q) => (
-                  <tr key={q.id} className="hover:bg-stone-50/50 dark:hover:bg-stone-750/30">
+                  <tr key={q.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-750/30">
                     <td className="py-3 px-4 font-mono font-bold text-amber-600 dark:text-amber-400">
                       {q.quoteNumber}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-stone-900 dark:text-stone-100">
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">
                         {q.customerName}
                       </div>
-                      <div className="text-xs text-stone-500">{q.customerPhone || 'Telefonsuz'}</div>
+                      <div className="text-xs text-slate-500">{q.customerPhone || 'Telefonsuz'}</div>
                     </td>
-                    <td className="py-3 px-4 font-bold text-stone-900 dark:text-stone-100">
+                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">
                       ₺{q.totalTl.toLocaleString('tr-TR')}
                     </td>
-                    <td className="py-3 px-4 font-mono text-xs text-stone-600 dark:text-stone-300">
+                    <td className="py-3 px-4 font-mono text-xs text-slate-600 dark:text-slate-300">
                       {q.totalHas} gr
                     </td>
                     <td className="py-3 px-4 text-xs">
                       {q.discountPercent > 0 ? (
                         <span className="text-amber-600 font-semibold">%{q.discountPercent}</span>
                       ) : (
-                        <span className="text-stone-400">-</span>
+                        <span className="text-slate-400">-</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-xs text-stone-500">
+                    <td className="py-3 px-4 text-xs text-slate-500">
                       {new Date(q.validUntil).toLocaleTimeString('tr-TR', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -405,7 +384,7 @@ export default function QuotesClient({
                               ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
                               : q.status === QUOTE_STATUS.CONVERTED
                               ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
-                              : 'bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-300'
+                              : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
                           }`}
                         >
                           {QUOTE_STATUS_LABELS[q.status as QuoteStatus] || q.status}
@@ -422,7 +401,7 @@ export default function QuotesClient({
                     <td className="py-3 px-4 text-right">
                       <button
                         onClick={() => setSelectedQuote(q)}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 transition"
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 transition"
                       >
                         İncele & İşlem
                       </button>
@@ -437,15 +416,15 @@ export default function QuotesClient({
       {/* YENİ TEKLİF HAZIRLAMA MODALI */}
       {showNewQuoteModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-800 rounded-2xl max-w-4xl w-full border border-stone-200 dark:border-stone-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
-              <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-4xl w-full border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <BadgePercent className="w-5 h-5 text-amber-500" />
                 Yeni Fiyat Teklifi Hazırla
               </h3>
               <button
                 onClick={() => setShowNewQuoteModal(false)}
-                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 ✕
               </button>
@@ -455,13 +434,13 @@ export default function QuotesClient({
               {/* Müşteri & Süre Bilgileri */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Kayıtlı Müşteri (Opsiyonel)
                   </label>
                   <select
                     value={customerId}
                     onChange={handleCustomerSelect}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                   >
                     <option value="">-- Müşteri Seç / Yeni Giriş --</option>
                     {customers.map((c) => (
@@ -473,7 +452,7 @@ export default function QuotesClient({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Müşteri Adı *
                   </label>
                   <input
@@ -482,12 +461,12 @@ export default function QuotesClient({
                     placeholder="Müşteri ad soyad"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Telefon (WhatsApp için)
                   </label>
                   <input
@@ -495,21 +474,21 @@ export default function QuotesClient({
                     placeholder="05xxxxxxxxx"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                   />
                 </div>
               </div>
 
               {/* Geçerlilik & Tolerans */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-stone-50 dark:bg-stone-900/40 p-3.5 rounded-xl border border-stone-200 dark:border-stone-700">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-900/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Geçerlilik Süresi
                   </label>
                   <select
                     value={validityMinutes}
                     onChange={(e) => setValidityMinutes(parseInt(e.target.value, 10))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                   >
                     {QUOTE_VALIDITY_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -520,13 +499,13 @@ export default function QuotesClient({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Kur Artış Toleransı (%)
                   </label>
                   <select
                     value={tolerancePercent}
                     onChange={(e) => setTolerancePercent(parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                   >
                     <option value={1.0}>%1.0 (Düşük Tolerans)</option>
                     <option value={1.5}>%1.5 (Standart Tolerans)</option>
@@ -535,7 +514,7 @@ export default function QuotesClient({
                 </div>
 
                 <div>
-                  <div className="text-xs text-stone-500">Referans Taban Kur</div>
+                  <div className="text-xs text-slate-500">Referans Taban Kur</div>
                   <div className="text-base font-bold text-amber-600 dark:text-amber-400 mt-1">
                     ₺{liveGoldPrice.toLocaleString('tr-TR')} / gr Has
                   </div>
@@ -545,13 +524,13 @@ export default function QuotesClient({
               {/* Kalemler Tablosu & Terazi */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     Teklif Kalemleri ({lines.length})
                   </h4>
                   <button
                     type="button"
                     onClick={addLine}
-                    className="px-3 py-1 text-xs font-semibold rounded-lg bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 flex items-center gap-1"
+                    className="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Satır Ekle
@@ -562,7 +541,7 @@ export default function QuotesClient({
                   {lines.map((line, idx) => (
                     <div
                       key={idx}
-                      className="p-3 bg-stone-50 dark:bg-stone-900/40 rounded-xl border border-stone-200 dark:border-stone-700 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
+                      className="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
                     >
                       <div className="sm:col-span-4">
                         <input
@@ -571,7 +550,7 @@ export default function QuotesClient({
                           placeholder="Ürün adı"
                           value={line.title}
                           onChange={(e) => updateLine(idx, 'title', e.target.value)}
-                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                         />
                       </div>
 
@@ -579,7 +558,7 @@ export default function QuotesClient({
                         <select
                           value={line.carat}
                           onChange={(e) => updateLine(idx, 'carat', parseInt(e.target.value, 10))}
-                          className="w-full px-2 py-1.5 text-xs rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                          className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                         >
                           <option value={24}>24 Ayar</option>
                           <option value={22}>22 Ayar</option>
@@ -597,7 +576,7 @@ export default function QuotesClient({
                           placeholder="Gram"
                           value={line.weight}
                           onChange={(e) => updateLine(idx, 'weight', parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 text-xs rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-mono"
+                          className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono"
                         />
                         <ScaleButton
                           onWeightReceived={(w) => updateLine(idx, 'weight', w)}
@@ -614,11 +593,11 @@ export default function QuotesClient({
                           placeholder="Birim ₺"
                           value={line.unitPrice}
                           onChange={(e) => updateLine(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 text-xs rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-mono"
+                          className="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono"
                         />
                       </div>
 
-                      <div className="sm:col-span-1 text-xs font-bold text-stone-900 dark:text-stone-100 font-mono text-right">
+                      <div className="sm:col-span-1 text-xs font-bold text-slate-900 dark:text-slate-100 font-mono text-right">
                         ₺{Math.round(line.weight * line.unitPrice + (line.laborCost || 0)).toLocaleString('tr-TR')}
                       </div>
 
@@ -639,9 +618,9 @@ export default function QuotesClient({
               </div>
 
               {/* İskonto & Toplamlar */}
-              <div className="bg-stone-50 dark:bg-stone-900/60 p-4 rounded-xl border border-stone-200 dark:border-stone-700 flex flex-col sm:flex-row justify-between gap-4">
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between gap-4">
                 <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Özel İskonto Oranı (%)
                   </label>
                   <div className="flex items-center gap-2">
@@ -651,9 +630,9 @@ export default function QuotesClient({
                       max="100"
                       value={discountPercent}
                       onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
-                      className="w-24 px-3 py-1.5 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                      className="w-24 px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                     />
-                    <span className="text-xs text-stone-500">
+                    <span className="text-xs text-slate-500">
                       (Standart personel tavanı: %3 • Müdür tavanı: %10)
                     </span>
                   </div>
@@ -667,7 +646,7 @@ export default function QuotesClient({
                 </div>
 
                 <div className="text-right space-y-1">
-                  <div className="text-xs text-stone-500">
+                  <div className="text-xs text-slate-500">
                     Ara Toplam: ₺{totals.subtotalTl.toLocaleString('tr-TR')}
                   </div>
                   {totals.discountAmountTl > 0 && (
@@ -675,7 +654,7 @@ export default function QuotesClient({
                       İskonto Tutarı: -₺{totals.discountAmountTl.toLocaleString('tr-TR')} (%{totals.appliedDiscountPercent})
                     </div>
                   )}
-                  <div className="text-lg font-bold text-stone-900 dark:text-stone-100">
+                  <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
                     Net Tutar: ₺{totals.totalTl.toLocaleString('tr-TR')}
                   </div>
                   <div className="text-xs font-mono text-amber-600 dark:text-amber-400">
@@ -688,7 +667,7 @@ export default function QuotesClient({
                 <button
                   type="button"
                   onClick={() => setShowNewQuoteModal(false)}
-                  className="px-4 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300"
+                  className="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
                 >
                   Vazgeç
                 </button>
@@ -708,20 +687,20 @@ export default function QuotesClient({
       {/* TEKLİF İNCELEME & SATIŞA DÖNÜŞTÜRME MODALI */}
       {selectedQuote && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-800 rounded-2xl max-w-2xl w-full border border-stone-200 dark:border-stone-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <BadgePercent className="w-5 h-5 text-amber-500" />
                   Teklif Detayı: {selectedQuote.quoteNumber}
                 </h3>
-                <div className="text-xs text-stone-500 mt-0.5">
+                <div className="text-xs text-slate-500 mt-0.5">
                   Müşteri: <strong>{selectedQuote.customerName}</strong> ({selectedQuote.customerPhone || 'Telefonsuz'})
                 </div>
               </div>
               <button
                 onClick={() => setSelectedQuote(null)}
-                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 ✕
               </button>
@@ -739,9 +718,9 @@ export default function QuotesClient({
               )}
 
               {/* Kalemler */}
-              <div className="border border-stone-200 dark:border-stone-700 rounded-xl overflow-hidden">
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-stone-50 dark:bg-stone-900/60 text-stone-500">
+                  <thead className="bg-slate-50 dark:bg-slate-900/60 text-slate-500">
                     <tr>
                       <th className="py-2.5 px-3">Ürün</th>
                       <th className="py-2.5 px-3">Ayar</th>
@@ -750,7 +729,7 @@ export default function QuotesClient({
                       <th className="py-2.5 px-3 text-right">Tutar</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                     {selectedQuote.lines?.map((line: any) => (
                       <tr key={line.id}>
                         <td className="py-2.5 px-3 font-medium">{line.title}</td>
@@ -767,8 +746,8 @@ export default function QuotesClient({
               </div>
 
               {/* Tutar Özeti */}
-              <div className="bg-stone-50 dark:bg-stone-900/40 p-4 rounded-xl space-y-1 text-sm">
-                <div className="flex justify-between text-stone-500">
+              <div className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl space-y-1 text-sm">
+                <div className="flex justify-between text-slate-500">
                   <span>Ara Toplam:</span>
                   <span>₺{selectedQuote.subtotalTl.toLocaleString('tr-TR')}</span>
                 </div>
@@ -778,7 +757,7 @@ export default function QuotesClient({
                     <span>-₺{selectedQuote.discountTl.toLocaleString('tr-TR')}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base font-bold text-stone-900 dark:text-stone-100 pt-1 border-t border-stone-200 dark:border-stone-700">
+                <div className="flex justify-between text-base font-bold text-slate-900 dark:text-slate-100 pt-1 border-t border-slate-200 dark:border-slate-700">
                   <span>Toplam Tutar:</span>
                   <span>₺{selectedQuote.totalTl.toLocaleString('tr-TR')}</span>
                 </div>
@@ -813,7 +792,7 @@ export default function QuotesClient({
 
                 <button
                   onClick={() => window.print()}
-                  className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700 flex items-center gap-1.5 text-stone-700 dark:text-stone-200"
+                  className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 text-slate-700 dark:text-slate-200"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   Matbu Teklif Yazdır
@@ -847,23 +826,23 @@ export default function QuotesClient({
       {/* SATIŞA DÖNÜŞTÜRME ONAY MODALI */}
       {showConvertModal && selectedQuote && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-stone-800 rounded-2xl max-w-md w-full border border-stone-200 dark:border-stone-700 shadow-2xl p-6">
-            <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100 mb-2">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
+            <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-2">
               Teklifi Satışa Dönüştür
             </h3>
-            <p className="text-xs text-stone-500 dark:text-stone-400 mb-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               <strong>{selectedQuote.quoteNumber}</strong> numaralı teklif için resmi satış kaydı oluşturulacaktır.
               Toplam Tutar: <strong>₺{selectedQuote.totalTl.toLocaleString('tr-TR')}</strong>
             </p>
 
             <div className="mb-4">
-              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Tahsilat / Ödeme Yöntemi
               </label>
               <select
                 value={convertPaymentMethod}
                 onChange={(e) => setConvertPaymentMethod(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               >
                 <option value="CASH">Nakit (Kasa Girişi)</option>
                 <option value="CARD">Kredi / Banka Kartı</option>
@@ -877,7 +856,7 @@ export default function QuotesClient({
               <button
                 type="button"
                 onClick={() => setShowConvertModal(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300"
+                className="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
               >
                 İptal
               </button>

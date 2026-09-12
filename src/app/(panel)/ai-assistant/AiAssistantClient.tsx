@@ -34,7 +34,6 @@ import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { isAffirmativeConfirmation, isNegativeCancellation } from '@/constants/ai';
-import HeaderActions from '@/components/HeaderActions';
 
 interface ActionProposal {
   actionType: string;
@@ -409,18 +408,17 @@ Size nasıl yardımcı olabilirim?`,
                   Canlı Danışman & Eylem Motoru
                 </span>
               </h1>
-              <p className="text-gray-400 text-xs mt-0.5">{MESSAGES.AI_ASSISTANT_SUBTITLE}</p>
+              <p className="text-slate-400 text-xs mt-0.5">{MESSAGES.AI_ASSISTANT_SUBTITLE}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
               href={ROUTES.SETTINGS_AI}
-              className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-750 text-gray-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-750 text-slate-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
             >
               <Settings size={14} className="text-yellow-400" /> API & WhatsApp Ayarları
             </Link>
-            <HeaderActions />
           </div>
         </div>
       </header>
@@ -437,7 +435,7 @@ Size nasıl yardımcı olabilirim?`,
             </div>
             <Link
               href={ROUTES.SETTINGS_AI}
-              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-gray-950 font-black rounded-xl text-xs shrink-0 transition-colors"
+              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs shrink-0 transition-colors"
             >
               Anahtar Ekle
             </Link>
@@ -445,7 +443,7 @@ Size nasıl yardımcı olabilirim?`,
         )}
 
         {/* ─── SOHBET GEÇMİŞİ ALANI ─── */}
-        <div className="flex-1 overflow-y-auto space-y-4 p-4 rounded-2xl bg-gray-950/40 border border-gray-850 shadow-inner">
+        <div className="flex-1 overflow-y-auto space-y-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-850 shadow-inner">
           <AnimatePresence initial={false}>
             {messages.map(msg => (
               <motion.div
@@ -463,8 +461,8 @@ Size nasıl yardımcı olabilirim?`,
                 <div
                   className={`max-w-[85%] sm:max-w-[78%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-yellow-500 text-gray-950 font-semibold rounded-tr-none shadow-md shadow-yellow-500/10'
-                      : 'bg-gray-900 border border-gray-800 text-gray-100 rounded-tl-none space-y-3'
+                      ? 'bg-yellow-500 text-slate-950 font-semibold rounded-tr-none shadow-md shadow-yellow-500/10'
+                      : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-tl-none space-y-3'
                   }`}
                 >
                   {/* Metin İçeriği */}
@@ -472,8 +470,8 @@ Size nasıl yardımcı olabilirim?`,
 
                   {/* ─── 2 AŞAMALI TEYİT KARTI (ACTION PROPOSAL CARD) ─── */}
                   {msg.actionProposal && (
-                    <div className="mt-3 p-4 rounded-2xl bg-gray-950/80 border border-yellow-500/30 space-y-3 shadow-lg">
-                      <div className="flex items-center justify-between border-b border-gray-800 pb-2.5">
+                    <div className="mt-3 p-4 rounded-2xl bg-slate-950/80 border border-yellow-500/30 space-y-3 shadow-lg">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
                         <div className="flex items-center gap-2">
                           <div className="p-1.5 bg-yellow-500/20 text-yellow-400 rounded-lg">
                             <ShieldCheck size={16} />
@@ -490,15 +488,15 @@ Size nasıl yardımcı olabilirim?`,
                         </span>
                       </div>
 
-                      <p className="text-xs text-gray-300">{msg.actionProposal.description}</p>
+                      <p className="text-xs text-slate-300">{msg.actionProposal.description}</p>
 
                       {/* Parametre Tablosu */}
                       {msg.actionProposal.summary && Object.keys(msg.actionProposal.summary).length > 0 && (
-                        <div className="grid grid-cols-2 gap-2 bg-gray-900/90 p-2.5 rounded-xl border border-gray-800 text-[11px]">
+                        <div className="grid grid-cols-2 gap-2 bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 text-[11px]">
                           {Object.entries(msg.actionProposal.summary).map(([key, val]) => (
                             <div key={key} className="space-y-0.5">
-                              <span className="text-gray-400 text-[10px] font-semibold">{key}:</span>
-                              <p className="font-bold text-gray-200">{String(val)}</p>
+                              <span className="text-slate-400 text-[10px] font-semibold">{key}:</span>
+                              <p className="font-bold text-slate-200">{String(val)}</p>
                             </div>
                           ))}
                         </div>
@@ -516,7 +514,7 @@ Size nasıl yardımcı olabilirim?`,
                             </button>
                             <button
                               onClick={() => handleCancelAction(msg.id)}
-                              className="py-2.5 px-3 bg-gray-800 hover:bg-red-500/20 hover:text-red-400 text-gray-400 font-bold text-xs rounded-xl flex items-center gap-1 transition-all"
+                              className="py-2.5 px-3 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-slate-400 font-bold text-xs rounded-xl flex items-center gap-1 transition-all"
                             >
                               <XCircle size={15} /> İptal Et
                             </button>
@@ -598,7 +596,7 @@ Size nasıl yardımcı olabilirim?`,
                         )}
 
                         {msg.actionStatus === 'CANCELLED' && (
-                          <div className="p-2.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-400 text-xs font-semibold flex items-center gap-1.5">
+                          <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-semibold flex items-center gap-1.5">
                             <XCircle size={15} /> İşlem patron tarafından iptal edildi.
                           </div>
                         )}
@@ -636,7 +634,7 @@ Size nasıl yardımcı olabilirim?`,
                 <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 flex items-center justify-center shrink-0">
                   <RefreshCw size={16} className="animate-spin" />
                 </div>
-                <div className="p-3.5 rounded-2xl bg-gray-900 border border-gray-800 text-yellow-400 text-xs flex items-center gap-2">
+                <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-yellow-400 text-xs flex items-center gap-2">
                   <Sparkles size={14} className="animate-pulse" />
                   <span>Patron Asistanı canlı verilerinizi analiz ediyor...</span>
                 </div>
@@ -655,7 +653,7 @@ Size nasıl yardımcı olabilirim?`,
                 key={idx}
                 onClick={() => handleSendMessage(sug.text)}
                 disabled={loading}
-                className="px-3 py-1.5 rounded-xl bg-gray-900/90 hover:bg-yellow-500/15 border border-gray-800 hover:border-yellow-500/40 text-gray-300 hover:text-yellow-400 text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all shrink-0 shadow-sm disabled:opacity-50"
+                className="px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-yellow-500/15 border border-slate-800 hover:border-yellow-500/40 text-slate-300 hover:text-yellow-400 text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all shrink-0 shadow-sm disabled:opacity-50"
               >
                 <Icon size={13} className="text-yellow-400" />
                 {sug.label}
@@ -671,7 +669,7 @@ Size nasıl yardımcı olabilirim?`,
               e.preventDefault();
               handleSendMessage();
             }}
-            className="flex items-center gap-2 bg-gray-950 p-2 rounded-2xl border border-gray-800 shadow-xl focus-within:border-yellow-500/60 transition-all"
+            className="flex items-center gap-2 bg-slate-950 p-2 rounded-2xl border border-slate-800 shadow-xl focus-within:border-yellow-500/60 transition-all"
           >
             {/* Sesli Konuşma Mikrofon Butonu */}
             <button
@@ -680,7 +678,7 @@ Size nasıl yardımcı olabilirim?`,
               className={`p-3 rounded-xl transition-all ${
                 isRecording
                   ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30'
-                  : 'bg-gray-900 text-gray-400 hover:text-yellow-400 hover:bg-gray-800'
+                  : 'bg-slate-900 text-slate-400 hover:text-yellow-400 hover:bg-slate-800'
               }`}
               title={isRecording ? 'Dinlemeyi Durdur' : 'Sesli Soru Sor'}
             >
@@ -694,14 +692,14 @@ Size nasıl yardımcı olabilirim?`,
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               disabled={loading}
-              className="flex-1 bg-transparent px-3 text-xs sm:text-sm text-gray-100 placeholder-gray-500 focus:outline-none disabled:opacity-50"
+              className="flex-1 bg-transparent px-3 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none disabled:opacity-50"
             />
 
             {/* Gönder Butonu */}
             <button
               type="submit"
               disabled={!inputQuery.trim() || loading}
-              className="p-3 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:hover:bg-yellow-500 text-gray-950 rounded-xl transition-all font-black shadow-md shadow-yellow-500/10 flex items-center justify-center shrink-0"
+              className="p-3 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:hover:bg-yellow-500 text-slate-950 rounded-xl transition-all font-black shadow-md shadow-yellow-500/10 flex items-center justify-center shrink-0"
             >
               <Send size={18} />
             </button>

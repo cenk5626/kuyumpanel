@@ -95,6 +95,18 @@ export const ROUTES = {
   API_BANK_TRANSACTIONS: '/api/banking/transactions',
   API_POS_SETTLEMENTS: '/api/banking/settlements',
   API_BANK_SYNC: '/api/banking/sync',
+  HISTORY_RATES: '/history-rates',
+  API_PRICES_SNAPSHOTS: '/api/prices/snapshots',
+  API_MILYEM_SNAPSHOTS: '/api/milyem/snapshots',
+  PURCHASE_ORDERS: '/purchase-orders',
+  API_PURCHASE_ORDERS: '/api/purchase-orders',
+  BANK_ACCOUNTS: '/settings/bank-accounts',
+  API_BUSINESS_BANK_ACCOUNTS: '/api/business-bank-accounts',
+  IDENTITY_VAULT: '/identity-vault',
+  API_CUSTOMER_IDENTITIES: '/api/customer-identities',
+  NOTEBOOK: '/notebook',
+  API_NOTEBOOK: '/api/notebook',
+  API_NOTEBOOK_REMINDERS: '/api/notebook/reminders',
 } as const;
 
 

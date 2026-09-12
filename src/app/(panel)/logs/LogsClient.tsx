@@ -19,10 +19,9 @@ import {
   Sparkles,
   DollarSign,
   Layers,
-  Coins
+  Coins,
 } from 'lucide-react';
 import { THEME, ANIM } from '@/constants/theme';
-import HeaderActions from '@/components/HeaderActions';
 
 interface AuditLogItem {
   id: string;
@@ -179,7 +178,7 @@ export default function LogsClient({
       <div className="p-8 text-center max-w-lg mx-auto mt-20 bg-red-500/10 border border-red-500/20 rounded-2xl">
         <ShieldAlert size={48} className="mx-auto text-red-400 mb-4" />
         <h2 className="text-xl font-bold text-white mb-2">Erişim Engellendi</h2>
-        <p className="text-gray-400 text-sm">
+        <p className="text-slate-400 text-sm">
           İşlem logları ve denetim kayıtları sadece <strong>Bayi Yetkilisi (Yönetici)</strong> tarafından görüntülenebilir.
         </p>
       </div>
@@ -195,7 +194,7 @@ export default function LogsClient({
             <History className="text-yellow-400" size={28} />
             İşlem Logları & Güvenlik Radarı
           </h1>
-          <p className="text-gray-400 text-xs mt-1">
+          <p className="text-slate-400 text-xs mt-1">
             Sistem denetim günlüğü, yapay zeka şüpheli işlem radarı ve değiştirilen/silinen işlem revizyon takibi.
           </p>
         </div>
@@ -208,18 +207,17 @@ export default function LogsClient({
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             Yenile
           </button>
-          <HeaderActions />
         </div>
       </div>
 
       {/* 3'lü TAB SEÇİCİ */}
-      <div className="flex flex-col sm:flex-row bg-gray-900/80 p-1.5 rounded-2xl border border-gray-800/80 max-w-2xl backdrop-blur-md gap-1">
+      <div className="flex flex-col sm:flex-row bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 max-w-2xl backdrop-blur-md gap-1">
         <button
           onClick={() => setActiveTab('audit')}
           className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'audit'
-              ? 'bg-yellow-500 text-gray-950 shadow-lg shadow-yellow-500/20'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-yellow-500 text-slate-950 shadow-lg shadow-yellow-500/20'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
           <History size={15} /> 1. Sistem Logları ({logs.length})
@@ -229,7 +227,7 @@ export default function LogsClient({
           className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'suspicious'
               ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
-              : 'text-gray-400 hover:text-red-400'
+              : 'text-slate-400 hover:text-red-400'
           }`}
         >
           <AlertTriangle size={15} /> 2. Şüpheli İşlem Radarı ({suspiciousList.length})
@@ -239,7 +237,7 @@ export default function LogsClient({
           className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all min-h-[44px] ${
             activeTab === 'revisions'
               ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
-              : 'text-gray-400 hover:text-purple-300'
+              : 'text-slate-400 hover:text-purple-300'
           }`}
         >
           <FileEdit size={15} /> 3. Düzeltme & Silme ({revisionsList.length})
@@ -249,7 +247,7 @@ export default function LogsClient({
       {/* Arama ve Filtre */}
       <div className={`${THEME.GLASS_CARD} p-4 flex flex-col sm:flex-row gap-3 items-center justify-between`}>
         <div className="relative flex-1 w-full">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             value={searchQuery}
@@ -267,7 +265,7 @@ export default function LogsClient({
 
         {activeTab === 'audit' && (
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter size={16} className="text-gray-400" />
+            <Filter size={16} className="text-slate-400" />
             <select
               value={selectedAction}
               onChange={(e) => setSelectedAction(e.target.value)}
@@ -304,7 +302,7 @@ export default function LogsClient({
               <tbody className={THEME.TABLE.TBODY}>
                 {filteredLogs.length > 0 ? (
                   filteredLogs.map((log, i) => {
-                    const badgeStyle = ACTION_COLOR_MAP[log.action] || 'bg-gray-800 text-gray-300 border-gray-700';
+                    const badgeStyle = ACTION_COLOR_MAP[log.action] || 'bg-slate-800 text-slate-300 border-slate-700';
                     return (
                       <motion.tr
                         key={log.id}
@@ -314,7 +312,7 @@ export default function LogsClient({
                         className={THEME.TABLE.TR}
                       >
                         <td className={THEME.TABLE.TD}>
-                          <div className="flex items-center gap-2 text-gray-400 text-xs font-mono">
+                          <div className="flex items-center gap-2 text-slate-400 text-xs font-mono">
                             <Calendar size={13} className="text-yellow-500/70" />
                             {new Date(log.createdAt).toLocaleString('tr-TR')}
                           </div>
@@ -326,17 +324,17 @@ export default function LogsClient({
                         </td>
                         <td className={THEME.TABLE.TD}>
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-[10px] text-yellow-400 font-bold">
+                            <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] text-yellow-400 font-bold">
                               {(log.userName || log.userEmail || 'P')[0].toUpperCase()}
                             </div>
                             <div>
                               <span className="text-xs font-medium text-white block">{log.userName || 'Sistem'}</span>
-                              {log.userEmail && <span className="text-[10px] text-gray-500 block">{log.userEmail}</span>}
+                              {log.userEmail && <span className="text-[10px] text-slate-500 block">{log.userEmail}</span>}
                             </div>
                           </div>
                         </td>
                         <td className={THEME.TABLE.TD}>
-                          <span className="text-xs text-gray-300 font-mono whitespace-normal max-w-xl block">
+                          <span className="text-xs text-slate-300 font-mono whitespace-normal max-w-xl block">
                             {log.details}
                           </span>
                         </td>
@@ -345,7 +343,7 @@ export default function LogsClient({
                   })
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500 text-sm">
+                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500 text-sm">
                       Kayıtlı sistem logu bulunamadı.
                     </td>
                   </tr>
@@ -368,7 +366,7 @@ export default function LogsClient({
               <ShieldAlert size={18} />
               Otomatik Güvenlik & Anomali Radarı
             </div>
-            <span className="text-xs text-gray-400 font-mono">
+            <span className="text-xs text-slate-400 font-mono">
               Yüksek Tutar, Gece İşlemleri, Olağandışı Fiyat Sapmaları ve Borç Limiti Aşımı
             </span>
           </div>
@@ -393,10 +391,10 @@ export default function LogsClient({
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: i * 0.02 }}
-                      className="hover:bg-red-500/5 transition-colors border-b border-gray-800/40"
+                      className="hover:bg-red-500/5 transition-colors border-b border-slate-800/40"
                     >
                       <td className={THEME.TABLE.TD}>
-                        <div className="text-xs font-mono text-gray-300">
+                        <div className="text-xs font-mono text-slate-300">
                           {new Date(tx.createdAt).toLocaleString('tr-TR')}
                         </div>
                       </td>
@@ -411,7 +409,7 @@ export default function LogsClient({
                           </span>
                           <div>
                             <span className="text-xs font-bold text-white block">{tx.productCode}</span>
-                            <span className="text-[10px] text-gray-400">{tx.quantity} Adet / gr</span>
+                            <span className="text-[10px] text-slate-400">{tx.quantity} Adet / gr</span>
                           </div>
                         </div>
                       </td>
@@ -420,7 +418,7 @@ export default function LogsClient({
                           <span className="text-sm font-bold text-white font-mono block">
                             ₺{tx.total.toLocaleString('tr-TR')}
                           </span>
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[10px] text-slate-400">
                             Ödeme: {tx.paymentMethod}
                           </span>
                         </div>
@@ -432,13 +430,13 @@ export default function LogsClient({
                               {tx.profitAmount >= 0 ? `+₺${tx.profitAmount.toLocaleString('tr-TR')}` : `-₺${Math.abs(tx.profitAmount).toLocaleString('tr-TR')}`}
                             </span>
                             {tx.profitMargin != null && (
-                              <span className="text-[10px] text-gray-500 block">
+                              <span className="text-[10px] text-slate-500 block">
                                 Marj: %{tx.profitMargin.toFixed(1)}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-500 text-xs">—</span>
+                          <span className="text-slate-500 text-xs">—</span>
                         )}
                       </td>
                       <td className={THEME.TABLE.TD}>
@@ -448,13 +446,13 @@ export default function LogsClient({
                         </div>
                       </td>
                       <td className={THEME.TABLE.TD}>
-                        <span className="text-xs font-medium text-gray-300">{tx.employeeName}</span>
+                        <span className="text-xs font-medium text-slate-300">{tx.employeeName}</span>
                       </td>
                     </motion.tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center text-gray-500 text-sm">
+                    <td colSpan={6} className="px-6 py-16 text-center text-slate-500 text-sm">
                       <CheckCircle size={36} className="mx-auto text-emerald-400 mb-2 opacity-80" />
                       Harika! Sistemde tespit edilen şüpheli veya kural dışı işlem kaydı bulunmuyor.
                     </td>
@@ -478,7 +476,7 @@ export default function LogsClient({
               <FileEdit size={18} />
               İşlem Düzenleme & Silme Revizyon Günlüğü
             </div>
-            <span className="text-xs text-gray-400 font-mono">
+            <span className="text-xs text-slate-400 font-mono">
               Düzenlenen ve iptal edilen işlemlerin kim tarafından hangi gerekçeyle değiştirildiği
             </span>
           </div>
@@ -506,7 +504,7 @@ export default function LogsClient({
                       className={THEME.TABLE.TR}
                     >
                       <td className={THEME.TABLE.TD}>
-                        <div className="text-xs font-mono text-gray-300">
+                        <div className="text-xs font-mono text-slate-300">
                           {new Date(rev.createdAt).toLocaleString('tr-TR')}
                         </div>
                       </td>
@@ -524,7 +522,7 @@ export default function LogsClient({
                           <span className="text-xs font-bold text-white block">
                             #{rev.transactionId.slice(-8)}
                           </span>
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[10px] text-slate-400">
                             {rev.previousData?.productCode || 'Ürün'} ({rev.previousData?.quantity || 0} Adet)
                           </span>
                         </div>
@@ -535,7 +533,7 @@ export default function LogsClient({
                         </span>
                       </td>
                       <td className={THEME.TABLE.TD}>
-                        <div className="text-xs font-medium text-gray-300">
+                        <div className="text-xs font-medium text-slate-300">
                           {rev.userName || rev.userEmail || 'Yönetici'}
                         </div>
                       </td>
@@ -551,7 +549,7 @@ export default function LogsClient({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center text-gray-500 text-sm">
+                    <td colSpan={6} className="px-6 py-16 text-center text-slate-500 text-sm">
                       Henüz geçmiş işlem düzenleme veya silme kaydı bulunmuyor.
                     </td>
                   </tr>
@@ -570,9 +568,9 @@ export default function LogsClient({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900 border border-purple-500/30 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+              className="bg-slate-900 border border-purple-500/30 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <FileEdit className="text-purple-400" size={20} />
@@ -592,8 +590,8 @@ export default function LogsClient({
                 <span className="text-[11px] font-bold text-yellow-400 uppercase tracking-wider block">
                   Düzeltme / Silme Gerekçesi
                 </span>
-                <p className="text-sm text-gray-200 font-medium">"{viewRevisionModal.reason}"</p>
-                <div className="text-[10px] text-gray-400 flex items-center gap-2 pt-1 font-mono">
+                <p className="text-sm text-slate-200 font-medium">"{viewRevisionModal.reason}"</p>
+                <div className="text-[10px] text-slate-400 flex items-center gap-2 pt-1 font-mono">
                   <span>Yapan: {viewRevisionModal.userName || viewRevisionModal.userEmail}</span>
                   <span>•</span>
                   <span>Tarih: {new Date(viewRevisionModal.createdAt).toLocaleString('tr-TR')}</span>
@@ -608,15 +606,15 @@ export default function LogsClient({
                     <History size={14} /> Önceki Hali (Değişmeden Önce)
                   </h4>
                   {viewRevisionModal.previousData ? (
-                    <div className="space-y-1 text-xs font-mono text-gray-300">
-                      <div><strong className="text-gray-400">Ürün:</strong> {viewRevisionModal.previousData.productCode}</div>
-                      <div><strong className="text-gray-400">Miktar:</strong> {viewRevisionModal.previousData.quantity}</div>
-                      <div><strong className="text-gray-400">Birim Fiyat:</strong> ₺{viewRevisionModal.previousData.price?.toLocaleString('tr-TR')}</div>
-                      <div><strong className="text-gray-400">Toplam:</strong> ₺{viewRevisionModal.previousData.total?.toLocaleString('tr-TR')}</div>
-                      <div><strong className="text-gray-400">Ödeme:</strong> {viewRevisionModal.previousData.paymentMethod}</div>
+                    <div className="space-y-1 text-xs font-mono text-slate-300">
+                      <div><strong className="text-slate-400">Ürün:</strong> {viewRevisionModal.previousData.productCode}</div>
+                      <div><strong className="text-slate-400">Miktar:</strong> {viewRevisionModal.previousData.quantity}</div>
+                      <div><strong className="text-slate-400">Birim Fiyat:</strong> ₺{viewRevisionModal.previousData.price?.toLocaleString('tr-TR')}</div>
+                      <div><strong className="text-slate-400">Toplam:</strong> ₺{viewRevisionModal.previousData.total?.toLocaleString('tr-TR')}</div>
+                      <div><strong className="text-slate-400">Ödeme:</strong> {viewRevisionModal.previousData.paymentMethod}</div>
                     </div>
                   ) : (
-                    <span className="text-gray-500 text-xs">Veri bulunamadı.</span>
+                    <span className="text-slate-500 text-xs">Veri bulunamadı.</span>
                   )}
                 </div>
 
@@ -626,12 +624,12 @@ export default function LogsClient({
                     <CheckCircle size={14} /> Yeni Hali (Düzeltme Sonrası)
                   </h4>
                   {viewRevisionModal.newData ? (
-                    <div className="space-y-1 text-xs font-mono text-gray-300">
-                      <div><strong className="text-gray-400">Ürün:</strong> {viewRevisionModal.newData.productCode}</div>
-                      <div><strong className="text-gray-400">Miktar:</strong> {viewRevisionModal.newData.quantity}</div>
-                      <div><strong className="text-gray-400">Birim Fiyat:</strong> ₺{viewRevisionModal.newData.price?.toLocaleString('tr-TR')}</div>
-                      <div><strong className="text-gray-400">Toplam:</strong> ₺{viewRevisionModal.newData.total?.toLocaleString('tr-TR')}</div>
-                      <div><strong className="text-gray-400">Ödeme:</strong> {viewRevisionModal.newData.paymentMethod}</div>
+                    <div className="space-y-1 text-xs font-mono text-slate-300">
+                      <div><strong className="text-slate-400">Ürün:</strong> {viewRevisionModal.newData.productCode}</div>
+                      <div><strong className="text-slate-400">Miktar:</strong> {viewRevisionModal.newData.quantity}</div>
+                      <div><strong className="text-slate-400">Birim Fiyat:</strong> ₺{viewRevisionModal.newData.price?.toLocaleString('tr-TR')}</div>
+                      <div><strong className="text-slate-400">Toplam:</strong> ₺{viewRevisionModal.newData.total?.toLocaleString('tr-TR')}</div>
+                      <div><strong className="text-slate-400">Ödeme:</strong> {viewRevisionModal.newData.paymentMethod}</div>
                     </div>
                   ) : (
                     <div className="p-3 bg-red-500/10 rounded-lg text-red-400 text-xs font-semibold">

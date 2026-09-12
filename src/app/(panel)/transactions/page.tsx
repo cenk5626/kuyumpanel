@@ -34,7 +34,6 @@ import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { THEME, ANIM } from '@/constants/theme';
 import { PAYMENT_METHODS } from '@/constants/kasa';
-import HeaderActions from '@/components/HeaderActions';
 import CameraScannerModal from '@/components/CameraScannerModal';
 import POSTransactionReceiptModal, { ReceiptData } from '@/components/POSTransactionReceiptModal';
 import ScaleButton from '@/components/ScaleButton';
@@ -939,7 +938,7 @@ export default function TransactionsPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all ${
               isKeyboardLocked
                 ? 'bg-amber-500 text-slate-950 hover:bg-amber-400 shadow-xs'
-                : 'bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-gray-700/60'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/60'
             }`}
           >
             <Keyboard size={14} />
@@ -969,11 +968,11 @@ export default function TransactionsPage() {
         <div className="flex items-center gap-3">
           {/* Tutar Arama Girişi */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500" size={14} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={14} />
             <input
               type="text"
               placeholder="Tutar..."
-              className="w-36 pl-8 pr-3 py-2 bg-white dark:bg-gray-800/80 border border-slate-300 dark:border-gray-700/60 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all font-mono text-right shadow-xs"
+              className="w-36 pl-8 pr-3 py-2 bg-white dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700/60 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all font-mono text-right shadow-xs"
             />
           </div>
 
@@ -994,8 +993,6 @@ export default function TransactionsPage() {
             <Plus size={14} />
             Ürün Ekle
           </button>
-
-          <HeaderActions />
         </div>
       </header>
 
@@ -1050,7 +1047,7 @@ export default function TransactionsPage() {
               onChange={e => setBarcodeQuery(e.target.value)}
               onKeyDown={handleBarcodeKeyDown}
               placeholder="Barkod okutun veya yazın..."
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-gray-950/60 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all font-mono shadow-xs"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all font-mono shadow-xs"
             />
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1098,7 +1095,7 @@ export default function TransactionsPage() {
           {/* === SOL SUTUN: ISLEM SATIRLARI (Sepet) === */}
           <div className="xl:col-span-2 flex flex-col gap-3 sm:gap-4 min-w-0">
             {basket.length === 0 ? (
-              <div className={`${THEME.GLASS_CARD} p-8 sm:p-12 text-center text-gray-500 text-xs sm:text-sm font-semibold`}>
+              <div className={`${THEME.GLASS_CARD} p-8 sm:p-12 text-center text-slate-500 text-xs sm:text-sm font-semibold`}>
                 İşlem sepeti boş. Başlamak için sağ üstten "+ Ürün Ekle" butonuna basın.
               </div>
             ) : (
@@ -1116,14 +1113,14 @@ export default function TransactionsPage() {
                   >
                     {/* 1. Ürün Seçimi */}
                     <div className="flex-1 min-w-[160px] w-full flex flex-col gap-1">
-                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Ürün:</label>
+                      <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Ürün:</label>
                       {item.productCode && (item.productCode.startsWith('K') || item.barcodeDetail) ? (
                         <div className="py-2 px-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
                           <p className="text-yellow-400 font-bold text-xs flex items-center gap-1.5 font-mono">
                             <Barcode size={14} /> {item.productCode}
                           </p>
                           <p className="text-white text-xs mt-1 font-semibold">{item.barcodeDetail?.title || 'Barkodlu Ürün'}</p>
-                          <p className="text-gray-400 text-[10px] mt-0.5 font-mono">
+                          <p className="text-slate-400 text-[10px] mt-0.5 font-mono">
                             {item.barcodeDetail?.carat} Ayar • {item.barcodeDetail?.weight} gr
                             {item.barcodeDetail?.costMilyem != null && (
                               <span className="text-yellow-400 font-bold ml-1.5 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">
@@ -1144,7 +1141,7 @@ export default function TransactionsPage() {
                           <select
                             value={item.productCode}
                             onChange={e => handleUpdateRowField(item.id, 'productCode', e.target.value)}
-                            className="w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl text-white text-xs focus:outline-none focus:border-yellow-500/50 appearance-none font-semibold"
+                            className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-yellow-500/50 appearance-none font-semibold"
                           >
                             <option value="">Ürün Seçin</option>
                             {PRODUCT_OPTIONS.map(p => (
@@ -1157,7 +1154,7 @@ export default function TransactionsPage() {
                               setActiveRowIdForModal(item.id);
                               setIsProductModalOpen(true);
                             }}
-                            className="w-full py-1.5 bg-gray-950/30 hover:bg-gray-950/50 border border-gray-800/80 rounded-lg text-[10px] text-gray-400 font-bold flex items-center justify-center gap-1.5 mt-1 transition-colors"
+                            className="w-full py-1.5 bg-slate-950/30 hover:bg-slate-950/50 border border-slate-800/80 rounded-lg text-[10px] text-slate-400 font-bold flex items-center justify-center gap-1.5 mt-1 transition-colors"
                           >
                             <Search size={10} />
                             Modal ile Seç
@@ -1211,7 +1208,7 @@ export default function TransactionsPage() {
                     <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto flex-1">
                       {/* İşlem Yönü */}
                       <div className="flex flex-col gap-1 w-full sm:w-28">
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">İşlem Tipi:</label>
+                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">İşlem Tipi:</label>
                         <select
                           value={item.type}
                           onChange={e => handleUpdateRowField(item.id, 'type', e.target.value)}
@@ -1228,7 +1225,7 @@ export default function TransactionsPage() {
 
                       {/* Miktar */}
                       <div className="flex flex-col gap-1 w-full sm:w-20">
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Miktar:</label>
+                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Miktar:</label>
                         <input
                           type={isKeyboardLocked ? "text" : "number"}
                           step="0.01"
@@ -1237,14 +1234,14 @@ export default function TransactionsPage() {
                           value={item.quantity}
                           onClick={e => handleInputClick(e, 'row-qty', item.id, item.quantity)}
                           onChange={e => handleUpdateRowField(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                          className="w-full px-2.5 sm:px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl text-white text-xs font-mono text-center focus:outline-none focus:border-yellow-500/50 min-h-[38px]"
+                          className="w-full px-2.5 sm:px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-white text-xs font-mono text-center focus:outline-none focus:border-yellow-500/50 min-h-[38px]"
                         />
                       </div>
 
                       {/* Birim Fiyat */}
                       <div className="col-span-2 sm:flex-1 min-w-[140px] flex flex-col gap-1 w-full">
                         <div className="flex justify-between items-center">
-                          <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Birim Fiyat:</label>
+                          <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Birim Fiyat:</label>
                           {liveP && (
                             <span className={`text-[9px] font-mono font-bold ${
                               item.type === 'buy' ? 'text-rose-400/90' : 'text-emerald-400/90'
@@ -1261,11 +1258,11 @@ export default function TransactionsPage() {
                             value={item.productCode ? (isKeyboardLocked ? formatValue(item.price, item.productType) : item.price) : ''}
                             onClick={e => handleInputClick(e, 'row-price', item.id, item.price)}
                             onChange={e => handleUpdateRowField(item.id, 'price', parseFloat(e.target.value) || 0)}
-                            className={`w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl font-bold font-mono text-right text-xs focus:outline-none focus:border-yellow-500/50 pr-8 min-h-[38px] ${
+                            className={`w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl font-bold font-mono text-right text-xs focus:outline-none focus:border-yellow-500/50 pr-8 min-h-[38px] ${
                               item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
                             }`}
                           />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-mono font-semibold">₺</span>
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-mono font-semibold">₺</span>
                         </div>
                       </div>
                     </div>
@@ -1273,7 +1270,7 @@ export default function TransactionsPage() {
                     {/* 3. Toplam Tutar & Sil Butonu */}
                     <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/40">
                       <div className="flex flex-col sm:text-right">
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Toplam:</label>
+                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Toplam:</label>
                         <span className={`text-sm sm:text-base font-black font-mono leading-tight sm:leading-7 ${
                           item.type === 'buy' ? 'text-rose-400' : 'text-emerald-400'
                         }`}>
@@ -1300,16 +1297,16 @@ export default function TransactionsPage() {
             
             {/* Canlı Milyem / Fiyat Ekranı (Widget) */}
             <div className={`${THEME.GLASS_CARD} p-4 flex flex-col gap-3.5 border border-yellow-900/15`}>
-              <div className="flex justify-between items-center pb-2 border-b border-gray-800/40">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-800/40">
                 <span className="text-xs font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-1.5">
                   <Coins className="text-yellow-500" size={14} />
                   CANLI FİYATLAR
                 </span>
-                <span className="text-[9px] text-gray-500 font-medium">Saniyede bir güncellenir</span>
+                <span className="text-[9px] text-slate-500 font-medium">Saniyede bir güncellenir</span>
               </div>
               
-              <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider border-b border-gray-850 pb-1.5 font-black">
-                <span className="text-gray-500">ÜRÜN</span>
+              <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider border-b border-slate-850 pb-1.5 font-black">
+                <span className="text-slate-500">ÜRÜN</span>
                 <span className="text-right text-rose-400">ALIŞ</span>
                 <span className="text-right text-emerald-400">SATIŞ</span>
               </div>
@@ -1331,8 +1328,8 @@ export default function TransactionsPage() {
                 ].map((p) => {
                   const price = livePrices[p.id];
                   return (
-                    <div key={p.id} className="grid grid-cols-3 text-gray-300">
-                      <span className="text-gray-400 font-sans font-bold text-[10px]">{p.label}</span>
+                    <div key={p.id} className="grid grid-cols-3 text-slate-300">
+                      <span className="text-slate-400 font-sans font-bold text-[10px]">{p.label}</span>
                       <span className="text-right font-extrabold text-rose-400">
                         {price ? formatValue(price.bid, p.type) : '—'}
                       </span>
@@ -1353,7 +1350,7 @@ export default function TransactionsPage() {
                   className={`py-2 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition-all ${
                     paymentMethod === 'cash'
                       ? 'bg-amber-500 border-amber-600 text-black'
-                      : 'bg-gray-950/40 border-gray-800 text-gray-400 hover:text-gray-200'
+                      : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   <Coins size={15} />
@@ -1364,7 +1361,7 @@ export default function TransactionsPage() {
                   className={`py-2 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition-all ${
                     paymentMethod === 'bank'
                       ? 'bg-blue-600 border-blue-700 text-white'
-                      : 'bg-gray-950/40 border-gray-800 text-gray-400 hover:text-gray-200'
+                      : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   <Building size={15} />
@@ -1375,7 +1372,7 @@ export default function TransactionsPage() {
                   className={`py-2 rounded-xl text-[10px] font-bold border flex flex-col items-center gap-1 transition-all ${
                     paymentMethod === 'card'
                       ? 'bg-purple-600 border-purple-700 text-white'
-                      : 'bg-gray-950/40 border-gray-800 text-gray-400 hover:text-gray-200'
+                      : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   <CreditCard size={15} />
@@ -1400,7 +1397,7 @@ export default function TransactionsPage() {
                   placeholder="Örn: Ahmet Yılmaz, sipariş notu..."
                   value={orderNote}
                   onChange={e => setOrderNote(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-950/60 border border-gray-800 rounded-xl text-white text-xs focus:outline-none focus:border-yellow-500/50"
+                  className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-yellow-500/50"
                 />
               </div>
 
@@ -1420,14 +1417,14 @@ export default function TransactionsPage() {
               </div>
 
               {/* Toplam Detaylar (Alış/Satış kırılımı ve Has Çarpanı) */}
-              <div className="p-3 bg-gray-950/50 rounded-xl border border-gray-800/80 flex flex-col gap-1.5 text-xs font-semibold">
+              <div className="p-3 bg-slate-950/50 rounded-xl border border-slate-800/80 flex flex-col gap-1.5 text-xs font-semibold">
                 <div className="flex justify-between">
                   <span className="text-emerald-400 font-bold">Toplam Satış</span>
                   <span className="font-mono text-emerald-400 font-bold">
                     ₺{totalSales.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-gray-800/30 pt-1.5">
+                <div className="flex justify-between border-t border-slate-800/30 pt-1.5">
                   <span className="text-rose-400 font-bold">Toplam Alış</span>
                   <span className="font-mono text-rose-400 font-bold">
                     ₺{totalPurchases.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1519,26 +1516,26 @@ export default function TransactionsPage() {
             return (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className={`${THEME.GLASS_CARD} p-4 border border-yellow-500/20`}>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Toplam Satış Hasılatı</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Toplam Satış Hasılatı</p>
                   <p className="text-xl font-black text-white font-mono mt-1">₺{Math.round(totalSalesRevenue).toLocaleString('tr-TR')}</p>
-                  <span className="text-[10px] text-gray-500">{sellCount} Satış İşlemi</span>
+                  <span className="text-[10px] text-slate-500">{sellCount} Satış İşlemi</span>
                 </div>
                 <div className={`${THEME.GLASS_CARD} p-4 border border-emerald-500/20`}>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Net Kâr / Zarar</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Net Kâr / Zarar</p>
                   <p className={`text-xl font-black font-mono mt-1 ${totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {totalProfit >= 0 ? `+₺${Math.round(totalProfit).toLocaleString('tr-TR')}` : `-₺${Math.round(Math.abs(totalProfit)).toLocaleString('tr-TR')}`}
                   </p>
                   <span className="text-[10px] text-emerald-500/80">{profitableCount} Kârlı İşlem</span>
                 </div>
                 <div className={`${THEME.GLASS_CARD} p-4 border border-blue-500/20`}>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Ortalama Kâr Marjı</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ortalama Kâr Marjı</p>
                   <p className="text-xl font-black text-blue-400 font-mono mt-1">%{profitMargin.toFixed(1)}</p>
-                  <span className="text-[10px] text-gray-500">Maliyet üstü marj</span>
+                  <span className="text-[10px] text-slate-500">Maliyet üstü marj</span>
                 </div>
                 <div className={`${THEME.GLASS_CARD} p-4 border border-purple-500/20`}>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Toplam İşlem Adedi</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Toplam İşlem Adedi</p>
                   <p className="text-xl font-black text-purple-300 font-mono mt-1">{transactions.length}</p>
-                  <span className="text-[10px] text-gray-500">Kayıtlı Alış / Satış</span>
+                  <span className="text-[10px] text-slate-500">Kayıtlı Alış / Satış</span>
                 </div>
               </div>
             );
@@ -1551,30 +1548,30 @@ export default function TransactionsPage() {
             className={`${THEME.GLASS_CARD} overflow-hidden`}
           >
             {/* Tablo Başlık & Arama Çubuğu */}
-            <div className="p-5 border-b border-gray-800/60 bg-gray-950/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div className="p-5 border-b border-slate-800/60 bg-slate-950/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
                 <ArrowLeftRight size={20} className="text-yellow-500" />
                 <div>
                   <h3 className="text-base font-bold text-white">İşlem Geçmişi, Kâr/Zarar ve Düzenleme</h3>
-                  <p className="text-xs text-gray-400">Tüm alış, satış, revizyon ve şüpheli işlemler kaydı</p>
+                  <p className="text-xs text-slate-400">Tüm alış, satış, revizyon ve şüpheli işlemler kaydı</p>
                 </div>
               </div>
 
               {/* Arama Kutusu */}
               <div className="relative min-w-[260px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                 <input
                   type="text"
                   value={historySearch}
                   onChange={e => setHistorySearch(e.target.value)}
                   placeholder="Ürün, personel, fiş no veya tutar ara..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 transition-colors font-mono"
+                  className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500/50 transition-colors font-mono"
                 />
               </div>
             </div>
 
             {/* Filtreleme Butonları */}
-            <div className="px-5 py-3 border-b border-gray-800/40 bg-gray-900/30 flex items-center justify-between flex-wrap gap-2">
+            <div className="px-5 py-3 border-b border-slate-800/40 bg-slate-900/30 flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   type="button"
@@ -1582,7 +1579,7 @@ export default function TransactionsPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     historyTypeFilter === 'ALL'
                       ? 'bg-yellow-500 text-black shadow'
-                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                      : 'bg-slate-800/80 text-slate-400 hover:text-white'
                   }`}
                 >
                   Tümü ({transactions.length})
@@ -1593,7 +1590,7 @@ export default function TransactionsPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     historyTypeFilter === 'SELL'
                       ? 'bg-emerald-600 text-white shadow'
-                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                      : 'bg-slate-800/80 text-slate-400 hover:text-white'
                   }`}
                 >
                   Satışlar ({transactions.filter(t => t.type === 'sell').length})
@@ -1604,7 +1601,7 @@ export default function TransactionsPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     historyTypeFilter === 'BUY'
                       ? 'bg-rose-600 text-white shadow'
-                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                      : 'bg-slate-800/80 text-slate-400 hover:text-white'
                   }`}
                 >
                   Alışlar ({transactions.filter(t => t.type === 'buy').length})
@@ -1615,14 +1612,14 @@ export default function TransactionsPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     historyTypeFilter === 'SUSPICIOUS'
                       ? 'bg-rose-600 text-white shadow'
-                      : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                      : 'bg-slate-800/80 text-slate-400 hover:text-white'
                   }`}
                 >
                   Şüpheli ({transactions.filter(t => t.isSuspicious).length})
                 </button>
               </div>
 
-              <span className="text-xs text-gray-400 font-mono">
+              <span className="text-xs text-slate-400 font-mono">
                 {(() => {
                   const count = transactions.filter(tx => {
                     if (historyTypeFilter === 'SELL' && tx.type !== 'sell') return false;
@@ -1679,7 +1676,7 @@ export default function TransactionsPage() {
                     if (filtered.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={8} className="px-6 py-12 text-center text-gray-500 text-sm">
+                          <td colSpan={8} className="px-6 py-12 text-center text-slate-500 text-sm">
                             {historySearch ? 'Arama kriterlerine uygun işlem bulunamadı.' : 'Henüz kayıtlı işlem geçmişi bulunamadı.'}
                           </td>
                         </tr>
@@ -1695,7 +1692,7 @@ export default function TransactionsPage() {
                         className={THEME.TABLE.TR}
                       >
                         <td className={THEME.TABLE.TD}>
-                          <div className="text-xs font-mono text-gray-400">
+                          <div className="text-xs font-mono text-slate-400">
                             {new Date(tx.createdAt).toLocaleString('tr-TR')}
                           </div>
                         </td>
@@ -1724,7 +1721,7 @@ export default function TransactionsPage() {
                           </div>
                         </td>
                         <td className={THEME.TABLE.TD}>
-                          <span className="text-xs font-mono text-gray-300">
+                          <span className="text-xs font-mono text-slate-300">
                             ₺{tx.price.toLocaleString('tr-TR')}
                           </span>
                         </td>
@@ -1740,19 +1737,19 @@ export default function TransactionsPage() {
                                 {tx.profitAmount >= 0 ? `+₺${tx.profitAmount.toLocaleString('tr-TR')}` : `-₺${Math.abs(tx.profitAmount).toLocaleString('tr-TR')}`}
                               </span>
                               {tx.profitMargin != null && (
-                                <span className="text-[10px] text-gray-500 block font-mono">
+                                <span className="text-[10px] text-slate-500 block font-mono">
                                   Marj: %{tx.profitMargin.toFixed(1)}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-gray-500 text-xs font-mono">—</span>
+                            <span className="text-slate-500 text-xs font-mono">—</span>
                           )}
                         </td>
                         <td className={THEME.TABLE.TD}>
                           <div>
-                            <span className="text-xs font-semibold text-gray-200 block">{tx.paymentMethod || 'Nakit'}</span>
-                            <span className="text-[10px] text-gray-500">{tx.employeeName || 'Kasiyer'}</span>
+                            <span className="text-xs font-semibold text-slate-200 block">{tx.paymentMethod || 'Nakit'}</span>
+                            <span className="text-[10px] text-slate-500">{tx.employeeName || 'Kasiyer'}</span>
                           </div>
                         </td>
                         <td className={THEME.TABLE.TD}>
@@ -1804,9 +1801,9 @@ export default function TransactionsPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900 border border-yellow-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4"
+              className="bg-slate-900 border border-yellow-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4"
             >
-              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <FileText className="text-yellow-400" size={18} />
@@ -1816,7 +1813,7 @@ export default function TransactionsPage() {
                     İşlem No: #{editTxModal.id.slice(-8)} ({editTxModal.productCode})
                   </p>
                 </div>
-                <button onClick={() => setEditTxModal(null)} className="text-gray-400 hover:text-white p-1">
+                <button onClick={() => setEditTxModal(null)} className="text-slate-400 hover:text-white p-1">
                   <X size={18} />
                 </button>
               </div>
@@ -1824,7 +1821,7 @@ export default function TransactionsPage() {
               <form onSubmit={handleSaveEditTx} className="space-y-3.5">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Miktar</label>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Miktar</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1835,7 +1832,7 @@ export default function TransactionsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Birim Fiyat (₺)</label>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Birim Fiyat (₺)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1848,7 +1845,7 @@ export default function TransactionsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Ödeme Yöntemi</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ödeme Yöntemi</label>
                   <select
                     value={editTxForm.paymentMethod}
                     onChange={e => setEditTxForm({ ...editTxForm, paymentMethod: e.target.value })}
@@ -1873,7 +1870,7 @@ export default function TransactionsPage() {
                     placeholder="Örn: Yanlış adet girilmişti, müşteri talebiyle düzeltildi..."
                     className={THEME.INPUT}
                   />
-                  <span className="text-[10px] text-gray-500 mt-1 block">
+                  <span className="text-[10px] text-slate-500 mt-1 block">
                     Bu açıklama İşlem Revizyon Denetim Günlüğüne kaydedilecektir.
                   </span>
                 </div>
@@ -1882,7 +1879,7 @@ export default function TransactionsPage() {
                   <button
                     type="button"
                     onClick={() => setEditTxModal(null)}
-                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                    className="flex-1 py-2.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-700"
                   >
                     İptal
                   </button>
@@ -1908,14 +1905,14 @@ export default function TransactionsPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4"
+              className="bg-slate-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4"
             >
-              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2 text-red-400 font-bold text-base">
                   <Trash2 size={18} />
                   İşlemi İptal Et / Sil
                 </div>
-                <button onClick={() => setDeleteTxModal(null)} className="text-gray-400 hover:text-white p-1">
+                <button onClick={() => setDeleteTxModal(null)} className="text-slate-400 hover:text-white p-1">
                   <X size={18} />
                 </button>
               </div>
@@ -1924,7 +1921,7 @@ export default function TransactionsPage() {
                 <p className="text-white font-bold">
                   {deleteTxModal.type === 'buy' ? 'Alış İşlemi İptal Edilecek' : 'Satış İşlemi İptal Edilecek'}
                 </p>
-                <p className="text-gray-300 font-mono">
+                <p className="text-slate-300 font-mono">
                   {deleteTxModal.quantity} Adet {deleteTxModal.productCode} — ₺{deleteTxModal.total.toLocaleString('tr-TR')}
                 </p>
                 <p className="text-yellow-400 text-[11px] pt-1">
@@ -1951,7 +1948,7 @@ export default function TransactionsPage() {
                   <button
                     type="button"
                     onClick={() => setDeleteTxModal(null)}
-                    className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bold text-xs rounded-xl hover:bg-gray-700"
+                    className="flex-1 py-2.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-700"
                   >
                     Vazgeç
                   </button>
@@ -1980,14 +1977,14 @@ export default function TransactionsPage() {
               className={`${THEME.GLASS_CARD} w-full max-w-lg p-6 mx-4 flex flex-col max-h-[85vh]`}
             >
               {/* Modal Başlık */}
-              <div className="flex justify-between items-center pb-4 border-b border-gray-800/40">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-800/40">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <ArrowLeftRight size={18} className="text-yellow-500" />
                   Ürün Seçimi
                 </h3>
                 <button
                   onClick={() => setIsProductModalOpen(false)}
-                  className="p-1 hover:bg-gray-850 hover:text-white text-gray-400 rounded-lg transition-colors"
+                  className="p-1 hover:bg-slate-850 hover:text-white text-slate-400 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1995,13 +1992,13 @@ export default function TransactionsPage() {
 
               {/* Arama Girişi */}
               <div className="relative mt-4 mb-4">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                 <input
                   type="text"
                   placeholder="Ürün adı veya kod ara..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-900/60 border border-gray-800 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all font-semibold"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/30 transition-all font-semibold"
                 />
               </div>
 
@@ -2010,7 +2007,7 @@ export default function TransactionsPage() {
                 {/* 1. Sarrafiye Grubu */}
                 {filteredProducts.filter(p => p.type === 'sarrafiye').length > 0 && (
                   <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sarrafiye Altın</h4>
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sarrafiye Altın</h4>
                     <div className="grid grid-cols-2 gap-2">
                       {filteredProducts.filter(p => p.type === 'sarrafiye').map(p => {
                         const st = stocks.find(s => s.product === p.code || s.id === p.code);
@@ -2019,7 +2016,7 @@ export default function TransactionsPage() {
                           <button
                             key={p.code}
                             onClick={() => handleSelectProductFromModal(p.code)}
-                            className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-gray-900/40 border-gray-800/80 text-gray-300 hover:border-gray-700 hover:bg-gray-800/40"
+                            className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-slate-900/40 border-slate-800/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40"
                           >
                             <div className="flex flex-col min-w-0 pr-1">
                               <span className="font-semibold text-xs truncate">{p.label}</span>
@@ -2029,7 +2026,7 @@ export default function TransactionsPage() {
                                 {amt > 0 ? `Stok: ${amt} Adet` : '❌ Stok Yok'}
                               </span>
                             </div>
-                            <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
+                            <ChevronRight size={14} className="text-slate-500 flex-shrink-0" />
                           </button>
                         );
                       })}
@@ -2040,7 +2037,7 @@ export default function TransactionsPage() {
                 {/* 2. Döviz Grubu */}
                 {filteredProducts.filter(p => p.type === 'döviz').length > 0 && (
                   <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Döviz</h4>
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Döviz</h4>
                     <div className="grid grid-cols-2 gap-2">
                       {filteredProducts.filter(p => p.type === 'döviz').map(p => {
                         const st = stocks.find(s => s.product === p.code || s.id === p.code);
@@ -2049,7 +2046,7 @@ export default function TransactionsPage() {
                           <button
                             key={p.code}
                             onClick={() => handleSelectProductFromModal(p.code)}
-                            className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-gray-900/40 border-gray-800/80 text-gray-300 hover:border-gray-700 hover:bg-gray-800/40"
+                            className="flex items-center justify-between p-3 rounded-xl border text-left transition-all bg-slate-900/40 border-slate-800/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40"
                           >
                             <div className="flex flex-col min-w-0 pr-1">
                               <span className="font-semibold text-xs truncate">{p.label}</span>
@@ -2059,7 +2056,7 @@ export default function TransactionsPage() {
                                 {amt > 0 ? `Stok: ${amt}` : '❌ Stok Yok'}
                               </span>
                             </div>
-                            <ChevronRight size={14} className="text-gray-500 flex-shrink-0" />
+                            <ChevronRight size={14} className="text-slate-500 flex-shrink-0" />
                           </button>
                         );
                       })}
@@ -2068,7 +2065,7 @@ export default function TransactionsPage() {
                 )}
 
                 {filteredProducts.length === 0 && (
-                  <div className="text-center py-6 text-gray-500 text-xs font-semibold">
+                  <div className="text-center py-6 text-slate-500 text-xs font-semibold">
                     Arama kriterine uygun ürün bulunamadı.
                   </div>
                 )}
