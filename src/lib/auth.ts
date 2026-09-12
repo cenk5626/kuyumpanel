@@ -98,8 +98,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs without prepending invalid Vercel deployment hashes
+      if (url.startsWith('/')) {
+        return url;
+      }
+      try {
+        const parsedUrl = new URL(url);
+        const parsedBase = new URL(baseUrl);
+        if (parsedUrl.origin === parsedBase.origin) {
+          return url;
+        }
+      } catch {
+        /* fallback */
+      }
+      return baseUrl;
+    },
   },
   pages: {
     signIn: ROUTES.LOGIN,
+    signOut: ROUTES.LOGIN,
   },
 });

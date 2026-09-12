@@ -32,6 +32,17 @@ export default function HeaderActions() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirect: false });
+    } catch (err) {
+      console.warn('[HeaderActions] SignOut error:', err);
+    } finally {
+      // Direct navigation to /login on current origin prevents Vercel DEPLOYMENT_NOT_FOUND issues
+      window.location.href = ROUTES.LOGIN;
+    }
+  };
+
   return (
     <div className="flex items-center gap-2.5 ml-auto">
       {/* Fiyat Alarmları Hızlı Erişim Butonu */}
@@ -79,10 +90,10 @@ export default function HeaderActions() {
       {/* Logout (Çıkış Yap) Button */}
       <motion.button
         whileTap={{ scale: 0.92 }}
-        onClick={() => signOut({ callbackUrl: '/login' })}
+        onClick={handleSignOut}
         type="button"
         title="Oturumu Kapat"
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20 transition-all shadow-xs"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20 transition-all shadow-xs cursor-pointer"
       >
         <LogOut size={15} />
         <span className="hidden sm:inline select-none">Çıkış Yap</span>
