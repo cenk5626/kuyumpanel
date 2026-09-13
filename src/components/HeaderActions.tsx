@@ -34,12 +34,25 @@ export default function HeaderActions() {
 
   const handleSignOut = async () => {
     try {
+      await fetch('/api/auth/logout', { method: 'POST' }).catch(() => null);
+    } catch {
+      /* ignore */
+    }
+    try {
       await signOut({ redirect: false });
     } catch (err) {
       console.warn('[HeaderActions] SignOut error:', err);
     } finally {
-      // Direct navigation to /login on current origin prevents Vercel DEPLOYMENT_NOT_FOUND issues
-      window.location.href = ROUTES.LOGIN;
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {
+          /* ignore */
+        }
+        // Direct navigation to /login on current origin wipes Next.js client router cache
+        window.location.href = ROUTES.LOGIN;
+      }
     }
   };
 

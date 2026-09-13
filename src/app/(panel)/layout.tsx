@@ -11,6 +11,7 @@ import { hasPagePermission } from '@/constants/page-permissions';
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
 import { MENU_ITEMS } from '@/constants/menu';
+import { ROUTES } from '@/constants/routes';
 import { ThemeProvider } from '@/context/ThemeContext';
 
 function PanelContentGuard({
@@ -30,6 +31,14 @@ function PanelContentGuard({
         <div className="w-8 h-8 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
       </div>
     );
+  }
+
+  // Oturum açılmamışsa 403 değil, doğrudan /login sayfasına yönlendir (Issue 3)
+  if (status === 'unauthenticated' || (!session && status !== 'loading')) {
+    if (typeof window !== 'undefined') {
+      window.location.href = ROUTES.LOGIN;
+    }
+    return null;
   }
 
   const role = (session?.user as any)?.role;

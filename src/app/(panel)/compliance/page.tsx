@@ -1,4 +1,9 @@
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { ROUTES } from '@/constants/routes';
+import { hasPagePermission } from '@/constants/page-permissions';
+import AccessDenied from '@/components/AccessDenied';
 import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import ComplianceClient from './ComplianceClient';
 import { COMPLIANCE_CASE_STATUS, AML_TRIGGER_TYPE } from '@/constants/compliance';
@@ -6,6 +11,30 @@ import { COMPLIANCE_CASE_STATUS, AML_TRIGGER_TYPE } from '@/constants/compliance
 export const dynamic = 'force-dynamic';
 
 export default async function CompliancePage() {
+  let session = null;
+  try {
+    session = await auth();
+  } catch (e) {
+    console.error('Compliance auth error:', e);
+  }
+
+  if (!session) {
+    redirect(ROUTES.LOGIN);
+  }
+
+  const userRole = (session.user as any)?.role;
+  const userPermissions = (session.user as any)?.permissions;
+
+  if (!hasPagePermission(userRole, userPermissions, '/compliance')) {
+    return (
+      <AccessDenied
+        pageTitle="MASAK & AML Uyum"
+        userRole={userRole}
+        requiredModule="/compliance"
+      />
+    );
+  }
+
   let initialCases: any[] = [];
   let initialRules: any[] = [];
   let stats = {

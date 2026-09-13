@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { USER_ROLES } from '@/constants/roles';
-import { ALL_PAGE_IDS } from '@/constants/page-permissions';
+import { ALL_PAGE_IDS, hasPagePermission } from '@/constants/page-permissions';
+import { ROUTES } from '@/constants/routes';
+import AccessDenied from '@/components/AccessDenied';
 import UsersClient from './UsersClient';
 
 export const dynamic = 'force-dynamic';
@@ -16,18 +18,21 @@ export default async function UsersPage() {
   }
 
   if (!session) {
-    redirect('/login');
+    redirect(ROUTES.LOGIN);
   }
 
   const currentUserRole = (session.user as any)?.role;
+  const currentUserPermissions = (session.user as any)?.permissions;
   const currentUserDealerId = (session.user as any)?.dealerId;
 
-  // USER rolü bu sayfaya erişemez
-  if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
+  // Sayfa yetki kontrolü (Role ve Sayfa İzinleri)
+  if (!hasPagePermission(currentUserRole, currentUserPermissions, '/users')) {
     return (
-      <div className="p-8 text-center text-red-400 font-semibold bg-red-500/10 border border-red-500/20 rounded-xl max-w-md mx-auto mt-20">
-        Bu sayfayı görüntülemek için yetkiniz bulunmamaktadır.
-      </div>
+      <AccessDenied
+        pageTitle="Kullanıcı & İzin Yönetimi"
+        userRole={currentUserRole}
+        requiredModule="/users"
+      />
     );
   }
 

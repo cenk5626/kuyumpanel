@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
@@ -30,6 +30,8 @@ import {
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { THEME, ANIM } from '@/constants/theme';
+import { hasPagePermission } from '@/constants/page-permissions';
+import { USER_ROLES } from '@/constants/roles';
 import ReorderDraftModal from '@/components/ReorderDraftModal';
 
 interface SupplierItem {
@@ -53,6 +55,8 @@ interface RecentTransactionItem {
 
 interface DashboardProps {
   userName: string;
+  userRole?: string;
+  userPermissions?: string[] | string;
   totalUsers: number;
   adminCount: number;
   staffCount?: number;
@@ -73,6 +77,8 @@ interface DashboardProps {
 
 export default function DashboardClient({
   userName,
+  userRole,
+  userPermissions,
   totalUsers,
   adminCount,
   staffCount,
@@ -91,7 +97,46 @@ export default function DashboardClient({
   criticalStockItems = [],
 }: DashboardProps) {
   const { data: session } = useSession();
-  const activeUserName = session?.user?.name || userName;
+  const [profile, setProfile] = useState<{
+    name: string;
+    role: string;
+    permissions: string[];
+  }>({
+    name: userName,
+    role: userRole || (session?.user as any)?.role || USER_ROLES.USER,
+    permissions: Array.isArray(userPermissions)
+      ? userPermissions
+      : typeof userPermissions === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(userPermissions);
+          } catch {
+            return [];
+          }
+        })()
+      : (session?.user as any)?.permissions || [],
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && isMounted) {
+          setProfile({
+            name: data.name || userName,
+            role: data.role || userRole || USER_ROLES.USER,
+            permissions: data.permissions || [],
+          });
+        }
+      })
+      .catch(() => null);
+    return () => {
+      isMounted = false;
+    };
+  }, [userName, userRole]);
+
+  const activeUserName = profile.name || session?.user?.name || userName;
   const [showReorderModal, setShowReorderModal] = useState(false);
 
   // Hızlı Erişim Butonları
@@ -133,6 +178,11 @@ export default function DashboardClient({
       iconBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-400',
     },
   ];
+
+  // Aktif kullanıcının sayfa izinlerine göre filtreleme (Issue 5)
+  const filteredQuickActions = quickActions.filter((action) =>
+    hasPagePermission(profile.role, profile.permissions, action.href)
+  );
 
   return (
     <>
@@ -196,7 +246,7 @@ export default function DashboardClient({
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, i) => (
+            {filteredQuickActions.map((action, i) => (
               <motion.div
                 key={action.id}
                 initial={{ opacity: 0, y: 15 }}

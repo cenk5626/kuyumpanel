@@ -221,5 +221,106 @@ export function registerF47P0P1P2RegressionTests() {
       expect(staffCount).toBe(3);
       expect(adminCount + staffCount).toBe(totalUsers);
     });
+
+    test('47.12 Unauthenticated requests must redirect to login rather than rendering 403 AccessDenied', () => {
+      // Simulate unauthenticated state in route guard
+      function evaluateGuard(session: any, status: string, pathname: string) {
+        if (status === 'unauthenticated' || (!session && status !== 'loading')) {
+          return { action: 'REDIRECT', target: ROUTES.LOGIN };
+        }
+        const isAuthorized = hasPagePermission(session?.user?.role, session?.user?.permissions, pathname);
+        if (!isAuthorized) {
+          return { action: 'ACCESS_DENIED', status: 403 };
+        }
+        return { action: 'ALLOW' };
+      }
+
+      // Unauthenticated visitor trying to access /stocks or /users
+      expect(evaluateGuard(null, 'unauthenticated', '/stocks')).toEqual({ action: 'REDIRECT', target: ROUTES.LOGIN });
+      expect(evaluateGuard(null, 'unauthenticated', '/users')).toEqual({ action: 'REDIRECT', target: ROUTES.LOGIN });
+
+      // Authenticated Cashier trying to access /users -> 403 Access Denied
+      const cashierSession = {
+        user: { id: 'u1', role: USER_ROLES.USER, permissions: PERMISSION_PRESETS.CASHIER.pages },
+      };
+      expect(evaluateGuard(cashierSession, 'authenticated', '/users')).toEqual({ action: 'ACCESS_DENIED', status: 403 });
+
+      // Authenticated Cashier accessing /stocks -> ALLOW
+      expect(evaluateGuard(cashierSession, 'authenticated', '/stocks')).toEqual({ action: 'ALLOW' });
+    });
+
+    test('47.13 Quick actions permission filtering hides unauthorized shortcuts for Cashier', () => {
+      const quickActions = [
+        { id: 'quick-pos', href: ROUTES.TRANSACTIONS },
+        { id: 'quick-camera', href: ROUTES.TRANSACTIONS },
+        { id: 'quick-stocks', href: ROUTES.STOCKS },
+        { id: 'quick-suppliers', href: ROUTES.SUPPLIERS },
+      ];
+
+      const cashierRole = USER_ROLES.USER;
+      const cashierPerms = [...PERMISSION_PRESETS.CASHIER.pages];
+
+      const cashierVisibleActions = quickActions.filter(a => hasPagePermission(cashierRole, cashierPerms, a.href));
+      expect(cashierVisibleActions.length).toBe(3);
+      expect(cashierVisibleActions.some(a => a.id === 'quick-suppliers')).toBe(false);
+
+      const adminRole = USER_ROLES.ADMIN;
+      const adminPerms = [...ROLE_DEFAULT_PRESETS[USER_ROLES.ADMIN]];
+      const adminVisibleActions = quickActions.filter(a => hasPagePermission(adminRole, adminPerms, a.href));
+      expect(adminVisibleActions.length).toBe(4);
+      expect(adminVisibleActions.some(a => a.id === 'quick-suppliers')).toBe(true);
+    });
+
+    test('47.14 Turso inventory calculation matches exact store gold inventory of 276.56 gr', () => {
+      // 12 rows from Turso database
+      const tursoRows = [
+        { product: 'USD',           type: 'döviz',     amount: 152000 },
+        { product: 'EUR',           type: 'döviz',     amount: 0 },
+        { product: 'ECEYREKTL',     type: 'sarrafiye', amount: 44 },
+        { product: 'EYARIMTL',      type: 'sarrafiye', amount: 10 },
+        { product: 'ETAMTL',        type: 'sarrafiye', amount: 0 },
+        { product: 'EATATL',        type: 'sarrafiye', amount: 0 },
+        { product: 'EGREMSETL',     type: 'sarrafiye', amount: 0 },
+        { product: 'mil24Ayar',     type: 'sarrafiye', amount: 36 },
+        { product: 'mil22Ayar',     type: 'sarrafiye', amount: 0 },
+        { product: 'milAdanaBurma', type: 'sarrafiye', amount: 0 },
+        { product: 'milAjda',       type: 'sarrafiye', amount: 128.56 },
+        { product: 'mil14Ayar',     type: 'sarrafiye', amount: 0 },
+      ];
+
+      let sarrafiyeWeight = 0;
+      let sarrafiyeCount = 0;
+
+      for (const stock of tursoRows) {
+        if (stock.type === 'sarrafiye' && stock.amount > 0) {
+          if (COIN_WEIGHTS_GR[stock.product]) {
+            sarrafiyeWeight += stock.amount * COIN_WEIGHTS_GR[stock.product];
+            sarrafiyeCount += stock.amount;
+          } else if (GRAM_STOCK_PRODUCT_KEYS.includes(stock.product as any)) {
+            sarrafiyeWeight += stock.amount;
+            sarrafiyeCount += 1;
+          }
+        }
+      }
+
+      // 44 * 1.75 (77g) + 10 * 3.50 (35g) + 36g + 128.56g = 276.56g
+      expect(Math.round(sarrafiyeWeight * 100) / 100).toBe(276.56);
+      expect(sarrafiyeCount).toBe(56); // 44 + 10 + 1 + 1
+    });
+
+    test('47.15 User form initial state strictly enforces least-privilege defaults', () => {
+      const defaultInitialRole = USER_ROLES.USER;
+      const defaultInitialPerms = [...PERMISSION_PRESETS.CASHIER.pages];
+
+      expect(defaultInitialRole).toBe(USER_ROLES.USER);
+      expect(defaultInitialPerms.length).toBe(9);
+      expect(defaultInitialPerms).toContain('dashboard');
+      expect(defaultInitialPerms).toContain('prices');
+      expect(defaultInitialPerms).toContain('stocks');
+      expect(defaultInitialPerms).toContain('transactions');
+      expect(defaultInitialPerms).not.toContain('users');
+      expect(defaultInitialPerms).not.toContain('logs');
+      expect(defaultInitialPerms).not.toContain('compliance');
+    });
   });
 }

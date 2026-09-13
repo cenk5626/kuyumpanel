@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { USER_ROLES } from '@/constants/roles';
+import { hasPagePermission } from '@/constants/page-permissions';
+import { ROUTES } from '@/constants/routes';
+import AccessDenied from '@/components/AccessDenied';
 import LogsClient from './LogsClient';
 
 export const dynamic = 'force-dynamic';
@@ -15,18 +18,21 @@ export default async function LogsPage() {
   }
 
   if (!session) {
-    redirect('/login');
+    redirect(ROUTES.LOGIN);
   }
 
   const currentUserRole = (session.user as any)?.role;
+  const currentUserPermissions = (session.user as any)?.permissions;
   const currentUserDealerId = (session.user as any)?.dealerId || 'merkez';
 
-  // Sadece Admin ve Super Admin erişebilir
-  if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
+  // Sayfa yetki kontrolü (Role ve Sayfa İzinleri)
+  if (!hasPagePermission(currentUserRole, currentUserPermissions, '/logs')) {
     return (
-      <div className="p-8 text-center text-red-400 font-semibold bg-red-500/10 border border-red-500/20 rounded-xl max-w-md mx-auto mt-20">
-        Bu sayfayı görüntülemek için yetkiniz bulunmamaktadır. Sadece Bayi Yetkilisi erişebilir.
-      </div>
+      <AccessDenied
+        pageTitle="İşlem Logları"
+        userRole={currentUserRole}
+        requiredModule="/logs"
+      />
     );
   }
 

@@ -82,16 +82,22 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
   const [dealers, setDealers] = useState<Dealer[]>(initialDealers);
 
   const isSuperAdmin = currentUserRole === USER_ROLES.SUPER_ADMIN;
-  const defaultInitialRole = isSuperAdmin ? USER_ROLES.ADMIN : USER_ROLES.USER;
+  // Least-privilege ilkesi gereği yeni kullanıcı oluşturma her zaman Kasiyer (9 temel sayfa) ile başlar (Issue 6)
+  const defaultInitialRole = USER_ROLES.USER;
   const defaultInitialDealer = currentUserDealerId || (initialDealers[0]?.id || '');
-  const defaultInitialPerms = ROLE_DEFAULT_PRESETS[defaultInitialRole]
-    ? [...ROLE_DEFAULT_PRESETS[defaultInitialRole]]
-    : [...PERMISSION_PRESETS.CASHIER.pages];
+  const defaultInitialPerms: string[] = [...PERMISSION_PRESETS.CASHIER.pages];
 
   // User form modal states
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [userFormData, setUserFormData] = useState({
+  const [userFormData, setUserFormData] = useState<{
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+    dealerId: string;
+    permissions: string[];
+  }>({
     name: '',
     email: '',
     password: '',
@@ -120,11 +126,9 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
   const [loading, setLoading] = useState(false);
 
   const resetUserForm = () => {
-    const defaultRole = isSuperAdmin ? USER_ROLES.ADMIN : USER_ROLES.USER;
+    const defaultRole = USER_ROLES.USER;
     const defaultDealer = currentUserDealerId || (dealers[0]?.id || '');
-    const defaultPerms = ROLE_DEFAULT_PRESETS[defaultRole]
-      ? [...ROLE_DEFAULT_PRESETS[defaultRole]]
-      : [...PERMISSION_PRESETS.CASHIER.pages];
+    const defaultPerms = [...PERMISSION_PRESETS.CASHIER.pages];
     setUserFormData({
       name: '',
       email: '',

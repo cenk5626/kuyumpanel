@@ -14,9 +14,24 @@ export default async function DashboardPage() {
     console.error('Dashboard auth error:', e);
   }
 
-  const userRole = (session?.user as any)?.role || USER_ROLES.USER;
+  // Canlı veritabanı doğrulaması (JWT/Session stale cache engeli - Issue 1)
+  let dbUser = null;
+  if (session?.user?.id) {
+    try {
+      dbUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, name: true, role: true, dealerId: true, permissions: true },
+      });
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const activeUserName = dbUser?.name || session?.user?.name || 'Kullanıcı';
+  const userRole = dbUser?.role || (session?.user as any)?.role || USER_ROLES.USER;
   const isSuperAdmin = userRole === USER_ROLES.SUPER_ADMIN;
-  const dealerId = (session?.user as any)?.dealerId || 'merkez';
+  const dealerId = dbUser?.dealerId || (session?.user as any)?.dealerId || 'merkez';
+  const userPermissions = dbUser?.permissions || (session?.user as any)?.permissions;
 
   const dealerFilter = isSuperAdmin ? {} : { dealerId };
   const productFilter = isSuperAdmin ? { status: 'IN_STOCK' } : { status: 'IN_STOCK', dealerId };
@@ -98,7 +113,9 @@ export default async function DashboardPage() {
 
     return (
       <DashboardClient
-        userName={session?.user?.name || 'Kullanıcı'}
+        userName={activeUserName}
+        userRole={userRole}
+        userPermissions={userPermissions}
         totalUsers={totalUsers}
         adminCount={adminCount}
         staffCount={staffCount}
@@ -143,7 +160,9 @@ export default async function DashboardPage() {
     console.error('Error rendering DashboardPage:', err);
     return (
       <DashboardClient
-        userName={session?.user?.name || 'Kullanıcı'}
+        userName={activeUserName}
+        userRole={userRole}
+        userPermissions={userPermissions}
         totalUsers={0}
         adminCount={0}
         staffCount={0}

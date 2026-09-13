@@ -45,3 +45,5 @@ export const STANDARD_MILYEM_DEFINITIONS = [
   { code: 'mil14Ayar', label: '14 Ayar Takı', defaultMilyem: 585.0, unit: 'milyem' },
   { code: 'mil8Ayar', label: '8 Ayar Takı', defaultMilyem: 333.0, unit: 'milyem' },
 ] as const;
+
+export type MilyemStandardKey = (typeof STANDARD_MILYEM_DEFINITIONS)[number]['code'];

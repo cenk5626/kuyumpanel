@@ -1,4 +1,9 @@
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { ROUTES } from '@/constants/routes';
+import { hasPagePermission } from '@/constants/page-permissions';
+import AccessDenied from '@/components/AccessDenied';
 import { getAuthenticatedContext } from '@/lib/security/auth-context';
 import BankingClient from './BankingClient';
 import { BANK_ACCOUNT_TYPE, POS_SETTLEMENT_STATUS, BANK_MATCH_STATUS } from '@/constants/banking';
@@ -6,6 +11,30 @@ import { BANK_ACCOUNT_TYPE, POS_SETTLEMENT_STATUS, BANK_MATCH_STATUS } from '@/c
 export const dynamic = 'force-dynamic';
 
 export default async function BankingPage() {
+  let session = null;
+  try {
+    session = await auth();
+  } catch (e) {
+    console.error('Banking auth error:', e);
+  }
+
+  if (!session) {
+    redirect(ROUTES.LOGIN);
+  }
+
+  const userRole = (session.user as any)?.role;
+  const userPermissions = (session.user as any)?.permissions;
+
+  if (!hasPagePermission(userRole, userPermissions, '/banking')) {
+    return (
+      <AccessDenied
+        pageTitle="Banka & POS Takas"
+        userRole={userRole}
+        requiredModule="/banking"
+      />
+    );
+  }
+
   let initialAccounts: any[] = [];
   let initialPosTerminals: any[] = [];
   let initialSettlements: any[] = [];
