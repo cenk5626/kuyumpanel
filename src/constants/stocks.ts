@@ -96,3 +96,22 @@ export function determineStockAlertLevel(
   }
   return STOCK_ALERT_LEVELS.SAFE;
 }
+
+// Standart Darphane Sarrafiye / Ziynet Birim Brüt Gramajları (gr)
+export const COIN_WEIGHTS_GR: Record<string, number> = {
+  ECEYREKTL: 1.75,   // Çeyrek Altın (1.754 gr)
+  EYARIMTL: 3.50,    // Yarım Altın (3.508 gr)
+  ETAMTL: 7.00,      // Tam / Ziynet (7.016 gr)
+  EATATL: 7.216,     // Ata Lira / Cumhuriyet (7.216 gr)
+  EGREMSETL: 17.50,  // Gremse (17.54 gr)
+} as const;
+
+// Gram Cinsinden Stok Seviyesi Takip Edilen Sarrafiye Ürün Kodları
+export const GRAM_STOCK_PRODUCT_KEYS = [
+  'mil24Ayar',
+  'mil22Ayar',
+  'milAdanaBurma',
+  'milAjda',
+  'mil14Ayar',
+] as const;
+

@@ -479,3 +479,98 @@ export const ACTION_PERMISSIONS: ActionPermissionMeta[] = [
 ];
 
 export const ALL_ACTION_IDS = ACTION_PERMISSIONS.map((a) => a.id);
+
+/**
+ * Rota - Sayfa İzin Eşleme Tablosu (Route Guard Single Source of Truth)
+ */
+export const ROUTE_PAGE_MAP: Record<string, string> = {
+  '/': 'dashboard',
+  '/dashboard': 'dashboard',
+  '/prices': 'prices',
+  '/history-rates': 'prices',
+  '/stocks': 'stocks',
+  '/transactions': 'transactions',
+  '/price-check': 'price-check',
+  '/alerts': 'alerts',
+  '/customers': 'customers',
+  '/identity-vault': 'compliance',
+  '/loyalty': 'loyalty',
+  '/crm': 'crm',
+  '/quotes': 'quotes',
+  '/z-report': 'z-report',
+  '/balance-sheet': 'balance-sheet',
+  '/banking': 'banking',
+  '/settings/bank-accounts': 'banking',
+  '/invoices': 'invoices',
+  '/expense-vouchers': 'expense-vouchers',
+  '/installments': 'installments',
+  '/suppliers': 'suppliers',
+  '/purchases': 'purchases',
+  '/purchase-orders': 'purchases',
+  '/workshop': 'workshop',
+  '/services': 'services',
+  '/notebook': 'suppliers',
+  '/branches': 'branches',
+  '/transfers': 'transfers',
+  '/stock-audit': 'stock-audit',
+  '/rfid-stocktake': 'rfid-stocktake',
+  '/executive-analytics': 'executive-analytics',
+  '/approvals': 'approvals',
+  '/channels': 'channels',
+  '/compliance': 'compliance',
+  '/data-hub': 'data-hub',
+  '/ai-assistant': 'ai-assistant',
+  '/settings/ai': 'settings-ai',
+  '/logs': 'logs',
+  '/users': 'users',
+};
+
+/**
+ * Kullanıcı rolüne göre varsayılan Least-Privilege yetki presetleri
+ */
+export const ROLE_DEFAULT_PRESETS: Record<string, readonly string[]> = {
+  SUPER_ADMIN: ALL_PAGE_IDS,
+  ADMIN: PERMISSION_PRESETS.STORE_MANAGER.pages,
+  USER: PERMISSION_PRESETS.CASHIER.pages,
+  TABLET: ['price-check', 'prices', 'stocks'],
+  PC: PERMISSION_PRESETS.CASHIER.pages,
+};
+
+/**
+ * Kullanıcının belirtilen rota veya sayfa için yetkisinin olup olmadığını kontrol eder.
+ */
+export function hasPagePermission(
+  userRole: string | undefined | null,
+  userPermissions: string[] | string | undefined | null,
+  targetPageIdOrPath: string
+): boolean {
+  if (!userRole) return false;
+  if (userRole === 'SUPER_ADMIN') return true;
+
+  // Rota path'i verilmişse pageId'ye çevir
+  const pageId = ROUTE_PAGE_MAP[targetPageIdOrPath] || targetPageIdOrPath;
+
+  // İşlem Logları sadece ADMIN veya SUPER_ADMIN görebilir
+  if (pageId === 'logs' && userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
+    return false;
+  }
+
+  // Dashboard herkese açıktır
+  if (pageId === 'dashboard') {
+    return true;
+  }
+
+  let perms: string[] = [];
+  if (Array.isArray(userPermissions)) {
+    perms = userPermissions;
+  } else if (typeof userPermissions === 'string') {
+    try {
+      const parsed = JSON.parse(userPermissions);
+      if (Array.isArray(parsed)) perms = parsed;
+    } catch {
+      perms = [];
+    }
+  }
+
+  return perms.includes(pageId);
+}

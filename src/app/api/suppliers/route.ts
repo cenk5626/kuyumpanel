@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getAuthenticatedContext, assertTenantOwnership } from '@/lib/security/auth-context';
+import { getAuthenticatedContext, assertTenantOwnership, requirePageAccess } from '@/lib/security/auth-context';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +17,7 @@ const DEFAULT_SUPPLIERS = [
 export async function GET(req: Request) {
   try {
     const ctx = await getAuthenticatedContext();
+    requirePageAccess(ctx, 'suppliers');
     const currentUserRole = ctx.role;
     const currentUserDealerId = ctx.dealerId;
 
@@ -88,6 +89,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const ctx = await getAuthenticatedContext();
+    requirePageAccess(ctx, 'suppliers');
     const currentUserDealerId = ctx.dealerId;
 
     const body = await req.json();
@@ -119,6 +121,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const ctx = await getAuthenticatedContext();
+    requirePageAccess(ctx, 'suppliers');
     const currentUserRole = ctx.role;
     const currentUserDealerId = ctx.dealerId;
 
@@ -155,6 +158,7 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const ctx = await getAuthenticatedContext();
+    requirePageAccess(ctx, 'suppliers');
     const currentUserRole = ctx.role;
     const currentUserDealerId = ctx.dealerId;
 

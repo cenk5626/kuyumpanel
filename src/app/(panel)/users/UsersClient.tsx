@@ -13,6 +13,7 @@ import {
   ALL_PAGE_IDS,
   PERMISSION_PRESETS,
   PAGE_CATEGORIES,
+  ROLE_DEFAULT_PRESETS,
 } from '@/constants/page-permissions';
 import UserPermissionsModal from '@/components/users/UserPermissionsModal';
 
@@ -80,6 +81,13 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [dealers, setDealers] = useState<Dealer[]>(initialDealers);
 
+  const isSuperAdmin = currentUserRole === USER_ROLES.SUPER_ADMIN;
+  const defaultInitialRole = isSuperAdmin ? USER_ROLES.ADMIN : USER_ROLES.USER;
+  const defaultInitialDealer = currentUserDealerId || (initialDealers[0]?.id || '');
+  const defaultInitialPerms = ROLE_DEFAULT_PRESETS[defaultInitialRole]
+    ? [...ROLE_DEFAULT_PRESETS[defaultInitialRole]]
+    : [...PERMISSION_PRESETS.CASHIER.pages];
+
   // User form modal states
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -87,9 +95,9 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
     name: '',
     email: '',
     password: '',
-    role: USER_ROLES.ADMIN as string,
-    dealerId: '',
-    permissions: ALL_PAGE_IDS,
+    role: defaultInitialRole as string,
+    dealerId: defaultInitialDealer,
+    permissions: defaultInitialPerms,
   });
 
   // Dedicated Permissions modal states
@@ -111,16 +119,19 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const isSuperAdmin = currentUserRole === USER_ROLES.SUPER_ADMIN;
-
   const resetUserForm = () => {
+    const defaultRole = isSuperAdmin ? USER_ROLES.ADMIN : USER_ROLES.USER;
+    const defaultDealer = currentUserDealerId || (dealers[0]?.id || '');
+    const defaultPerms = ROLE_DEFAULT_PRESETS[defaultRole]
+      ? [...ROLE_DEFAULT_PRESETS[defaultRole]]
+      : [...PERMISSION_PRESETS.CASHIER.pages];
     setUserFormData({
       name: '',
       email: '',
       password: '',
-      role: USER_ROLES.ADMIN,
-      dealerId: '',
-      permissions: ALL_PAGE_IDS,
+      role: defaultRole,
+      dealerId: defaultDealer,
+      permissions: defaultPerms,
     });
     setEditingUser(null);
     setError('');
@@ -223,6 +234,12 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
     setLoading(true);
 
     try {
+      if (userFormData.role !== USER_ROLES.SUPER_ADMIN && !userFormData.dealerId) {
+        setError('Lütfen kullanıcının bağlı olacağı bayiyi seçiniz.');
+        setLoading(false);
+        return;
+      }
+
       if (editingUser) {
         // Update
         const res = await fetch(ROUTES.API_USERS, {
@@ -754,14 +771,17 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
 
                 {isSuperAdmin && (
                   <div>
-                    <label htmlFor="user-dealer" className={THEME.LABEL}>Bağlı Olduğu Bayi</label>
+                    <label htmlFor="user-dealer" className={THEME.LABEL}>
+                      Bağlı Olduğu Bayi {userFormData.role !== USER_ROLES.SUPER_ADMIN && <span className="text-rose-500 font-bold">*</span>}
+                    </label>
                     <select
                       id="user-dealer"
                       value={userFormData.dealerId}
                       onChange={(e) => setUserFormData({ ...userFormData, dealerId: e.target.value })}
+                      required={userFormData.role !== USER_ROLES.SUPER_ADMIN}
                       className={THEME.SELECT}
                     >
-                      <option value="">Merkez (Genel)</option>
+                      <option value="">{userFormData.role === USER_ROLES.SUPER_ADMIN ? 'Merkez / Genel Yönetim' : '-- Lütfen Bayi Seçiniz --'}</option>
                       {dealers.map(d => (
                         <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
@@ -774,13 +794,24 @@ export default function UsersClient({ initialUsers, initialEmployees, dealers: i
                   <select
                     id="user-role"
                     value={userFormData.role}
-                    onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      const rolePreset = ROLE_DEFAULT_PRESETS[newRole]
+                        ? [...ROLE_DEFAULT_PRESETS[newRole]]
+                        : [...PERMISSION_PRESETS.CASHIER.pages];
+                      setUserFormData({
+                        ...userFormData,
+                        role: newRole,
+                        permissions: rolePreset,
+                      });
+                    }}
                     className={THEME.SELECT}
                   >
-                    <option value={USER_ROLES.ADMIN}>Bayi Yetkilisi (Yönetici)</option>
+                    <option value={USER_ROLES.USER}>Kasiyer / Personel (9 Temel Sayfa)</option>
+                    <option value={USER_ROLES.ADMIN}>Bayi Yetkilisi (Mağaza Müdürü)</option>
                     <option value={USER_ROLES.TABLET}>Tablet Kullanıcısı</option>
                     <option value={USER_ROLES.PC}>Bilgisayar Kullanıcısı</option>
-                    {isSuperAdmin && <option value={USER_ROLES.SUPER_ADMIN}>{MESSAGES.ROLE_SUPER_ADMIN}</option>}
+                    {isSuperAdmin && <option value={USER_ROLES.SUPER_ADMIN}>{MESSAGES.ROLE_SUPER_ADMIN} (Tüm Yetkiler)</option>}
                   </select>
                 </div>
 

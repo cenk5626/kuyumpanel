@@ -77,6 +77,7 @@ export async function GET() {
       type: s.type,
       amount: s.amount,
       minThreshold: s.minThreshold ?? 5,
+      updatedAt: s.updatedAt ? s.updatedAt.toISOString() : new Date().toISOString(),
     }));
 
     return NextResponse.json(mapped);

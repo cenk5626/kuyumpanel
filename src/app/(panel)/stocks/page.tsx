@@ -179,7 +179,18 @@ function StockRow({ stock, onEdit, livePrice, turnoverItem }: {
           )}
         </div>
         <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-500 font-mono mt-1 flex-wrap">
-          <span>Güncelleme: {new Date(stock.updatedAt).toLocaleString('tr-TR')}</span>
+          <span suppressHydrationWarning>
+            Güncelleme:{' '}
+            {stock.updatedAt && !isNaN(new Date(stock.updatedAt).getTime())
+              ? new Date(stock.updatedAt).toLocaleString('tr-TR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : '—'}
+          </span>
           {turnoverItem && turnoverItem.daysToStockout !== Infinity && (
             <span>• Tahmini Tükenme: {turnoverItem.daysToStockout > 0 ? `${turnoverItem.daysToStockout} gün` : 'Tükendi'}</span>
           )}

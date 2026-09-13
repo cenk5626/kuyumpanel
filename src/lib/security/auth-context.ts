@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { USER_ROLES, UserRole } from '@/constants/roles';
 import { PERMISSIONS, PermissionKey, ROLE_PERMISSIONS_MAP } from '@/constants/permissions';
+import { hasPagePermission } from '@/constants/page-permissions';
 
 export class AuthenticationError extends Error {
   statusCode: number;
@@ -117,6 +118,22 @@ export function requirePermission(
 
   if (!ctx.permissions.includes(permission)) {
     throw new AuthorizationError(`Bu işlem için '${permission}' yetkisine sahip olmalısınız.`, 403);
+  }
+}
+
+/**
+ * Kullanıcının belirtilen modüle/sayfaya erişim yetkisini doğrular.
+ */
+export function requirePageAccess(
+  ctx: AuthenticatedContext,
+  pageId: string
+): void {
+  if (ctx.role === USER_ROLES.SUPER_ADMIN) {
+    return;
+  }
+
+  if (!hasPagePermission(ctx.role, ctx.permissions as any, pageId)) {
+    throw new AuthorizationError(`'${pageId}' modülüne erişim yetkiniz bulunmamaktadır.`, 403);
   }
 }
 

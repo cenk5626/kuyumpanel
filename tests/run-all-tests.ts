@@ -58,6 +58,7 @@ import { registerF43BusinessBankAccountsTests } from './tier1/f43_business_bank_
 import { registerF44CustomerIdentityVaultTests } from './tier1/f44_customer_identity_vault.test';
 import { registerF45JewelerNotebookTests } from './tier1/f45_jeweler_notebook.test';
 import { registerF46ServiceRepairExtendedTests } from './tier1/f46_service_repair_extended.test';
+import { registerF47P0P1P2RegressionTests } from './tier1/f47_p0_p1_p2_regressions.test';
 
 // Tier 2 Registrars
 import { registerTier2Part1Tests } from './tier2/tier2_boundaries_p1.test';
@@ -174,6 +175,7 @@ async function main() {
   registerF44CustomerIdentityVaultTests();
   registerF45JewelerNotebookTests();
   registerF46ServiceRepairExtendedTests();
+  registerF47P0P1P2RegressionTests();
 
   // 2. Register Tier 2 (100 tests)
   registerTier2Part1Tests();

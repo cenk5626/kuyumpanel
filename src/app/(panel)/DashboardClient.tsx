@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import { 
   Users, 
   Shield, 
@@ -54,8 +55,13 @@ interface DashboardProps {
   userName: string;
   totalUsers: number;
   adminCount: number;
+  staffCount?: number;
   totalStockCount: number;
   totalStockWeight: number;
+  barcodeCount?: number;
+  barcodeWeight?: number;
+  sarrafiyeCount?: number;
+  sarrafiyeWeight?: number;
   suppliers: SupplierItem[];
   totalSupplierHasBalance: number;
   totalSupplierTlBalance: number;
@@ -69,8 +75,13 @@ export default function DashboardClient({
   userName,
   totalUsers,
   adminCount,
+  staffCount,
   totalStockCount,
   totalStockWeight,
+  barcodeCount = 0,
+  barcodeWeight = 0,
+  sarrafiyeCount = 0,
+  sarrafiyeWeight = 0,
   suppliers,
   totalSupplierHasBalance,
   totalSupplierTlBalance,
@@ -79,6 +90,8 @@ export default function DashboardClient({
   criticalStockCount = 0,
   criticalStockItems = [],
 }: DashboardProps) {
+  const { data: session } = useSession();
+  const activeUserName = session?.user?.name || userName;
   const [showReorderModal, setShowReorderModal] = useState(false);
 
   // Hızlı Erişim Butonları
@@ -150,7 +163,7 @@ export default function DashboardClient({
               <h2 className="text-2xl sm:text-3xl font-light text-slate-900 dark:text-white">
                 {MESSAGES.DASHBOARD_WELCOME},{' '}
                 <span className="bg-gradient-to-r from-amber-600 to-yellow-600 dark:from-yellow-300 dark:to-amber-500 bg-clip-text text-transparent font-bold">
-                  {userName}
+                  {activeUserName}
                 </span>
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 font-medium">
@@ -270,7 +283,16 @@ export default function DashboardClient({
             </div>
             <p className={THEME.STAT_LABEL}>Stok Altın Miktarı</p>
             <h3 className={THEME.STAT_VALUE}>{totalStockWeight.toFixed(2)} gr</h3>
-            <p className="text-xs text-slate-500 font-mono mt-1">{totalStockCount} adet barkodlu takı ürünü</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+              {sarrafiyeWeight > 0 || sarrafiyeCount > 0 ? (
+                <>
+                  <span className="text-amber-600 dark:text-yellow-400 font-semibold">{sarrafiyeWeight.toFixed(2)} gr</span> sarrafiye ({sarrafiyeCount} adet/kalem)
+                  {barcodeCount > 0 && <span> • <span className="font-semibold">{barcodeWeight.toFixed(2)} gr</span> ({barcodeCount} takı)</span>}
+                </>
+              ) : (
+                `${totalStockCount} adet barkodlu takı ürünü`
+              )}
+            </p>
           </motion.div>
 
           {/* Toptancı Has Borcu Kartı */}
@@ -307,7 +329,9 @@ export default function DashboardClient({
             </div>
             <p className={THEME.STAT_LABEL}>Kullanıcı Sayısı</p>
             <h3 className={THEME.STAT_VALUE}>{totalUsers}</h3>
-            <p className="text-xs text-slate-500 font-mono mt-1">{adminCount} yetkili yönetici hesabı</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+              {adminCount} Yönetici • {staffCount !== undefined ? staffCount : Math.max(0, totalUsers - adminCount)} Personel
+            </p>
           </motion.div>
 
           {/* Sistem Durumu Kartı */}
@@ -369,7 +393,7 @@ export default function DashboardClient({
                       const isSell = tx.type === 'sell';
                       return (
                         <tr key={tx.id} className="border-b border-slate-800/40 hover:bg-yellow-500/5 transition-colors">
-                          <td className="px-3 py-2.5 text-slate-400 font-mono">
+                          <td className="px-3 py-2.5 text-slate-400 font-mono" suppressHydrationWarning>
                             {new Date(tx.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                           </td>
                           <td className="px-3 py-2.5 font-bold">

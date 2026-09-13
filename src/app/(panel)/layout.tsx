@@ -2,14 +2,53 @@
 
 import { useState, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import { SessionProvider } from 'next-auth/react';
+import { SessionProvider, useSession } from 'next-auth/react';
 import { Menu } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import HeaderActions from '@/components/HeaderActions';
+import AccessDenied from '@/components/AccessDenied';
+import { hasPagePermission } from '@/constants/page-permissions';
 import { THEME } from '@/constants/theme';
 import { MESSAGES } from '@/constants/messages';
 import { MENU_ITEMS } from '@/constants/menu';
 import { ThemeProvider } from '@/context/ThemeContext';
+
+function PanelContentGuard({
+  children,
+  pathname,
+  activeItem,
+}: {
+  children: React.ReactNode;
+  pathname: string;
+  activeItem: any;
+}) {
+  const { data: session, status } = useSession();
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <div className="w-8 h-8 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const role = (session?.user as any)?.role;
+  const permissions = (session?.user as any)?.permissions;
+
+  const isAuthorized = hasPagePermission(role, permissions, pathname);
+
+  if (!isAuthorized) {
+    return (
+      <AccessDenied
+        pageTitle={activeItem?.label}
+        userRole={role}
+        requiredModule={pathname}
+      />
+    );
+  }
+
+  return <>{children}</>;
+}
 
 export default function PanelLayout({
   children,
@@ -93,7 +132,9 @@ export default function PanelLayout({
 
             {/* Sayfa İçeriği (Responsive Padding ve Kenar Çubuğu Boşluğu) */}
             <main className={THEME.MAIN_WRAPPER}>
-              {children}
+              <PanelContentGuard pathname={pathname} activeItem={activeItem}>
+                {children}
+              </PanelContentGuard>
             </main>
           </div>
         </div>

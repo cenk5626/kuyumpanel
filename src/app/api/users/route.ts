@@ -4,7 +4,7 @@ import { hash } from 'bcryptjs';
 import { getAuthenticatedContext, requirePermission } from '@/lib/security/auth-context';
 import { PERMISSIONS } from '@/constants/permissions';
 import { USER_ROLES } from '@/constants/roles';
-import { ALL_PAGE_IDS } from '@/constants/page-permissions';
+import { ALL_PAGE_IDS, ROLE_DEFAULT_PRESETS, PERMISSION_PRESETS } from '@/constants/page-permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,58 +62,78 @@ export async function POST(req: NextRequest) {
     const currentUserRole = ctx.role;
     const currentUserDealerId = ctx.dealerId;
 
-  if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
-    return NextResponse.json({ error: 'Kullanıcı ekleme yetkiniz yok.' }, { status: 403 });
-  }
-
-  const body = await req.json();
-  const { name, email, password, role, dealerId, permissions } = body;
-
-  if (!name || !email || !password) {
-    return NextResponse.json({ error: 'Tüm alanlar zorunludur.' }, { status: 400 });
-  }
-
-  // Yetki sınırlarını kontrol et
-  let targetDealerId = dealerId;
-  let targetRole = role || USER_ROLES.USER;
-
-  if (currentUserRole === USER_ROLES.ADMIN) {
-    // Admin sadece kendi bayisine kullanıcı ekleyebilir ve SUPER_ADMIN yetkisi veremez
-    targetDealerId = currentUserDealerId;
-    if (targetRole === USER_ROLES.SUPER_ADMIN) {
-      targetRole = USER_ROLES.ADMIN;
+    if (currentUserRole !== USER_ROLES.SUPER_ADMIN && currentUserRole !== USER_ROLES.ADMIN) {
+      return NextResponse.json({ error: 'Kullanıcı ekleme yetkiniz yok.' }, { status: 403 });
     }
-  }
 
-  // Check duplicate email
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: 'Bu e-posta zaten kullanılıyor.' }, { status: 409 });
-  }
+    const body = await req.json();
+    const { name, email, password, role, dealerId, permissions } = body;
 
-  const hashedPassword = await hash(password, SALT_ROUNDS);
+    if (!name || !email || !password) {
+      return NextResponse.json({ error: 'Tüm alanlar zorunludur.' }, { status: 400 });
+    }
 
-  const defaultPerms = JSON.stringify(ALL_PAGE_IDS);
+    // Yetki sınırlarını kontrol et
+    let targetDealerId = dealerId;
+    let targetRole = role || USER_ROLES.USER;
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-      role: targetRole,
-      permissions: Array.isArray(permissions) ? JSON.stringify(permissions) : (typeof permissions === 'string' ? permissions : defaultPerms),
-      dealerId: targetDealerId || null,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      permissions: true,
-      dealerId: true,
-      createdAt: true,
-    },
-  });
+    if (currentUserRole === USER_ROLES.ADMIN) {
+      // Admin sadece kendi bayisine kullanıcı ekleyebilir ve SUPER_ADMIN yetkisi veremez
+      targetDealerId = currentUserDealerId;
+      if (targetRole === USER_ROLES.SUPER_ADMIN) {
+        targetRole = USER_ROLES.ADMIN;
+      }
+    }
+
+    // Super Admin dışındaki tüm kullanıcılar için bayi seçimi zorunludur
+    if (targetRole !== USER_ROLES.SUPER_ADMIN && !targetDealerId) {
+      return NextResponse.json(
+        { error: 'Super Admin dışındaki kullanıcılar için bayi seçimi zorunludur.' },
+        { status: 400 }
+      );
+    }
+
+    // Bayi varlığını kontrol et
+    if (targetDealerId) {
+      const dealerExists = await prisma.dealer.findUnique({ where: { id: targetDealerId } });
+      if (!dealerExists) {
+        return NextResponse.json({ error: 'Belirtilen bayi bulunamadı.' }, { status: 404 });
+      }
+    }
+
+    // Check duplicate email
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return NextResponse.json({ error: 'Bu e-posta zaten kullanılıyor.' }, { status: 409 });
+    }
+
+    const hashedPassword = await hash(password, SALT_ROUNDS);
+
+    // Least-privilege varsayılan yetki şablonu (Kasiyer için 9 sayfa, Admin için mağaza müdürü şablonu)
+    const rolePreset = ROLE_DEFAULT_PRESETS[targetRole] || PERMISSION_PRESETS.CASHIER.pages;
+    const defaultPerms = JSON.stringify(rolePreset);
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: targetRole,
+        permissions: permissions
+          ? (Array.isArray(permissions) ? JSON.stringify(permissions) : permissions)
+          : defaultPerms,
+        dealerId: targetDealerId || null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        permissions: true,
+        dealerId: true,
+        createdAt: true,
+      },
+    });
 
     return NextResponse.json(user, { status: 201 });
   } catch (error: any) {
@@ -188,7 +208,22 @@ export async function PUT(req: NextRequest) {
     
     if (currentUserRole === USER_ROLES.SUPER_ADMIN) {
       if (role) updateData.role = role;
-      if (dealerId !== undefined) updateData.dealerId = dealerId || null;
+      if (dealerId !== undefined) {
+        const finalRole = role || targetUser.role;
+        if (finalRole !== USER_ROLES.SUPER_ADMIN && !dealerId) {
+          return NextResponse.json(
+            { error: 'Super Admin dışındaki kullanıcılar için bayi seçimi zorunludur.' },
+            { status: 400 }
+          );
+        }
+        if (dealerId) {
+          const dealerExists = await prisma.dealer.findUnique({ where: { id: dealerId } });
+          if (!dealerExists) {
+            return NextResponse.json({ error: 'Belirtilen bayi bulunamadı.' }, { status: 404 });
+          }
+        }
+        updateData.dealerId = dealerId || null;
+      }
     } else if (currentUserRole === USER_ROLES.ADMIN) {
       // Admin yetki veya bayi değiştiremez
       if (role && role !== USER_ROLES.SUPER_ADMIN) {

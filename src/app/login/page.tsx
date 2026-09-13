@@ -30,8 +30,8 @@ export default function LoginPage() {
       if (result?.error) {
         setError(MESSAGES.LOGIN_ERROR_INVALID);
       } else {
-        router.push(ROUTES.DASHBOARD);
-        router.refresh();
+        // Hard navigation ensures Next.js client router cache is wiped and fresh session profile is retrieved
+        window.location.href = ROUTES.DASHBOARD;
       }
     } catch {
       setError(MESSAGES.LOGIN_ERROR_GENERIC);
